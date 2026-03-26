@@ -1,0 +1,91 @@
+{
+  "pages": [
+    {
+      "path": "pages/home/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "灵境"
+      }
+    },
+    {
+      "path": "pages/crawl/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "AI资讯"
+      }
+    },
+    {
+      "path": "pages/school/input",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "AI学堂"
+      }
+    },
+    {
+      "path": "pages/school/role-loading",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "生成角色"
+      }
+    },
+    {
+      "path": "pages/school/role-intro",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "角色介绍"
+      }
+    },
+    {
+      "path": "pages/school/outline-loading",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "生成大纲"
+      }
+    },
+    {
+      "path": "pages/school/classroom",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "互动课堂"
+      }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "个人信息"
+      }
+    },
+    {
+      "path": "pages/profile/nickname",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "设置昵称"
+      }
+    },
+    {
+      "path": "pages/profile/bio",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "自我介绍"
+      }
+    },
+    {
+      "path": "pages/workshop/preview",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "Workshop Preview"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "white",
+    "navigationBarBackgroundColor": "#070B1A",
+    "backgroundColor": "#070B1A",
+    "rpxCalcMaxDeviceWidth": 402,
+    "rpxCalcBaseDeviceWidth": 375,
+    "app-plus": {
+      "darkmode": true
+    }
+  }
+}

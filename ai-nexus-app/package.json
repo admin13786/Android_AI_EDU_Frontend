@@ -1,0 +1,18 @@
+{
+  "name": "ai-nexus-app",
+  "version": "1.0.0",
+  "description": "AI Nexus - 灵境 AI教育平台",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "uni dev",
+    "build": "uni build",
+    "dev:h5": "uni dev --platform h5",
+    "build:h5": "uni build --platform h5",
+    "dev:app": "uni dev --platform app",
+    "build:app": "uni build --platform app"
+  },
+  "dependencies": {
+    "pinia": "^2.1.7",
+    "vue": "^3.4.0"
+  }
+}

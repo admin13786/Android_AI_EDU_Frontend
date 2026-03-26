@@ -1,0 +1,124 @@
+.role-page[data-v-84653446] {
+  min-height: 100vh;
+  background: #0a0a0a;
+  display: flex;
+  flex-direction: column;
+}
+.status-bar[data-v-84653446], .page-header[data-v-84653446] {
+  padding: 0 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.status-bar[data-v-84653446] {
+  height: 1.9375rem;
+}
+.status-time[data-v-84653446], .status-glyph[data-v-84653446], .header-action[data-v-84653446], .header-title[data-v-84653446] {
+  color: #FFFFFF;
+}
+.status-icons[data-v-84653446] {
+  display: flex;
+  gap: 0.25rem;
+}
+.header-title[data-v-84653446] {
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+.header-action[data-v-84653446], .header-placeholder[data-v-84653446] {
+  width: 1.25rem;
+  text-align: center;
+}
+.role-scroll[data-v-84653446] {
+  flex: 1;
+}
+.title-area[data-v-84653446] {
+  padding: 0.625rem 0.75rem 0;
+}
+.big-title[data-v-84653446] {
+  display: block;
+  color: #FFFFFF;
+  font-size: 1.1875rem;
+  font-weight: 700;
+  margin-bottom: 0.3125rem;
+}
+.sub-copy[data-v-84653446] {
+  color: #a1a1aa;
+  font-size: 0.75rem;
+}
+.cards-area[data-v-84653446] {
+  padding: 0.5rem 0.75rem 0.75rem;
+}
+.role-card[data-v-84653446] {
+  border-radius: 0.75rem;
+  background: #18181b;
+  border: 0.0625rem solid #27272a;
+  padding: 0.6875rem;
+  margin-bottom: 0.5rem;
+}
+.role-card.teacher[data-v-84653446] {
+  border-color: rgba(124, 58, 237, 0.5);
+}
+.role-card.assistant[data-v-84653446] {
+  border-color: rgba(34, 211, 238, 0.5);
+}
+.role-card.student[data-v-84653446] {
+  border-color: rgba(196, 248, 42, 0.5);
+}
+.role-head[data-v-84653446] {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4375rem;
+}
+.role-avatar[data-v-84653446] {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.role-avatar.teacher[data-v-84653446] {
+  background: #7c3aed;
+}
+.role-avatar.assistant[data-v-84653446] {
+  background: #22d3ee;
+}
+.role-avatar.student[data-v-84653446] {
+  background: #c4f82a;
+}
+.role-avatar-text[data-v-84653446] {
+  color: #0a0a0a;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.role-type[data-v-84653446] {
+  display: block;
+  color: #a1a1aa;
+  font-size: 0.6875rem;
+  margin-bottom: 0.125rem;
+}
+.role-name[data-v-84653446] {
+  color: #FFFFFF;
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+.role-desc[data-v-84653446] {
+  color: #a1a1aa;
+  font-size: 0.75rem;
+  line-height: 1.65;
+}
+.bottom-button[data-v-84653446] {
+  margin: 0 0.75rem 0.75rem;
+  height: 3rem;
+  border-radius: 0.875rem;
+  background: #7c3aed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bottom-button-text[data-v-84653446] {
+  color: #FFFFFF;
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
