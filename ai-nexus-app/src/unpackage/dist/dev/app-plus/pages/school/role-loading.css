@@ -2,21 +2,18 @@
   min-height: 100vh;
   background: #0a0a0a;
 }
-.status-bar[data-v-2974fbbe], .page-header[data-v-2974fbbe] {
+.top-safe[data-v-2974fbbe] {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+.page-header[data-v-2974fbbe] {
   padding: 0 0.75rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.status-bar[data-v-2974fbbe] {
-  height: 1.9375rem;
-}
-.status-time[data-v-2974fbbe], .status-glyph[data-v-2974fbbe], .header-action[data-v-2974fbbe], .header-title[data-v-2974fbbe] {
+.header-action[data-v-2974fbbe], .header-title[data-v-2974fbbe] {
   color: #FFFFFF;
-}
-.status-icons[data-v-2974fbbe] {
-  display: flex;
-  gap: 0.25rem;
 }
 .header-title[data-v-2974fbbe] {
   font-size: 0.9375rem;

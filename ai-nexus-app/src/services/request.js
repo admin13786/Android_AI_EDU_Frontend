@@ -1,4 +1,6 @@
 let unauthorizedHandler = null
+let handling401 = false
+let last401At = 0
 
 export function setUnauthorizedHandler(fn) {
   unauthorizedHandler = typeof fn === 'function' ? fn : null
@@ -8,8 +10,6 @@ const getBaseUrl = () => {
   const storedBaseUrl = uni.getStorageSync('apiBaseUrl')
   if (storedBaseUrl) return storedBaseUrl
 
-  // H5 使用 devServer proxy；App 默认指向 Android 模拟器映射地址。
-  // 真机联调时可在 storage 中覆盖为局域网 IP。
   // #ifdef H5
   return ''
   // #endif
@@ -22,14 +22,15 @@ const normalizeError = (statusCode, data) => {
   if (typeof data === 'string') return data
   if (data?.detail) return data.detail
   if (data?.message) return data.message
-  if (statusCode === 404) return '请求的资源不存在'
-  if (statusCode >= 500) return '服务器开小差了，请稍后再试'
-  return '请求失败，请稍后重试'
+  if (statusCode === 404) return 'Resource not found'
+  if (statusCode >= 500) return 'Server error, please retry later'
+  return 'Request failed'
 }
 
 const request = (options) => {
   const token = uni.getStorageSync('token')
   const unifiedKey = uni.getStorageSync('unifiedApiKey')
+
   return new Promise((resolve, reject) => {
     uni.request({
       url: getBaseUrl() + options.url,
@@ -40,18 +41,34 @@ const request = (options) => {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(unifiedKey ? { 'X-Api-Key': unifiedKey } : {}),
-        ...options.header
+        ...options.header,
       },
       success: (res) => {
         if (res.statusCode === 401) {
+          uni.removeStorageSync('token')
+          uni.removeStorageSync('userInfo')
+
           try {
             if (unauthorizedHandler) unauthorizedHandler()
-          } catch (e) {
-            uni.removeStorageSync('token')
-            uni.removeStorageSync('userInfo')
+          } catch (error) {
+            // ignore
           }
-          uni.reLaunch({ url: '/pages/home/index' })
-          reject(new Error('未授权'))
+
+          const now = Date.now()
+          if (!handling401 || now - last401At > 2000) {
+            handling401 = true
+            last401At = now
+            const pages = getCurrentPages?.() || []
+            const currentRoute = pages.length ? `/${pages[pages.length - 1].route}` : ''
+            if (currentRoute !== '/pages/home/index') {
+              uni.reLaunch({ url: '/pages/home/index' })
+            }
+            setTimeout(() => {
+              handling401 = false
+            }, 2200)
+          }
+
+          reject(new Error('Unauthorized'))
           return
         }
 
@@ -63,8 +80,8 @@ const request = (options) => {
         resolve(res.data)
       },
       fail: (error) => {
-        reject(new Error(error?.errMsg || '网络请求失败'))
-      }
+        reject(new Error(error?.errMsg || 'Network request failed'))
+      },
     })
   })
 }

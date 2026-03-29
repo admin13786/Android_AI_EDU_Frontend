@@ -77,7 +77,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import { getClassroomHistory, updateApiBaseUrl } from '@/services/api'
+import { getClassroomHistory, updateApiBaseUrl, updateUserInfo } from '@/services/api'
 import { useUserStore } from '@/stores/user'
 import { getLayoutMetrics } from '@/utils/layout'
 import {
@@ -149,6 +149,13 @@ const loadPageData = async () => {
     const user = await userStore.fetchUserInfo()
     apiBaseUrl.value = user.apiBaseUrl || userStore.apiBaseUrl
     saveLocalProfile({ nickname: user.nickname || getLocalProfile().nickname })
+    // Mirror cloud profile fields into local (so edit pages show latest).
+    if (user && (Object.prototype.hasOwnProperty.call(user, 'bio') || Object.prototype.hasOwnProperty.call(user, 'gender'))) {
+      saveLocalProfile({
+        bio: user.bio != null ? user.bio : getLocalProfile().bio,
+        gender: user.gender != null ? user.gender : getLocalProfile().gender,
+      })
+    }
   } catch (error) {
     saveLocalProfile({ nickname: userInfo.value.nickname })
   }
@@ -176,6 +183,18 @@ const handleSave = async () => {
       userStore.setApiBaseUrl(cleaned)
       apiBaseUrl.value = cleaned
     }
+
+    // Sync profile (bio/gender) to backend; keep nickname handled by nickname page.
+    const lp = getLocalProfile()
+    const nextGender = lp.gender || '未设置'
+    const nextBio = lp.bio != null ? String(lp.bio) : ''
+    const prev = userStore.userInfo || {}
+    const prevGender = prev.gender != null ? String(prev.gender) : '未设置'
+    const prevBio = prev.bio != null ? String(prev.bio) : ''
+    if (nextGender !== prevGender || nextBio !== prevBio) {
+      tasks.push(updateUserInfo({ bio: nextBio, gender: nextGender }))
+    }
+
     if (tasks.length) {
       await Promise.all(tasks)
     }

@@ -1,9 +1,6 @@
 <template>
   <view class="loading-page">
-    <view class="status-bar" :style="{ paddingTop: `${statusBarHeight}px` }">
-      <text class="status-time">9:41</text>
-      <view class="status-icons"><text class="status-glyph">⌁</text><text class="status-glyph">◉</text><text class="status-glyph">▣</text></view>
-    </view>
+    <view class="top-safe" :style="{ paddingTop: `${statusBarHeight}px` }"></view>
     <view class="page-header">
       <text class="header-action" @click="goBack">←</text>
       <text class="header-title">生成课堂</text>
@@ -16,7 +13,7 @@
         <text class="doc-icon">▤</text>
         <view class="progress-track"><view class="progress-fill"></view></view>
       </view>
-      <text class="loading-foot">查看角色</text>
+      <text class="loading-foot">即将进入课堂</text>
     </view>
   </view>
 </template>
@@ -25,16 +22,22 @@
 import { onLoad, onUnload } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 import { getLayoutMetrics } from '@/utils/layout'
+import { safeNavigateBack } from '@/utils/navigation'
 
 const { statusBarHeight } = getLayoutMetrics()
 const loadingTip = ref('正在构建学习路径...')
 let firstTimer = null
 let secondTimer = null
 let classroomId = ''
-const goBack = () => uni.navigateBack()
+const goBack = () => safeNavigateBack('/pages/school/input')
 
 onLoad((query) => {
   classroomId = query.id || ''
+  if (!classroomId) {
+    loadingTip.value = '缺少课堂 ID，请返回重试'
+    uni.showToast({ title: '缺少课堂 ID', icon: 'none' })
+    return
+  }
   firstTimer = setTimeout(() => { loadingTip.value = '正在组织课堂内容和互动消息...' }, 900)
   secondTimer = setTimeout(() => { uni.redirectTo({ url: `/pages/school/classroom?id=${classroomId}` }) }, 1600)
 })
@@ -48,10 +51,9 @@ onUnload(() => {
 <style lang="scss" scoped>
 @import '../../theme.scss';
 .loading-page { min-height: 100vh; background: #0a0a0a; }
-.status-bar, .page-header { padding: 0 24rpx; display: flex; align-items: center; justify-content: space-between; }
-.status-bar { height: 62rpx; }
-.status-time, .status-glyph, .header-action, .header-title { color: $text-white; }
-.status-icons { display: flex; gap: 8rpx; }
+.top-safe { padding-left: 24rpx; padding-right: 24rpx; }
+.page-header { padding: 0 24rpx; display: flex; align-items: center; justify-content: space-between; }
+.header-action, .header-title { color: $text-white; }
 .header-title { font-size: 30rpx; font-weight: 700; }
 .header-action, .header-placeholder { width: 40rpx; text-align: center; }
 .loading-content { min-height: calc(100vh - 140rpx); padding: 120rpx 24rpx 0; display: flex; flex-direction: column; align-items: center; }

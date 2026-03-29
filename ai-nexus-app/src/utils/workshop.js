@@ -1,7 +1,7 @@
 const WORKSHOP_HISTORY_KEY = 'workshopHistory'
 
 const normalizeHistoryItem = (item = {}) => ({
-  id: item.id || `${Date.now()}`,
+  id: item.id || `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
   prompt: item.prompt || '',
   result: item.result || null,
   createdAt: item.createdAt || Date.now(),

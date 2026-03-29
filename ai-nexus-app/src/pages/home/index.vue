@@ -1,13 +1,6 @@
 <template>
   <view class="workshop-page">
-    <view class="status-bar" :style="{ paddingTop: `${statusBarHeight}px` }">
-      <text class="status-time">11:37</text>
-      <view class="status-icons">
-        <text class="status-glyph">◌</text>
-        <text class="status-glyph">◎</text>
-        <text class="status-glyph">▣</text>
-      </view>
-    </view>
+    <view class="top-safe" :style="{ paddingTop: `${statusBarHeight}px` }"></view>
 
     <view class="page-header">
       <text class="header-action" @click="toggleSidebar">☰</text>
@@ -31,8 +24,8 @@
 
           <view class="ai-column">
             <view class="ai-bubble">
-              <text class="ai-title">{{ loading ? '正在生成中' : '应用创建成功' }}</text>
-              <text class="ai-text">{{ loading ? loadingText : introText }}</text>
+              <text class="ai-title">{{ aiTitle }}</text>
+              <text class="ai-text">{{ aiBodyText }}</text>
 
               <view v-if="loading" class="loading-panel">
                 <view class="loading-orbit">
@@ -68,7 +61,7 @@
                 </view>
               </view>
 
-              <view class="idea-card">
+              <view v-if="showHighlights" class="idea-card">
                 <text class="idea-title">这次生成重点</text>
                 <view class="idea-item" v-for="(point, index) in highlights" :key="index">
                   <text class="idea-dot">•</text>
@@ -76,7 +69,7 @@
                 </view>
               </view>
 
-              <view v-if="generatedResult" class="result-card">
+              <view v-if="generatedResult && !isAssistantReply" class="result-card">
                 <view class="result-toolbar">
                   <text class="result-tool" @click="openPreview">试玩</text>
                   <text class="result-tool" @click="openPreview">发布</text>
@@ -113,6 +106,17 @@
                   </scroll-view>
                 </view>
               </view>
+
+              <view v-if="isAssistantReply && assistantActions.length" class="assist-actions">
+                <view
+                  v-for="action in assistantActions"
+                  :key="action.path"
+                  class="assist-action"
+                  @click="runAssistantAction(action)"
+                >
+                  <text class="assist-action-text">{{ action.label }}</text>
+                </view>
+              </view>
             </view>
 
             <text class="message-time">刚刚</text>
@@ -128,7 +132,7 @@
       </view>
     </scroll-view>
 
-    <view v-if="generatedResult && hasPreview" class="floating-action" @click="openPreview">
+    <view v-if="generatedResult && hasPreview && !isAssistantReply" class="floating-action" @click="openPreview">
       <text class="floating-action-text">↗</text>
     </view>
 
@@ -167,7 +171,7 @@
 import { computed, onUnmounted, ref } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import Sidebar from '@/components/Sidebar.vue'
-import { generateCode } from '@/services/api'
+import { generateCode, getWorkshopHistoryRemote, routeWorkshopInput, saveWorkshopHistoryRemote } from '@/services/api'
 import { navigateByPath } from '@/utils/navigation'
 import { getLayoutMetrics } from '@/utils/layout'
 import {
@@ -188,6 +192,9 @@ const loadingPhase = ref(0)
 const workshopHistory = ref([])
 const currentConversationId = ref('')
 let loadingTimer = null
+const workshopSyncInFlight = ref(false)
+const workshopSyncLastAt = ref(0)
+const workshopSyncLastSignature = ref('')
 
 const loadingPhases = [
   '正在理解需求',
@@ -200,6 +207,20 @@ const chatHeight = Math.max(systemInfo.windowHeight - statusBarHeight - 190 - sa
 const hasPreview = computed(() => !!generatedResult.value?.previewUrl)
 const loadingText = '正在生成页面并准备在线预览，请稍等片刻。'
 const activeLoadingPhase = computed(() => loadingPhases[loadingPhase.value % loadingPhases.length])
+const isAssistantReply = computed(() => generatedResult.value?.kind === 'assistant')
+const assistantActions = computed(() => (generatedResult.value?.quickActions || []).filter((x) => x?.label && x?.path))
+
+const aiTitle = computed(() => {
+  if (loading.value) return '正在生成中'
+  if (isAssistantReply.value) return '灵境助手'
+  return '应用创建成功'
+})
+
+const aiBodyText = computed(() => {
+  if (loading.value) return loadingText
+  if (isAssistantReply.value) return generatedResult.value?.text || ''
+  return introText.value
+})
 
 const introText = computed(() => {
   if (!lastPrompt.value) {
@@ -209,6 +230,7 @@ const introText = computed(() => {
 })
 
 const highlights = computed(() => {
+  if (isAssistantReply.value) return []
   if (loading.value) {
     return ['模型已开始生成应用结构', '结果完成后会自动切换到预览卡片', '如果预览可用，可以直接打开试玩']
   }
@@ -217,6 +239,8 @@ const highlights = computed(() => {
   }
   return ['保留核心玩法和页面骨架', '先生成可继续修改的代码结果', '下一步可以接入 WebView 或沙盒预览']
 })
+
+const showHighlights = computed(() => loading.value || (!isAssistantReply.value && !!generatedResult.value))
 
 const toggleSidebar = () => {
   sidebarVisible.value = !sidebarVisible.value
@@ -253,6 +277,71 @@ const loadConversation = (chatId) => {
   generatedResult.value = conversation.result || null
 }
 
+const mergeWorkshopHistory = (local = [], remote = []) => {
+  const byId = new Map()
+  ;[...remote, ...local].forEach((item) => {
+    if (!item || !item.id) return
+    const existing = byId.get(item.id)
+    if (!existing) {
+      byId.set(item.id, item)
+      return
+    }
+    const a = Number(existing.createdAt || 0)
+    const b = Number(item.createdAt || 0)
+    if (b > a) byId.set(item.id, item)
+  })
+  return Array.from(byId.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+}
+
+const historySignature = (list = []) => {
+  try {
+    return JSON.stringify(
+      (Array.isArray(list) ? list : [])
+        .map((x) => ({ id: x?.id || '', createdAt: Number(x?.createdAt || 0) }))
+        .filter((x) => x.id)
+        .slice(0, 60),
+    )
+  } catch (e) {
+    return ''
+  }
+}
+
+const syncWorkshopHistoryRemote = async ({ silent = true } = {}) => {
+  const now = Date.now()
+  if (workshopSyncInFlight.value) return
+  // Throttle: avoid request storms on frequent onShow.
+  if (now - workshopSyncLastAt.value < 12000) return
+
+  const local = getWorkshopHistory()
+  workshopHistory.value = local
+  try {
+    workshopSyncInFlight.value = true
+    const res = await getWorkshopHistoryRemote()
+    const remote = Array.isArray(res.list) ? res.list : []
+    const merged = mergeWorkshopHistory(local, remote)
+    workshopHistory.value = merged
+    uni.setStorageSync('workshopHistory', merged)
+    const mergedSig = historySignature(merged)
+    const remoteSig = historySignature(remote)
+    // Only push when merged differs from remote and we haven't pushed same payload.
+    if (mergedSig && mergedSig !== remoteSig && mergedSig !== workshopSyncLastSignature.value) {
+      try {
+        await saveWorkshopHistoryRemote(merged)
+        workshopSyncLastSignature.value = mergedSig
+      } catch (e) {
+        // ignore
+      }
+    }
+    workshopSyncLastAt.value = now
+  } catch (error) {
+    if (!silent) {
+      uni.showToast({ title: error.message || '云端历史同步失败', icon: 'none' })
+    }
+  } finally {
+    workshopSyncInFlight.value = false
+  }
+}
+
 const startLoadingAnimation = () => {
   if (loadingTimer) clearInterval(loadingTimer)
   loadingPhase.value = 0
@@ -274,6 +363,43 @@ const openPreview = () => {
   })
 }
 
+const runAssistantAction = (action) => {
+  if (!action?.path) return
+  navigateByPath(action.path)
+}
+
+const buildAssistantReply = ({ intent }) => {
+  const examples = ['做一个贪吃蛇小游戏', '生成一个登录页', '做一个记账小程序页面']
+  if (intent === 'news') {
+    return {
+      kind: 'assistant',
+      text: `我可以带你去看 AI 资讯榜单。\n\n你也可以继续在工坊里输入“${examples[0]}”这类指令来生成小游戏/页面原型。`,
+      quickActions: [
+        { label: '去 AI 资讯页', path: '/pages/crawl/index' },
+        { label: '去 AI 学堂', path: '/pages/school/input' },
+      ],
+    }
+  }
+  if (intent === 'school') {
+    return {
+      kind: 'assistant',
+      text: `我可以带你去 AI 学堂生成白板课堂。\n\n如果你想在工坊生成小游戏/页面，请直接说：\n- ${examples[0]}\n- ${examples[1]}`,
+      quickActions: [
+        { label: '去 AI 学堂', path: '/pages/school/input' },
+        { label: '去 AI 资讯页', path: '/pages/crawl/index' },
+      ],
+    }
+  }
+  return {
+    kind: 'assistant',
+    text: `我能做两件事：\n1) 在工坊帮你生成小游戏/页面原型\n2) 带你跳转到 AI 资讯 / AI 学堂\n\n如果你要生成，请这样说：\n- ${examples[0]}\n- ${examples[1]}\n- ${examples[2]}`,
+    quickActions: [
+      { label: '去 AI 资讯页', path: '/pages/crawl/index' },
+      { label: '去 AI 学堂', path: '/pages/school/input' },
+    ],
+  }
+}
+
 const handleGenerate = async () => {
   const prompt = userInput.value.trim()
   if (!prompt || loading.value) {
@@ -282,22 +408,46 @@ const handleGenerate = async () => {
   }
 
   lastPrompt.value = prompt
+  userInput.value = ''
+  try {
+    const routed = await routeWorkshopInput(prompt)
+    if (!routed?.shouldGenerate) {
+      generatedResult.value = {
+        kind: 'assistant',
+        text: routed?.replyText || buildAssistantReply({ intent: routed?.intent || 'help' }).text,
+        quickActions: Array.isArray(routed?.quickActions) ? routed.quickActions : buildAssistantReply({ intent: routed?.intent || 'help' }).quickActions,
+      }
+      return
+    }
+    // Use normalized prompt if provided by router.
+    lastPrompt.value = (routed?.normalizedPrompt || prompt).trim()
+  } catch (e) {
+    // If router fails, fall back to old behavior: require explicit keywords via local rules.
+    // (Keep UX safe: do not generate on greetings.)
+    const fallback = (await import('@/utils/workshop_intent')).classifyWorkshopInput(prompt)
+    if (fallback.intent !== (await import('@/utils/workshop_intent')).WorkshopIntent.GenerateWorkshop) {
+      generatedResult.value = buildAssistantReply({ intent: 'help' })
+      return
+    }
+  }
+
   loading.value = true
   generatedResult.value = null
-  userInput.value = ''
   startLoadingAnimation()
 
   try {
-    const response = await generateCode(prompt)
+    const response = await generateCode(lastPrompt.value)
     generatedResult.value = response.result
     const savedConversation = saveWorkshopConversation({
-      id: currentConversationId.value || `${Date.now()}`,
-      prompt,
+      id: currentConversationId.value || `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
+      prompt: lastPrompt.value,
       result: response.result,
       createdAt: Date.now(),
     })
     currentConversationId.value = savedConversation.id
     syncWorkshopHistory()
+    // Mark dirty and allow next scheduled sync to push.
+    workshopSyncLastAt.value = 0
   } catch (error) {
     uni.showToast({ title: error.message, icon: 'none' })
     userInput.value = prompt
@@ -312,7 +462,7 @@ onUnmounted(() => {
 })
 
 onLoad((query) => {
-  syncWorkshopHistory()
+  syncWorkshopHistoryRemote({ silent: true })
   sidebarVisible.value = query.openSidebar === '1'
 
   if (query.reset === '1') {
@@ -326,7 +476,7 @@ onLoad((query) => {
 })
 
 onShow(() => {
-  syncWorkshopHistory()
+  syncWorkshopHistoryRemote({ silent: true })
 })
 </script>
 
@@ -334,9 +484,7 @@ onShow(() => {
 @import '../../theme.scss';
 
 .workshop-page { min-height: 100vh; background: #0a0a0a; display: flex; flex-direction: column; position: relative; }
-.status-bar { height: 44rpx; padding-left: 24rpx; padding-right: 24rpx; display: flex; align-items: center; justify-content: space-between; }
-.status-time, .status-glyph { color: $text-white; font-size: 24rpx; font-weight: 600; }
-.status-icons { display: flex; align-items: center; gap: 10rpx; }
+.top-safe { padding-left: 24rpx; padding-right: 24rpx; }
 .page-header { height: 68rpx; padding: 0 24rpx; display: flex; align-items: center; justify-content: space-between; }
 .header-action, .header-placeholder { width: 44rpx; text-align: center; }
 .header-action { color: $text-white; font-size: 34rpx; }
@@ -411,6 +559,26 @@ onShow(() => {
 .send-button { width: 88rpx; height: 88rpx; border-radius: 50%; background: #8a2be2; display: flex; align-items: center; justify-content: center; box-shadow: 0 16rpx 28rpx rgba(138,43,226,0.22); }
 .send-button.disabled { opacity: 0.6; }
 .send-button-text { color: $text-white; font-size: 30rpx; transform: translateX(2rpx); }
+
+.assist-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 18rpx;
+}
+
+.assist-action {
+  padding: 12rpx 18rpx;
+  border-radius: 999rpx;
+  background: rgba(124, 58, 237, 0.12);
+  border: 2rpx solid rgba(124, 58, 237, 0.22);
+}
+
+.assist-action-text {
+  color: #7c3aed;
+  font-size: 24rpx;
+  font-weight: 700;
+}
 
 @keyframes spin {
   from { transform: rotate(0deg); }

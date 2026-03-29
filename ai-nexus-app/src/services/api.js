@@ -13,12 +13,29 @@ export const generateCode = (prompt) =>
     timeout: 600000,
   })
 
+export const routeWorkshopInput = (text) =>
+  request({
+    url: '/api/workshop/router',
+    method: 'POST',
+    data: { text },
+    timeout: 180000,
+  })
+
+export const getWorkshopHistoryRemote = () =>
+  request({ url: '/api/workshop/history', timeout: 180000 })
+
+export const saveWorkshopHistoryRemote = (list) =>
+  request({ url: '/api/workshop/history', method: 'PUT', data: { list }, timeout: 180000 })
+
 // School
 export const createClassroom = (topic) =>
   request({ url: '/api/school/create', method: 'POST', data: { topic }, timeout: 180000 })
 
 export const getClassroomHistory = () =>
   request({ url: '/api/school/history' })
+
+export const deleteClassroom = (id) =>
+  request({ url: `/api/school/${id}`, method: 'DELETE', timeout: 180000 })
 
 export const getClassroomDetail = (id) =>
   request({ url: `/api/school/${id}`, timeout: 180000 })

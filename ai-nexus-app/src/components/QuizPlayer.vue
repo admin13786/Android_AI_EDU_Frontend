@@ -24,6 +24,7 @@
         v-for="(q, idx) in questions"
         :key="q.id"
         class="q-card"
+        :class="showResult ? (results[q.id] ? 'q-ok' : 'q-bad') : ''"
       >
         <!-- header -->
         <view class="q-header">
@@ -55,14 +56,6 @@
               <view v-if="isChosen(q.id, opt.value)" class="indicator-fill" />
             </view>
             <text class="opt-text">{{ opt.value }}. {{ opt.label }}</text>
-            <text
-              v-if="showResult && isCorrectAnswer(q.id, opt.value)"
-              class="result-icon icon-correct"
-            >✓</text>
-            <text
-              v-if="showResult && isWrongPick(q.id, opt.value)"
-              class="result-icon icon-wrong"
-            >✗</text>
           </view>
         </view>
 
@@ -78,10 +71,6 @@
             auto-height
             @input="onTextInput($event, q.id)"
           />
-          <view v-if="showResult && correctAnswers[q.id]" class="sa-ref">
-            <text class="sa-ref-label">参考答案</text>
-            <text class="sa-ref-content">{{ (correctAnswers[q.id] || []).join('') }}</text>
-          </view>
         </view>
 
         <!-- analysis (result mode) -->
@@ -124,10 +113,18 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
-  correctAnswers: {
+  results: {
     type: Object,
     default: () => ({})
-  }
+  },
+  score: {
+    type: Number,
+    default: 0
+  },
+  maxScore: {
+    type: Number,
+    default: 0
+  },
 })
 
 const emit = defineEmits(['submit', 'complete'])
@@ -142,41 +139,19 @@ const typeLabel = (type) => TYPE_LABELS[type] || type
 const isChosen = (qId, value) => (userAnswers[qId] || []).includes(value)
 const textOf = (qId) => (userAnswers[qId] || [''])[0] || ''
 
-const isCorrectAnswer = (qId, value) =>
-  (props.correctAnswers[qId] || []).includes(value)
-
-const isWrongPick = (qId, value) =>
-  isChosen(qId, value) && !isCorrectAnswer(qId, value)
-
 const optionClasses = (q, opt) => {
   const chosen = isChosen(q.id, opt.value)
-  if (!props.showResult) return { selected: chosen }
-  const correct = isCorrectAnswer(q.id, opt.value)
-  return {
-    selected: chosen,
-    'res-correct': chosen && correct,
-    'res-wrong': chosen && !correct,
-    'res-missed': !chosen && correct
-  }
+  return { selected: chosen }
 }
 
 // ── Computed ───────────────────────────────────────
 const maxScore = computed(() =>
-  props.questions.reduce((s, q) => s + (q.points || 0), 0)
+  props.maxScore || props.questions.reduce((s, q) => s + (q.points || 0), 0)
 )
 
 const totalScore = computed(() => {
   if (!props.showResult) return 0
-  return props.questions.reduce((sum, q) => {
-    const ca = props.correctAnswers[q.id] || []
-    const ua = userAnswers[q.id] || []
-    if (q.type === 'short_answer') {
-      return sum + (ca[0] && ua[0] === ca[0] ? (q.points || 0) : 0)
-    }
-    if (!ca.length) return sum
-    const match = ca.length === ua.length && ca.every(v => ua.includes(v))
-    return sum + (match ? (q.points || 0) : 0)
-  }, 0)
+  return props.score || 0
 })
 
 const progressPercent = computed(() =>
@@ -388,36 +363,15 @@ const handleSubmit = () => {
     }
   }
 
-  &.res-correct {
-    border-color: #22c55e;
-    background: rgba(34, 197, 94, 0.1);
+  /* result colors are applied at question card level */
+}
 
-    .opt-indicator {
-      border-color: #22c55e;
-    }
+.q-card.q-ok {
+  border-color: rgba(34, 211, 238, 0.35);
+}
 
-    .indicator-fill {
-      background: #22c55e;
-    }
-  }
-
-  &.res-wrong {
-    border-color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
-
-    .opt-indicator {
-      border-color: #ef4444;
-    }
-
-    .indicator-fill {
-      background: #ef4444;
-    }
-  }
-
-  &.res-missed {
-    border-color: #22c55e;
-    border-left-width: 6rpx;
-  }
+.q-card.q-bad {
+  border-color: rgba(244, 63, 94, 0.35);
 }
 
 .opt-indicator {
@@ -461,19 +415,7 @@ const handleSubmit = () => {
   line-height: 1.5;
 }
 
-.result-icon {
-  font-size: 28rpx;
-  font-weight: 700;
-  margin-left: 12rpx;
-
-  &.icon-correct {
-    color: #22c55e;
-  }
-
-  &.icon-wrong {
-    color: #ef4444;
-  }
-}
+/* result icons removed: do not reveal correct answers */
 
 /* ── Short Answer ──────────────────────────────── */
 .sa-area {
@@ -499,28 +441,7 @@ const handleSubmit = () => {
   }
 }
 
-.sa-ref {
-  margin-top: 16rpx;
-  padding: 16rpx 20rpx;
-  background: rgba(34, 197, 94, 0.08);
-  border: 2rpx solid rgba(34, 197, 94, 0.2);
-  border-radius: 12rpx;
-  display: flex;
-  flex-direction: column;
-}
-
-.sa-ref-label {
-  font-size: 22rpx;
-  color: #22c55e;
-  font-weight: 600;
-  margin-bottom: 8rpx;
-}
-
-.sa-ref-content {
-  font-size: 26rpx;
-  color: #e2e8f0;
-  line-height: 1.5;
-}
+/* reference answer block removed */
 
 /* ── Analysis ──────────────────────────────────── */
 .q-analysis {

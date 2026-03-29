@@ -1,13 +1,6 @@
 <template>
   <view class="edit-page">
-    <view class="status-bar" :style="{ paddingTop: `${statusBarHeight}px` }">
-      <text class="status-time">13:10</text>
-      <view class="status-icons">
-        <text class="status-glyph">◦</text>
-        <text class="status-glyph">◦</text>
-        <text class="status-glyph">▮</text>
-      </view>
-    </view>
+    <view class="top-safe" :style="{ paddingTop: `${statusBarHeight}px` }"></view>
 
     <view class="page-header">
       <text class="header-action" @click="goBack">←</text>
@@ -33,18 +26,20 @@ import { onLoad } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 import { getLayoutMetrics } from '@/utils/layout'
 import { getLocalProfile, saveLocalProfile, setProfilePendingToast } from '@/utils/profile'
+import { safeNavigateBack } from '@/utils/navigation'
 
 const { statusBarHeight } = getLayoutMetrics()
 const bio = ref('')
 
 const goBack = () => {
-  uni.navigateBack()
+  safeNavigateBack('/pages/profile/index')
 }
 
 const handleSave = () => {
-  saveLocalProfile({ bio: bio.value.trim() || '这个人很神秘，还没有留下自我介绍。' })
+  // Allow empty string to represent "cleared".
+  saveLocalProfile({ bio: bio.value.trim() })
   setProfilePendingToast('自我介绍修改成功')
-  uni.navigateBack()
+  safeNavigateBack('/pages/profile/index')
 }
 
 onLoad(() => {
@@ -56,11 +51,9 @@ onLoad(() => {
 @import '../../theme.scss';
 
 .edit-page { min-height: 100vh; background: #0f0f0f; }
-.status-bar, .page-header { padding: 0 16rpx; display: flex; align-items: center; justify-content: space-between; }
-.status-bar { height: 44rpx; }
-.status-time, .status-glyph, .header-title, .header-action { color: $text-white; }
-.status-time, .status-glyph { font-size: 24rpx; font-weight: 600; }
-.status-icons { display: flex; gap: 10rpx; }
+.top-safe { padding-left: 16rpx; padding-right: 16rpx; }
+.page-header { padding: 0 16rpx; display: flex; align-items: center; justify-content: space-between; }
+.header-title, .header-action { color: $text-white; }
 .page-header { height: 56rpx; }
 .header-title { font-size: 30rpx; font-weight: 700; }
 .header-action { min-width: 40rpx; text-align: center; font-size: 24rpx; }

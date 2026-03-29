@@ -1,9 +1,6 @@
 <template>
   <view class="loading-page">
-    <view class="status-bar" :style="{ paddingTop: `${statusBarHeight}px` }">
-      <text class="status-time">9:41</text>
-      <view class="status-icons"><text class="status-glyph">⌁</text><text class="status-glyph">◉</text><text class="status-glyph">▣</text></view>
-    </view>
+    <view class="top-safe" :style="{ paddingTop: `${statusBarHeight}px` }"></view>
     <view class="page-header">
       <text class="header-action" @click="goBack">←</text>
       <text class="header-title">生成课堂</text>
@@ -26,6 +23,8 @@
 import { onLoad, onUnload } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 import { getLayoutMetrics } from '@/utils/layout'
+import { createClassroom } from '@/services/api'
+import { safeNavigateBack } from '@/utils/navigation'
 
 const { statusBarHeight } = getLayoutMetrics()
 const loadingTip = ref('正在根据课程内容生成角色...')
@@ -33,30 +32,67 @@ let firstTimer = null
 let secondTimer = null
 let classroomId = ''
 let topic = ''
-const goBack = () => uni.navigateBack()
+const goBack = () => safeNavigateBack('/pages/school/input')
+
+const clearTimers = () => {
+  clearTimeout(firstTimer)
+  clearTimeout(secondTimer)
+  firstTimer = null
+  secondTimer = null
+}
+
+const startFlow = async () => {
+  clearTimers()
+  loadingTip.value = '正在根据课程内容生成角色...'
+  firstTimer = setTimeout(() => {
+    loadingTip.value = '正在组织老师、助教和学生代表的人设...'
+  }, 900)
+
+  try {
+    if (!classroomId) {
+      loadingTip.value = '正在创建课堂...'
+      const res = await createClassroom(topic)
+      classroomId = res?.classroomId || ''
+    }
+    if (!classroomId) {
+      throw new Error('课堂创建失败，请稍后重试')
+    }
+
+    secondTimer = setTimeout(() => {
+      uni.redirectTo({ url: `/pages/school/role-intro?id=${classroomId}&topic=${encodeURIComponent(topic)}` })
+    }, 800)
+  } catch (error) {
+    const msg = error?.message || '课堂创建失败，请稍后重试'
+    loadingTip.value = msg
+    uni.showToast({ title: msg, icon: 'none' })
+  }
+}
 
 onLoad((query) => {
   classroomId = query.id || ''
-  topic = query.topic || ''
-  firstTimer = setTimeout(() => { loadingTip.value = '正在组织老师、助教和学生代表的人设...' }, 900)
-  secondTimer = setTimeout(() => {
-    uni.redirectTo({ url: `/pages/school/role-intro?id=${classroomId}&topic=${encodeURIComponent(topic)}` })
-  }, 1600)
+  try {
+    topic = decodeURIComponent(String(query.topic || '')).trim()
+  } catch (e) {
+    topic = String(query.topic || '').trim()
+  }
+  if (!topic) {
+    loadingTip.value = '缺少课程主题，请返回重试'
+    return
+  }
+  startFlow()
 })
 
 onUnload(() => {
-  clearTimeout(firstTimer)
-  clearTimeout(secondTimer)
+  clearTimers()
 })
 </script>
 
 <style lang="scss" scoped>
 @import '../../theme.scss';
 .loading-page { min-height: 100vh; background: #0a0a0a; }
-.status-bar, .page-header { padding: 0 24rpx; display: flex; align-items: center; justify-content: space-between; }
-.status-bar { height: 62rpx; }
-.status-time, .status-glyph, .header-action, .header-title { color: $text-white; }
-.status-icons { display: flex; gap: 8rpx; }
+.top-safe { padding-left: 24rpx; padding-right: 24rpx; }
+.page-header { padding: 0 24rpx; display: flex; align-items: center; justify-content: space-between; }
+.header-action, .header-title { color: $text-white; }
 .header-title { font-size: 30rpx; font-weight: 700; }
 .header-action, .header-placeholder { width: 40rpx; text-align: center; }
 .loading-content { min-height: calc(100vh - 140rpx); padding: 120rpx 24rpx 0; display: flex; flex-direction: column; align-items: center; }

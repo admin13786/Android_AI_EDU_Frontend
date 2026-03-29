@@ -1,13 +1,6 @@
 <template>
   <view class="classroom-page">
-    <view class="status-bar" :style="{ paddingTop: `${statusBarHeight}px` }">
-      <text class="status-time">9:41</text>
-      <view class="status-icons">
-        <text class="status-glyph">⌁</text>
-        <text class="status-glyph">◉</text>
-        <text class="status-glyph">▣</text>
-      </view>
-    </view>
+    <view class="top-safe" :style="{ paddingTop: `${statusBarHeight}px` }"></view>
 
     <view class="page-header">
       <text class="header-icon" @click="goBack">←</text>
@@ -21,8 +14,8 @@
         <text class="speed-text">{{ playSpeed }}x</text>
       </view>
       <text class="control-label" @click="prevLesson">上一节</text>
-      <view class="play-button" @click="togglePlay">
-        <text class="play-icon">{{ isPlaying ? '暂停' : '播放' }}</text>
+      <view class="play-button" :class="{ disabled: playDisabled }" @click="togglePlay">
+        <text class="play-icon">{{ playButtonText }}</text>
       </view>
       <text class="control-label" @click="nextLesson">下一节</text>
     </view>
@@ -38,7 +31,7 @@
           <view class="orbit-dot orbit-dot-c"></view>
         </view>
         <text class="video-placeholder-title">课堂生成中…</text>
-        <text class="video-placeholder-copy">OpenMAIC 正在生成白板课件、讲解脚本和互动内容，请稍等片刻。</text>
+        <text class="video-placeholder-copy">课堂引擎正在生成白板课件、讲解脚本和互动内容，请稍等片刻。</text>
       </view>
     </view>
 
@@ -56,9 +49,17 @@
         :key="currentOutline?.id"
         :questions="quizQuestions"
         :show-result="quizShowResult"
-        :correct-answers="quizCorrectAnswers"
+        :submitting="quizSubmitting"
+        :results="quizResults"
+        :score="quizScore"
+        :max-score="quizMaxScore"
         @submit="handleQuizSubmit"
       />
+    </view>
+
+    <view class="status-card" v-if="quizLastSummary">
+      <text class="status-card-title">上次测验结果</text>
+      <text class="status-card-copy">{{ quizLastSummary }}</text>
     </view>
 
     <view class="media-area" v-else-if="currentVideoUrl">
@@ -123,10 +124,17 @@
       </view>
     </view>
 
-    <scroll-view class="chat-area" scroll-y :style="{ height: `${chatHeight}px` }">
+    <scroll-view
+      class="chat-area"
+      scroll-y
+      scroll-with-animation
+      :scroll-into-view="chatScrollIntoView"
+      :style="{ height: `${chatHeight}px` }"
+    >
       <view
-        v-for="msg in chatMessages"
-        :key="msg.id"
+        v-for="(msg, index) in chatMessages"
+        :id="`msg-${msgKey(msg, index)}`"
+        :key="msgKey(msg, index)"
         class="message-row"
         :class="msg.role"
       >
@@ -167,7 +175,7 @@
 </template>
 
 <script setup>
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import WhiteboardPlayer from '@/components/WhiteboardPlayer.vue'
 import QuizPlayer from '@/components/QuizPlayer.vue'
@@ -180,6 +188,7 @@ import {
 } from '@/services/api'
 import { getBaseUrl } from '@/services/request'
 import { getLayoutMetrics } from '@/utils/layout'
+import { safeNavigateBack } from '@/utils/navigation'
 
 const systemInfo = uni.getSystemInfoSync()
 const { safeAreaInsetsBottom, statusBarHeight } = getLayoutMetrics()
@@ -194,6 +203,7 @@ const volumeOn = ref(true)
 const playSpeed = ref('1.0')
 const chatInput = ref('')
 const chatMessages = ref([])
+const chatScrollIntoView = ref('')
 const classroom = ref(null)
 const currentStep = ref(0)
 const sending = ref(false)
@@ -206,7 +216,11 @@ const activeElementId = ref('')
 const activeSubtitle = ref('')
 const currentSegmentIndex = ref(-1)
 const quizShowResult = ref(false)
-const quizCorrectAnswers = ref({})
+const quizResults = ref({})
+const quizScore = ref(0)
+const quizMaxScore = ref(0)
+const quizLast = ref(null)
+const quizSubmitting = ref(false)
 let classroomId = ''
 let refreshTimer = null
 let refreshAttempts = 0
@@ -220,7 +234,7 @@ const chatHeight = Math.max(
 const currentOutline = computed(() => classroom.value?.outline?.[currentStep.value] || null)
 const generationStatus = computed(() => classroom.value?.generation?.status || '')
 const generationFailed = computed(() => generationStatus.value === 'failed')
-const generationError = computed(() => classroom.value?.generation?.error || 'OpenMAIC 当前不可用，请稍后重试。')
+const generationError = computed(() => classroom.value?.generation?.error || '课堂引擎当前不可用，请稍后重试。')
 const isGenerating = computed(() => ['queued', 'running'].includes(generationStatus.value))
 const currentVideoUrl = computed(() => currentOutline.value?.video?.url || '')
 const currentAudioSegments = computed(() => currentOutline.value?.audio?.segments || [])
@@ -230,11 +244,36 @@ const sceneHasWhiteboard = computed(() =>
 const sceneIsQuiz = computed(() =>
   currentOutline.value?.sceneType === 'quiz' && (currentOutline.value?.questions?.length || 0) > 0,
 )
+const sceneIsInteractive = computed(() => currentOutline.value?.sceneType === 'interactive')
 const quizQuestions = computed(() => currentOutline.value?.questions || [])
+const quizLastSummary = computed(() => {
+  const ql = quizLast.value
+  const sid = currentOutline.value?.id
+  if (!ql || !sid) return ''
+  if (ql.sceneId !== sid) return ''
+  const score = Number(ql.score || 0)
+  const maxScore = Number(ql.maxScore || 0)
+  const ts = ql.submittedAt ? `，${String(ql.submittedAt).slice(0, 19).replace('T', ' ')}` : ''
+  if (!maxScore || maxScore <= 0) return `得分 ${score}${ts}`
+  return `得分 ${score}/${maxScore}${ts}`
+})
 const sceneAudioReady = computed(() =>
   currentAudioSegments.value.length > 0 && currentAudioSegments.value.every((segment) => !!segment.url),
 )
 const currentSubtitle = computed(() => activeSubtitle.value || '')
+const playDisabled = computed(() => {
+  if (isGenerating.value) return true
+  if (audioPreparing.value) return true
+  if (sceneIsQuiz.value) return true
+  if (sceneIsInteractive.value) return true
+  if (sceneHasWhiteboard.value) return false
+  if (currentVideoUrl.value) return false
+  return true
+})
+const playButtonText = computed(() => {
+  if (audioPreparing.value) return '准备…'
+  return isPlaying.value ? '暂停' : '播放'
+})
 const sceneTypeLabel = computed(() => {
   const sceneType = currentOutline.value?.sceneType || 'slide'
   if (sceneType === 'interactive') return '互动'
@@ -284,10 +323,28 @@ const roleShortName = (role, name) => {
   return (name || '?').slice(0, 1)
 }
 
+const msgKey = (msg, index) => {
+  const id = msg?.id
+  if (id != null && id !== '') return `id-${id}`
+  const role = msg?.role || 'unknown'
+  const name = msg?.name || ''
+  return `idx-${index}-${role}-${name}`
+}
+
+const scrollChatToBottom = async () => {
+  await nextTick()
+  const lastIndex = (chatMessages.value || []).length - 1
+  if (lastIndex < 0) return
+  const lastMsg = chatMessages.value[lastIndex]
+  chatScrollIntoView.value = `msg-${msgKey(lastMsg, lastIndex)}`
+}
+
 const applyClassroom = (nextClassroom) => {
   classroom.value = nextClassroom
   chatMessages.value = nextClassroom?.messages || []
   currentStep.value = nextClassroom?.currentStep || 0
+  quizLast.value = nextClassroom?.quizLast || null
+  scrollChatToBottom()
 }
 
 const resolveMediaUrl = (url) => {
@@ -316,23 +373,71 @@ const updateAudioRuntimeConfig = () => {
   audioContext.playbackRate = Number(playSpeed.value) || 1
 }
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+const waitAudioCanplay = async ({ timeoutMs = 4000 } = {}) => {
+  // Some Android WebView runtimes need a short canplay window after src assignment.
+  await Promise.race([
+    new Promise((resolve) => {
+      try {
+        if (typeof audioContext.onCanPlay === 'function') {
+          audioContext.onCanPlay(() => resolve(true))
+        } else if (typeof audioContext.onCanplay === 'function') {
+          audioContext.onCanplay(() => resolve(true))
+        } else {
+          resolve(false)
+        }
+      } catch (e) {
+        resolve(false)
+      }
+    }),
+    sleep(timeoutMs).then(() => false),
+  ])
+}
+
+const safeAudioPlay = async ({ retryOnce = true } = {}) => {
+  try {
+    updateAudioRuntimeConfig()
+    audioContext.play()
+    return true
+  } catch (error) {
+    if (!retryOnce) return false
+    try {
+      audioContext.stop()
+    } catch (e) {
+      // ignore
+    }
+    await sleep(180)
+    try {
+      updateAudioRuntimeConfig()
+      audioContext.play()
+      return true
+    } catch (e) {
+      return false
+    }
+  }
+}
+
 const handleVideoError = () => {
   videoError.value = '视频加载失败，请检查网络或稍后重试'
 }
 
-const stopRefreshTimer = () => {
+const clearRefreshTimer = () => {
   if (refreshTimer) {
     clearTimeout(refreshTimer)
     refreshTimer = null
   }
+}
+
+const resetRefreshAttempts = () => {
   refreshAttempts = 0
 }
 
 const scheduleRefresh = (id, delay = 3000) => {
-  stopRefreshTimer()
+  clearRefreshTimer()
   refreshAttempts++
   if (refreshAttempts > MAX_REFRESH_ATTEMPTS) {
-    refreshAttempts = 0
+    resetRefreshAttempts()
     uni.showToast({ title: '生成超时，请手动刷新', icon: 'none' })
     return
   }
@@ -367,21 +472,18 @@ const playSegmentAt = async (segmentIndex = 0) => {
   activeElementId.value = segment.relatedElementId || ''
   activeSubtitle.value = segment.text || ''
   audioError.value = ''
-  updateAudioRuntimeConfig()
   audioContext.src = resolveMediaUrl(segment.url)
-  isPlaying.value = true
-
-  try {
-    audioContext.play()
-  } catch (error) {
-    isPlaying.value = false
+  await waitAudioCanplay()
+  const ok = await safeAudioPlay()
+  isPlaying.value = ok
+  if (!ok) {
     audioError.value = '语音播放失败，请检查网络或稍后重试。'
   }
 }
 
 const ensureCurrentSceneAudio = async ({ autoplay = false, silent = false } = {}) => {
   const scene = currentOutline.value
-  if (!scene || scene.sceneType !== 'slide' || !scene.audio?.segments?.length) {
+  if (!scene || scene.sceneType !== 'slide' || !(scene.whiteboard?.elements?.length || 0)) {
     return false
   }
   if (sceneAudioReady.value) {
@@ -423,29 +525,50 @@ const toggleVolume = () => {
 }
 
 const handleQuizSubmit = async ({ answers }) => {
+  if (quizSubmitting.value) return
   const sid = currentOutline.value?.id
   if (!classroomId || !sid) {
     uni.showToast({ title: '测验数据不完整', icon: 'none' })
     return
   }
   try {
+    quizSubmitting.value = true
     uni.showLoading({ title: '批改中…', mask: true })
     const res = await scoreClassroomQuiz(classroomId, { sceneId: sid, answers })
-    quizCorrectAnswers.value = res.correctAnswers || {}
+    quizResults.value = res.results || {}
+    quizScore.value = Number(res.score || 0)
+    quizMaxScore.value = Number(res.maxScore || 0)
     quizShowResult.value = true
+    if (res.saved === false) {
+      uni.showToast({ title: '已评分但保存失败，稍后再试', icon: 'none' })
+    }
+    // Refresh classroom so quizLast is persisted and viewable after restart.
+    try {
+      await loadClassroom(classroomId, { silent: true })
+    } catch (e) {
+      // ignore
+    }
   } catch (error) {
     uni.showToast({ title: error.message || '评分失败', icon: 'none' })
   } finally {
     uni.hideLoading()
+    quizSubmitting.value = false
   }
 }
 
 const goBack = () => {
-  uni.navigateBack()
+  safeNavigateBack('/pages/school/input')
 }
 
 const togglePlay = async () => {
-  if (isGenerating.value) return
+  if (isGenerating.value) {
+    uni.showToast({ title: '课堂生成中，稍后可播放', icon: 'none' })
+    return
+  }
+  if (audioPreparing.value) {
+    uni.showToast({ title: '语音准备中…', icon: 'none' })
+    return
+  }
 
   if (isPlaying.value) {
     audioContext.pause()
@@ -453,22 +576,42 @@ const togglePlay = async () => {
     return
   }
 
-  if (sceneHasWhiteboard.value && currentAudioSegments.value.length) {
+  if (sceneHasWhiteboard.value) {
     if (!sceneAudioReady.value) {
       const prepared = await ensureCurrentSceneAudio({ autoplay: false })
-      if (!prepared) return
+      if (!prepared) {
+        uni.showToast({ title: audioError.value || '语音尚未准备好', icon: 'none' })
+        return
+      }
+    }
+    if (!currentAudioSegments.value.length) {
+      uni.showToast({ title: '当前页没有讲解语音', icon: 'none' })
+      return
     }
 
     if (currentSegmentIndex.value >= 0 && currentSegmentIndex.value < currentAudioSegments.value.length) {
-      updateAudioRuntimeConfig()
-      isPlaying.value = true
-      audioContext.play()
+      const ok = await safeAudioPlay()
+      isPlaying.value = ok
+      if (!ok) {
+        audioError.value = '语音播放失败，请检查网络或稍后重试。'
+        uni.showToast({ title: audioError.value, icon: 'none' })
+      }
       return
     }
     await playSegmentAt(0)
   } else if (currentVideoUrl.value) {
     uni.showToast({ title: '视频播放请直接操作播放器', icon: 'none' })
   } else if (sceneIsQuiz.value) {
+    uni.showToast({ title: '测验场景无需播放', icon: 'none' })
+    return
+  } else if (sceneIsInteractive.value) {
+    uni.showToast({ title: '互动场景暂不支持播放', icon: 'none' })
+    return
+  } else if (sceneHasWhiteboard.value && currentAudioSegments.value.length === 0) {
+    uni.showToast({ title: '当前页没有讲解语音', icon: 'none' })
+    return
+  } else {
+    uni.showToast({ title: '当前页无可播放内容', icon: 'none' })
     return
   }
 }
@@ -512,6 +655,7 @@ const sendMessage = async () => {
     if (typeof response.currentStep === 'number') {
       currentStep.value = response.currentStep
     }
+    scrollChatToBottom()
   } catch (error) {
     uni.showToast({ title: error.message, icon: 'none' })
     chatInput.value = message
@@ -530,7 +674,8 @@ const loadClassroom = async (id, { silent = false } = {}) => {
     if (response.classroom?.source === 'openmaic' && ['queued', 'running'].includes(response.classroom?.generation?.status)) {
       scheduleRefresh(id)
     } else {
-      stopRefreshTimer()
+      clearRefreshTimer()
+      resetRefreshAttempts()
     }
 
     if (response.classroom?.generation?.status === 'failed' && !failureNoticeShown.value) {
@@ -567,7 +712,9 @@ watch(
     if (!nextId || nextId === prevId) return
     stopPlayback()
     quizShowResult.value = false
-    quizCorrectAnswers.value = {}
+    quizResults.value = {}
+    quizScore.value = 0
+    quizMaxScore.value = 0
     if (currentOutline.value?.sceneType === 'slide') {
       ensureCurrentSceneAudio({ silent: true })
     }
@@ -585,10 +732,13 @@ audioContext.onError((error) => {
 })
 
 onLoad((query) => {
-  if (query.id) {
-    classroomId = query.id
-    loadClassroom(query.id)
+  if (!query.id) {
+    uni.showToast({ title: '缺少课堂 ID', icon: 'none' })
+    safeNavigateBack('/pages/school/input')
+    return
   }
+  classroomId = query.id
+  loadClassroom(query.id)
 })
 
 onShow(() => {
@@ -597,8 +747,14 @@ onShow(() => {
   }
 })
 
+onHide(() => {
+  // Stop polling when page is hidden (avoid request storms in background).
+  clearRefreshTimer()
+})
+
 onUnmounted(() => {
-  stopRefreshTimer()
+  clearRefreshTimer()
+  resetRefreshAttempts()
   stopPlayback()
   audioContext.destroy()
 })
@@ -614,27 +770,9 @@ onUnmounted(() => {
   flex-direction: column;
 }
 
-.status-bar {
-  height: 62rpx;
+.top-safe {
   padding-left: 24rpx;
   padding-right: 24rpx;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.status-time,
-.status-glyph {
-  color: $text-white;
-  font-size: 24rpx;
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 600;
-}
-
-.status-icons {
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
 }
 
 .page-header {
@@ -986,6 +1124,7 @@ onUnmounted(() => {
 
 .send-button.disabled {
   opacity: 0.45;
+  pointer-events: none;
 }
 
 .send-icon,
@@ -1004,6 +1143,11 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   box-shadow: 0 12rpx 36rpx rgba(124, 58, 237, 0.32);
+}
+
+.play-button.disabled {
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 .speed-pill {

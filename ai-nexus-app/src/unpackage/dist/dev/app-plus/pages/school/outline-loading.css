@@ -2,21 +2,18 @@
   min-height: 100vh;
   background: #0a0a0a;
 }
-.status-bar[data-v-c5ad6f9e], .page-header[data-v-c5ad6f9e] {
+.top-safe[data-v-c5ad6f9e] {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+.page-header[data-v-c5ad6f9e] {
   padding: 0 0.75rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.status-bar[data-v-c5ad6f9e] {
-  height: 1.9375rem;
-}
-.status-time[data-v-c5ad6f9e], .status-glyph[data-v-c5ad6f9e], .header-action[data-v-c5ad6f9e], .header-title[data-v-c5ad6f9e] {
+.header-action[data-v-c5ad6f9e], .header-title[data-v-c5ad6f9e] {
   color: #FFFFFF;
-}
-.status-icons[data-v-c5ad6f9e] {
-  display: flex;
-  gap: 0.25rem;
 }
 .header-title[data-v-c5ad6f9e] {
   font-size: 0.9375rem;

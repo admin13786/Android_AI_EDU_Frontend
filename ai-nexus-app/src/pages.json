@@ -22,6 +22,13 @@
       }
     },
     {
+      "path": "pages/school/history",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "历史课堂"
+      }
+    },
+    {
       "path": "pages/school/role-loading",
       "style": {
         "navigationStyle": "custom",

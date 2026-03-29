@@ -438,6 +438,14 @@ if (uni.restoreGlobal) {
     }
     uni.navigateTo({ url: path });
   };
+  const safeNavigateBack = (fallbackUrl = "/pages/home/index?openSidebar=1") => {
+    const pages = getCurrentPages();
+    if (pages.length > 1) {
+      uni.navigateBack();
+      return;
+    }
+    uni.reLaunch({ url: fallbackUrl });
+  };
   const getLayoutMetrics = () => {
     var _a;
     const systemInfo = uni.getSystemInfoSync();
@@ -448,7 +456,7 @@ if (uni.restoreGlobal) {
   };
   const WORKSHOP_HISTORY_KEY = "workshopHistory";
   const normalizeHistoryItem = (item = {}) => ({
-    id: item.id || `${Date.now()}`,
+    id: item.id || `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
     prompt: item.prompt || "",
     result: item.result || null,
     createdAt: item.createdAt || Date.now()
@@ -1340,20 +1348,52 @@ if (uni.restoreGlobal) {
       let secondTimer = null;
       let classroomId = "";
       let topic = "";
-      const goBack = () => uni.navigateBack();
-      onLoad((query) => {
-        classroomId = query.id || "";
-        topic = query.topic || "";
+      const goBack = () => safeNavigateBack("/pages/school/input");
+      const clearTimers = () => {
+        clearTimeout(firstTimer);
+        clearTimeout(secondTimer);
+        firstTimer = null;
+        secondTimer = null;
+      };
+      const startFlow = async () => {
+        clearTimers();
+        loadingTip.value = "正在根据课程内容生成角色...";
         firstTimer = setTimeout(() => {
           loadingTip.value = "正在组织老师、助教和学生代表的人设...";
         }, 900);
-        secondTimer = setTimeout(() => {
-          uni.redirectTo({ url: `/pages/school/role-intro?id=${classroomId}&topic=${encodeURIComponent(topic)}` });
-        }, 1600);
+        try {
+          if (!classroomId) {
+            loadingTip.value = "正在创建课堂...";
+            const res = await createClassroom(topic);
+            classroomId = (res == null ? void 0 : res.classroomId) || "";
+          }
+          if (!classroomId) {
+            throw new Error("课堂创建失败，请稍后重试");
+          }
+          secondTimer = setTimeout(() => {
+            uni.redirectTo({ url: `/pages/school/role-intro?id=${classroomId}&topic=${encodeURIComponent(topic)}` });
+          }, 800);
+        } catch (error) {
+          const msg = (error == null ? void 0 : error.message) || "课堂创建失败，请稍后重试";
+          loadingTip.value = msg;
+          uni.showToast({ title: msg, icon: "none" });
+        }
+      };
+      onLoad((query) => {
+        classroomId = query.id || "";
+        try {
+          topic = decodeURIComponent(String(query.topic || "")).trim();
+        } catch (e) {
+          topic = String(query.topic || "").trim();
+        }
+        if (!topic) {
+          loadingTip.value = "缺少课程主题，请返回重试";
+          return;
+        }
+        startFlow();
       });
       onUnload(() => {
-        clearTimeout(firstTimer);
-        clearTimeout(secondTimer);
+        clearTimers();
       });
       const __returned__ = { statusBarHeight, loadingTip, get firstTimer() {
         return firstTimer;
@@ -1371,12 +1411,16 @@ if (uni.restoreGlobal) {
         return topic;
       }, set topic(v) {
         topic = v;
-      }, goBack, get onLoad() {
+      }, goBack, clearTimers, startFlow, get onLoad() {
         return onLoad;
       }, get onUnload() {
         return onUnload;
       }, ref: vue.ref, get getLayoutMetrics() {
         return getLayoutMetrics;
+      }, get createClassroom() {
+        return createClassroom;
+      }, get safeNavigateBack() {
+        return safeNavigateBack;
       } };
       Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
       return __returned__;
@@ -1387,17 +1431,10 @@ if (uni.restoreGlobal) {
       vue.createElementVNode(
         "view",
         {
-          class: "status-bar",
+          class: "top-safe",
           style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
         },
-        [
-          vue.createElementVNode("text", { class: "status-time" }, "9:41"),
-          vue.createElementVNode("view", { class: "status-icons" }, [
-            vue.createElementVNode("text", { class: "status-glyph" }, "⌁"),
-            vue.createElementVNode("text", { class: "status-glyph" }, "◉"),
-            vue.createElementVNode("text", { class: "status-glyph" }, "▣")
-          ])
-        ],
+        null,
         4
         /* STYLE */
       ),
@@ -1590,9 +1627,14 @@ if (uni.restoreGlobal) {
       let firstTimer = null;
       let secondTimer = null;
       let classroomId = "";
-      const goBack = () => uni.navigateBack();
+      const goBack = () => safeNavigateBack("/pages/school/input");
       onLoad((query) => {
         classroomId = query.id || "";
+        if (!classroomId) {
+          loadingTip.value = "缺少课堂 ID，请返回重试";
+          uni.showToast({ title: "缺少课堂 ID", icon: "none" });
+          return;
+        }
         firstTimer = setTimeout(() => {
           loadingTip.value = "正在组织课堂内容和互动消息...";
         }, 900);
@@ -1622,6 +1664,8 @@ if (uni.restoreGlobal) {
         return onUnload;
       }, ref: vue.ref, get getLayoutMetrics() {
         return getLayoutMetrics;
+      }, get safeNavigateBack() {
+        return safeNavigateBack;
       } };
       Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
       return __returned__;
@@ -1632,17 +1676,10 @@ if (uni.restoreGlobal) {
       vue.createElementVNode(
         "view",
         {
-          class: "status-bar",
+          class: "top-safe",
           style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
         },
-        [
-          vue.createElementVNode("text", { class: "status-time" }, "9:41"),
-          vue.createElementVNode("view", { class: "status-icons" }, [
-            vue.createElementVNode("text", { class: "status-glyph" }, "⌁"),
-            vue.createElementVNode("text", { class: "status-glyph" }, "◉"),
-            vue.createElementVNode("text", { class: "status-glyph" }, "▣")
-          ])
-        ],
+        null,
         4
         /* STYLE */
       ),
@@ -1669,7 +1706,7 @@ if (uni.restoreGlobal) {
             vue.createElementVNode("view", { class: "progress-fill" })
           ])
         ]),
-        vue.createElementVNode("text", { class: "loading-foot" }, "查看角色")
+        vue.createElementVNode("text", { class: "loading-foot" }, "即将进入课堂")
       ])
     ]);
   }
@@ -4982,12 +5019,12 @@ This will fail in production.`);
       const { statusBarHeight } = getLayoutMetrics();
       const bio = vue.ref("");
       const goBack = () => {
-        uni.navigateBack();
+        safeNavigateBack("/pages/profile/index");
       };
       const handleSave = () => {
-        saveLocalProfile({ bio: bio.value.trim() || "这个人很神秘，还没有留下自我介绍。" });
+        saveLocalProfile({ bio: bio.value.trim() });
         setProfilePendingToast("自我介绍修改成功");
-        uni.navigateBack();
+        safeNavigateBack("/pages/profile/index");
       };
       onLoad(() => {
         bio.value = getLocalProfile().bio;
@@ -5002,6 +5039,8 @@ This will fail in production.`);
         return saveLocalProfile;
       }, get setProfilePendingToast() {
         return setProfilePendingToast;
+      }, get safeNavigateBack() {
+        return safeNavigateBack;
       } };
       Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
       return __returned__;
@@ -5012,17 +5051,10 @@ This will fail in production.`);
       vue.createElementVNode(
         "view",
         {
-          class: "status-bar",
+          class: "top-safe",
           style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
         },
-        [
-          vue.createElementVNode("text", { class: "status-time" }, "13:10"),
-          vue.createElementVNode("view", { class: "status-icons" }, [
-            vue.createElementVNode("text", { class: "status-glyph" }, "◦"),
-            vue.createElementVNode("text", { class: "status-glyph" }, "◦"),
-            vue.createElementVNode("text", { class: "status-glyph" }, "▮")
-          ])
-        ],
+        null,
         4
         /* STYLE */
       ),

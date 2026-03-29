@@ -17,3 +17,12 @@ export const navigateByPath = (path) => {
 
   uni.navigateTo({ url: path })
 }
+
+export const safeNavigateBack = (fallbackUrl = '/pages/home/index?openSidebar=1') => {
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    uni.navigateBack()
+    return
+  }
+  uni.reLaunch({ url: fallbackUrl })
+}

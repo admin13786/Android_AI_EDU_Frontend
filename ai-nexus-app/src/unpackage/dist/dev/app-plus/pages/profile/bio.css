@@ -2,25 +2,18 @@
   min-height: 100vh;
   background: #0f0f0f;
 }
-.status-bar[data-v-7b992428], .page-header[data-v-7b992428] {
+.top-safe[data-v-7b992428] {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+.page-header[data-v-7b992428] {
   padding: 0 0.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.status-bar[data-v-7b992428] {
-  height: 1.375rem;
-}
-.status-time[data-v-7b992428], .status-glyph[data-v-7b992428], .header-title[data-v-7b992428], .header-action[data-v-7b992428] {
+.header-title[data-v-7b992428], .header-action[data-v-7b992428] {
   color: #FFFFFF;
-}
-.status-time[data-v-7b992428], .status-glyph[data-v-7b992428] {
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-.status-icons[data-v-7b992428] {
-  display: flex;
-  gap: 0.3125rem;
 }
 .page-header[data-v-7b992428] {
   height: 1.75rem;

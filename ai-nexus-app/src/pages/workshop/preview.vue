@@ -1,18 +1,11 @@
 <template>
   <view class="preview-page">
-    <view class="status-bar" :style="{ paddingTop: `${statusBarHeight}px` }">
-      <text class="status-time">11:37</text>
-      <view class="status-icons">
-        <text class="status-glyph">◌</text>
-        <text class="status-glyph">◎</text>
-        <text class="status-glyph">▣</text>
-      </view>
-    </view>
+    <view class="top-safe" :style="{ paddingTop: `${statusBarHeight}px` }"></view>
 
     <view class="page-header">
       <text class="header-action" @click="goBack">‹</text>
       <text class="header-title">{{ pageTitle }}</text>
-      <text class="header-action" @click="openExternal">↗</text>
+      <text class="header-action" @click="copyLink">⧉</text>
     </view>
 
     <view v-if="previewUrl" class="webview-wrap">
@@ -27,7 +20,7 @@
     </view>
 
     <view v-if="previewUrl" class="fallback-bar" :style="{ paddingBottom: `${safeAreaInsetsBottom + 18}px` }">
-      <text class="fallback-copy">如果内嵌预览打不开，可切换浏览器兜底</text>
+      <text class="fallback-copy">内嵌预览优先；如打不开可用浏览器兜底</text>
       <view class="fallback-button" @click="openExternal">
         <text class="fallback-button-text">浏览器打开</text>
       </view>
@@ -39,28 +32,65 @@
 import { onLoad } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 import { getLayoutMetrics } from '@/utils/layout'
+import { safeNavigateBack } from '@/utils/navigation'
 
 const { statusBarHeight, safeAreaInsetsBottom } = getLayoutMetrics()
 const previewUrl = ref('')
 const pageTitle = ref('工坊预览')
 
 const goBack = () => {
-  uni.navigateBack()
+  safeNavigateBack('/pages/home/index?openSidebar=1')
+}
+
+const isHttpUrl = (url) => /^https?:\/\/.+/i.test(url || '')
+
+const copyLink = () => {
+  if (!previewUrl.value) return
+  if (!isHttpUrl(previewUrl.value)) {
+    uni.showToast({ title: '预览地址不合法', icon: 'none' })
+    return
+  }
+  uni.setClipboardData({ data: previewUrl.value })
 }
 
 const openExternal = () => {
   if (!previewUrl.value) return
-  // #ifdef APP-PLUS
-  plus.runtime.openURL(previewUrl.value)
-  // #endif
-  // #ifdef H5
-  window.open(previewUrl.value, '_blank')
-  // #endif
+  if (!isHttpUrl(previewUrl.value)) {
+    uni.showToast({ title: '预览地址不合法', icon: 'none' })
+    return
+  }
+  uni.showModal({
+    title: '提示',
+    content: '将使用系统浏览器打开预览链接，是否继续？',
+    success: (res) => {
+      if (!res.confirm) return
+      // #ifdef APP-PLUS
+      plus.runtime.openURL(previewUrl.value)
+      // #endif
+      // #ifdef H5
+      window.open(previewUrl.value, '_blank')
+      // #endif
+    },
+  })
 }
 
 onLoad((query) => {
-  previewUrl.value = decodeURIComponent(query.url || '')
-  pageTitle.value = decodeURIComponent(query.title || '工坊预览')
+  let url = ''
+  let title = '工坊预览'
+  try {
+    url = decodeURIComponent(query.url || '')
+    title = decodeURIComponent(query.title || '工坊预览')
+  } catch (e) {
+    url = ''
+    title = '工坊预览'
+  }
+  pageTitle.value = title
+  if (url && !isHttpUrl(url)) {
+    uni.showToast({ title: '预览地址不合法', icon: 'none' })
+    previewUrl.value = ''
+    return
+  }
+  previewUrl.value = url
 })
 </script>
 
@@ -74,7 +104,7 @@ onLoad((query) => {
   flex-direction: column;
 }
 
-.status-bar,
+.top-safe,
 .page-header {
   padding: 0 24rpx;
   display: flex;
@@ -82,20 +112,9 @@ onLoad((query) => {
   justify-content: space-between;
 }
 
-.status-bar {
-  height: 44rpx;
-}
-
-.status-time,
-.status-glyph,
 .header-title,
 .header-action {
   color: $text-white;
-}
-
-.status-icons {
-  display: flex;
-  gap: 10rpx;
 }
 
 .page-header {
