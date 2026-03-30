@@ -174,6 +174,7 @@ import Sidebar from '@/components/Sidebar.vue'
 import { generateCode, getWorkshopHistoryRemote, routeWorkshopInput, saveWorkshopHistoryRemote } from '@/services/api'
 import { navigateByPath } from '@/utils/navigation'
 import { getLayoutMetrics } from '@/utils/layout'
+import { classifyWorkshopInput, WorkshopIntent } from '@/utils/workshop_intent'
 import {
   getWorkshopConversation,
   getWorkshopHistory,
@@ -424,8 +425,8 @@ const handleGenerate = async () => {
   } catch (e) {
     // If router fails, fall back to old behavior: require explicit keywords via local rules.
     // (Keep UX safe: do not generate on greetings.)
-    const fallback = (await import('@/utils/workshop_intent')).classifyWorkshopInput(prompt)
-    if (fallback.intent !== (await import('@/utils/workshop_intent')).WorkshopIntent.GenerateWorkshop) {
+    const fallback = classifyWorkshopInput(prompt)
+    if (fallback.intent !== WorkshopIntent.GenerateWorkshop) {
       generatedResult.value = buildAssistantReply({ intent: 'help' })
       return
     }

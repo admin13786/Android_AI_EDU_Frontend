@@ -1,6 +1,7 @@
 let unauthorizedHandler = null
 let handling401 = false
 let last401At = 0
+const DEFAULT_API_BASE_URL = 'http://121.89.87.255:10001'
 
 export function setUnauthorizedHandler(fn) {
   unauthorizedHandler = typeof fn === 'function' ? fn : null
@@ -8,13 +9,18 @@ export function setUnauthorizedHandler(fn) {
 
 const getBaseUrl = () => {
   const storedBaseUrl = uni.getStorageSync('apiBaseUrl')
-  if (storedBaseUrl) return storedBaseUrl
+  if (storedBaseUrl) {
+    const normalizedBaseUrl = String(storedBaseUrl).trim().replace(/\/+$/, '')
+    if (!/^https?:\/\/(10\.0\.2\.2|127\.0\.0\.1|localhost)(:\d+)?$/i.test(normalizedBaseUrl)) {
+      return normalizedBaseUrl
+    }
+  }
 
   // #ifdef H5
-  return ''
+  return DEFAULT_API_BASE_URL
   // #endif
   // #ifndef H5
-  return 'http://10.0.2.2:8000'
+  return DEFAULT_API_BASE_URL
   // #endif
 }
 
@@ -87,4 +93,4 @@ const request = (options) => {
 }
 
 export default request
-export { getBaseUrl }
+export { DEFAULT_API_BASE_URL, getBaseUrl }

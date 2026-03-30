@@ -43,7 +43,7 @@
 
         <view class="settings-card">
           <view class="info-row"><text class="row-label">后端地址</text><text class="row-value compact">联调配置</text></view>
-          <text class="settings-tip">真机调试时可填写局域网地址，例如 http://192.168.1.10:8000。</text>
+          <text class="settings-tip">真机测试可直接填写阿里云后端地址，例如 http://121.89.87.255:10001。</text>
           <input class="settings-input" v-model="apiBaseUrl" placeholder="可选：填写后端地址" placeholder-class="row-placeholder" />
           <text class="settings-tip">若服务端设置了 UNIFIED_API_KEY，在此填写相同密钥（仅保存在本机，用于请求头 X-Api-Key）。</text>
           <input
