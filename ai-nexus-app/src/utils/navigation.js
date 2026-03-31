@@ -1,7 +1,6 @@
 const ROOT_PAGES = new Set([
   '/pages/home/index',
   '/pages/crawl/index',
-  '/pages/school/input',
   '/pages/profile/index'
 ])
 

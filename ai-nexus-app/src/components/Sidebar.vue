@@ -10,7 +10,7 @@
       @touchend="onTouchEnd"
       @touchcancel="onTouchEnd"
     >
-      <view class="sidebar-inner">
+      <scroll-view class="sidebar-inner" scroll-y>
         <view class="quick-action" @click="startNewConversation">
           <text class="quick-action-icon">+</text>
           <text class="quick-action-text">开启新对话</text>
@@ -50,10 +50,14 @@
             </view>
           </view>
         </view>
-      </view>
+      </scroll-view>
 
       <view class="profile-anchor" @click="goToProfile">
         <image class="profile-avatar" src="/static/avatar.svg" mode="aspectFill"></image>
+        <view class="profile-meta">
+          <text class="profile-title">个人中心</text>
+          <text class="profile-subtitle">查看资料与设置</text>
+        </view>
       </view>
     </view>
   </view>
@@ -224,6 +228,7 @@ onUnmounted(() => {
   animation: slide-in 0.22s ease;
   transition: transform 0.22s ease;
   will-change: transform;
+  overflow: hidden;
 }
 
 .sidebar-panel.closing {
@@ -231,7 +236,10 @@ onUnmounted(() => {
 }
 
 .sidebar-inner {
+  flex: 1;
+  min-height: 0;
   padding-top: 84rpx;
+  padding-bottom: 24rpx;
 }
 
 .quick-action {
@@ -341,13 +349,36 @@ onUnmounted(() => {
 }
 
 .profile-anchor {
-  padding: 0 20rpx 28rpx;
+  flex-shrink: 0;
+  padding: 18rpx 20rpx 28rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  border-top: 2rpx solid rgba(255, 255, 255, 0.08);
+  background: #0a0a0a;
 }
 
 .profile-avatar {
   width: 52rpx;
   height: 52rpx;
   border-radius: 50%;
+}
+
+.profile-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.profile-title {
+  color: $text-white;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.profile-subtitle {
+  color: #71717a;
+  font-size: 22rpx;
 }
 
 @keyframes slide-in {

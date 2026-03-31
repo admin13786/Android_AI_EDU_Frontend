@@ -4,25 +4,16 @@
   display: flex;
   flex-direction: column;
 }
-.status-bar[data-v-2ca49518],
+.top-safe[data-v-2ca49518],
 .page-header[data-v-2ca49518] {
   padding: 0 0.75rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.status-bar[data-v-2ca49518] {
-  height: 1.375rem;
-}
-.status-time[data-v-2ca49518],
-.status-glyph[data-v-2ca49518],
 .header-title[data-v-2ca49518],
 .header-action[data-v-2ca49518] {
   color: #FFFFFF;
-}
-.status-icons[data-v-2ca49518] {
-  display: flex;
-  gap: 0.3125rem;
 }
 .page-header[data-v-2ca49518] {
   height: 2.25rem;

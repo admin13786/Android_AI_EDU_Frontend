@@ -4,70 +4,36 @@
       "path": "pages/home/index",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "灵境"
+        "navigationBarTitleText": "AI工坊"
       }
     },
     {
       "path": "pages/crawl/index",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "AI资讯"
+        "navigationBarTitleText": "AI观察哨"
       }
     },
     {
       "path": "pages/school/input",
       "style": {
-        "navigationStyle": "custom",
-        "navigationBarTitleText": "AI学堂"
-      }
-    },
-    {
-      "path": "pages/school/history",
-      "style": {
-        "navigationStyle": "custom",
-        "navigationBarTitleText": "历史课堂"
-      }
-    },
-    {
-      "path": "pages/school/role-loading",
-      "style": {
-        "navigationStyle": "custom",
-        "navigationBarTitleText": "生成角色"
-      }
-    },
-    {
-      "path": "pages/school/role-intro",
-      "style": {
-        "navigationStyle": "custom",
-        "navigationBarTitleText": "角色介绍"
-      }
-    },
-    {
-      "path": "pages/school/outline-loading",
-      "style": {
-        "navigationStyle": "custom",
-        "navigationBarTitleText": "生成大纲"
-      }
-    },
-    {
-      "path": "pages/school/classroom",
-      "style": {
-        "navigationStyle": "custom",
-        "navigationBarTitleText": "互动课堂"
+        "navigationBarTitleText": "AI学堂",
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black"
       }
     },
     {
       "path": "pages/profile/index",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "个人信息"
+        "navigationBarTitleText": "个人中心"
       }
     },
     {
       "path": "pages/profile/nickname",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "设置昵称"
+        "navigationBarTitleText": "修改昵称"
       }
     },
     {

@@ -1,144 +1,72 @@
-.school-page[data-v-6684b8ff] {
+.school-web-page[data-v-6684b8ff] {
   min-height: 100vh;
   background: #0a0a0a;
   display: flex;
   flex-direction: column;
 }
-.status-bar[data-v-6684b8ff], .page-header[data-v-6684b8ff] {
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
+.webview-wrap[data-v-6684b8ff] {
+  flex: 1;
+  position: relative;
+}
+.webview-overlay[data-v-6684b8ff] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  pointer-events: none;
+}
+.back-pill[data-v-6684b8ff] {
+  width: 5.625rem;
+  height: 2.125rem;
+  border-radius: 31.21875rem;
+  background: rgba(10, 10, 10, 0.72);
+  border: 0.0625rem solid rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 2.125rem;
+  text-align: center;
+  pointer-events: auto;
+}
+.top-safe[data-v-6684b8ff],
+.page-header[data-v-6684b8ff] {
+  padding: 0 0.75rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.status-bar[data-v-6684b8ff] {
-  height: 1.9375rem;
+.page-header[data-v-6684b8ff] {
+  height: 2.25rem;
 }
-.status-time[data-v-6684b8ff], .status-glyph[data-v-6684b8ff], .header-title[data-v-6684b8ff], .header-action[data-v-6684b8ff] {
+.header-action[data-v-6684b8ff],
+.header-title[data-v-6684b8ff] {
   color: #FFFFFF;
 }
-.status-time[data-v-6684b8ff], .status-glyph[data-v-6684b8ff] {
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-.status-icons[data-v-6684b8ff] {
-  display: flex;
-  gap: 0.25rem;
-}
-.page-header[data-v-6684b8ff] {
-  height: 1.75rem;
-}
-.header-action[data-v-6684b8ff], .header-placeholder[data-v-6684b8ff] {
-  width: 1.25rem;
+.header-action[data-v-6684b8ff] {
+  width: 1.375rem;
   text-align: center;
+  font-size: 0.9375rem;
 }
 .header-title[data-v-6684b8ff] {
   font-size: 0.9375rem;
   font-weight: 700;
 }
-.school-scroll[data-v-6684b8ff] {
+.empty-state[data-v-6684b8ff] {
   flex: 1;
-}
-.hero-section[data-v-6684b8ff] {
-  padding: 0.75rem 0.5rem 0.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.3125rem;
-}
-.hero-badge[data-v-6684b8ff] {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 0.75rem;
-  background: linear-gradient(135deg, #8a2be2, #22d3ee);
-}
-.hero-title[data-v-6684b8ff] {
-  color: #FFFFFF;
-  font-size: 1.1875rem;
-  font-weight: 700;
-}
-.hero-copy[data-v-6684b8ff] {
-  color: #8e8e93;
-  font-size: 0.6875rem;
-}
-.search-bar[data-v-6684b8ff] {
-  margin: 0 0.5rem;
-  height: 2.75rem;
-  border-radius: 0.75rem;
-  background: #1c1c1e;
-  border: 0.0625rem solid #00d5ff;
-  padding: 0 0.625rem;
-  display: flex;
-  align-items: center;
-}
-.search-input[data-v-6684b8ff] {
-  flex: 1;
-  color: #FFFFFF;
-  font-size: 0.875rem;
-}
-.search-placeholder[data-v-6684b8ff] {
-  color: #8e8e93;
-}
-.course-list[data-v-6684b8ff], .empty-card[data-v-6684b8ff] {
-  padding: 0.5rem 0.5rem 0.75rem;
-}
-.course-card[data-v-6684b8ff] {
-  border-radius: 0.625rem;
-  background: #1c1c1e;
-  padding: 0.75rem;
-  margin-bottom: 0.5rem;
-}
-.course-title[data-v-6684b8ff] {
-  display: block;
-  color: #FFFFFF;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  line-height: 1.45;
-  margin-bottom: 0.25rem;
-}
-.course-subtitle[data-v-6684b8ff] {
-  display: block;
-  color: #8e8e93;
-  font-size: 0.6875rem;
-  margin-bottom: 0.5rem;
-}
-.course-tag[data-v-6684b8ff] {
-  width: -webkit-fit-content;
-  width: fit-content;
-  border-radius: 31.21875rem;
-  background: rgba(138, 43, 226, 0.2);
-  padding: 0.25rem 0.5rem;
-}
-.course-tag-text[data-v-6684b8ff] {
-  color: #c4b5fd;
-  font-size: 0.625rem;
+  padding: 1.5rem;
 }
 .empty-title[data-v-6684b8ff] {
   display: block;
   color: #FFFFFF;
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 700;
-  margin-bottom: 0.3125rem;
+  margin-bottom: 0.375rem;
 }
 .empty-copy[data-v-6684b8ff] {
-  color: #8e8e93;
-  font-size: 0.75rem;
-  line-height: 1.65;
-}
-.bottom-action[data-v-6684b8ff] {
-  margin: 0 0.5rem 0.5rem;
-  height: 2.875rem;
-  border-radius: 0.75rem;
-  background: #8a2be2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.bottom-action.disabled[data-v-6684b8ff] {
-  opacity: 0.65;
-}
-.bottom-action-text[data-v-6684b8ff] {
-  color: #FFFFFF;
-  font-size: 0.9375rem;
-  font-weight: 700;
+  color: #94A3B8;
+  font-size: 0.8125rem;
+  line-height: 1.7;
 }

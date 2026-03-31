@@ -1,6 +1,6 @@
 <template>
   <view class="news-page">
-    <view class="status-bar" :style="{ paddingTop: `${statusBarHeight}px` }">
+    <view class="top-safe" :style="{ height: `${statusBarHeight}px` }">
       <text class="status-time">9:41</text>
       <view class="status-icons">
         <text class="status-glyph">⌁</text>
@@ -123,11 +123,10 @@ onMounted(() => {
 @import '../../theme.scss';
 
 .news-page { min-height: 100vh; background: #0a0a0a; display: flex; flex-direction: column; }
-.status-bar, .page-header { padding-left: 24rpx; padding-right: 24rpx; display: flex; align-items: center; justify-content: space-between; }
-.status-bar { height: 62rpx; }
-.status-time, .status-glyph { color: $text-white; font-size: 24rpx; font-weight: 600; }
-.status-icons { display: flex; gap: 10rpx; }
-.page-header { padding-top: 12rpx; }
+.top-safe, .page-header { padding-left: 24rpx; padding-right: 24rpx; }
+.top-safe { flex-shrink: 0; }
+.status-time, .status-icons { display: none; }
+.page-header { position: sticky; top: 0; z-index: 20; padding-top: 12rpx; display: flex; align-items: center; justify-content: space-between; background: #0a0a0a; }
 .header-action, .header-placeholder { width: 44rpx; text-align: center; }
 .header-action, .header-title { color: $text-white; }
 .header-action { font-size: 34rpx; }

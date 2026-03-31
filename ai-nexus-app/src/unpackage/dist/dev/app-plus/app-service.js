@@ -33,7 +33,7 @@ if (uni.restoreGlobal) {
   "use strict";
   const ON_SHOW = "onShow";
   const ON_LOAD = "onLoad";
-  const ON_UNLOAD = "onUnload";
+  const ON_BACK_PRESS = "onBackPress";
   const createLifeCycleHook = (lifecycle, flag = 0) => (hook, target = vue.getCurrentInstance()) => {
     !vue.isInSSRComponentSetup && vue.injectHook(lifecycle, hook, target);
   };
@@ -47,8 +47,8 @@ if (uni.restoreGlobal) {
     2
     /* HookFlags.PAGE */
   );
-  const onUnload = /* @__PURE__ */ createLifeCycleHook(
-    ON_UNLOAD,
+  const onBackPress = /* @__PURE__ */ createLifeCycleHook(
+    ON_BACK_PRESS,
     2
     /* HookFlags.PAGE */
   );
@@ -61,7 +61,7 @@ if (uni.restoreGlobal) {
     return target;
   };
   const ANIMATION_MS = 220;
-  const _sfc_main$e = {
+  const _sfc_main$8 = {
     __name: "Sidebar",
     props: {
       visible: Boolean,
@@ -213,7 +213,7 @@ if (uni.restoreGlobal) {
       return __returned__;
     }
   };
-  function _sfc_render$d(_ctx, _cache, $props, $setup, $data, $options) {
+  function _sfc_render$7(_ctx, _cache, $props, $setup, $data, $options) {
     return $setup.rendered ? (vue.openBlock(), vue.createElementBlock("view", {
       key: 0,
       class: "sidebar-wrapper"
@@ -238,7 +238,10 @@ if (uni.restoreGlobal) {
           onTouchcancel: $setup.onTouchEnd
         },
         [
-          vue.createElementVNode("view", { class: "sidebar-inner" }, [
+          vue.createElementVNode("scroll-view", {
+            class: "sidebar-inner",
+            "scroll-y": ""
+          }, [
             vue.createElementVNode("view", {
               class: "quick-action",
               onClick: $setup.startNewConversation
@@ -328,7 +331,11 @@ if (uni.restoreGlobal) {
               class: "profile-avatar",
               src: _imports_0,
               mode: "aspectFill"
-            })
+            }),
+            vue.createElementVNode("view", { class: "profile-meta" }, [
+              vue.createElementVNode("text", { class: "profile-title" }, "个人中心"),
+              vue.createElementVNode("text", { class: "profile-subtitle" }, "查看资料与设置")
+            ])
           ])
         ],
         34
@@ -336,16 +343,23 @@ if (uni.restoreGlobal) {
       )
     ])) : vue.createCommentVNode("v-if", true);
   }
-  const Sidebar = /* @__PURE__ */ _export_sfc(_sfc_main$e, [["render", _sfc_render$d], ["__scopeId", "data-v-3801e5de"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/components/Sidebar.vue"]]);
+  const Sidebar = /* @__PURE__ */ _export_sfc(_sfc_main$8, [["render", _sfc_render$7], ["__scopeId", "data-v-3801e5de"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/components/Sidebar.vue"]]);
   let unauthorizedHandler = null;
+  let handling401 = false;
+  let last401At = 0;
+  const DEFAULT_API_BASE_URL = "http://121.89.87.255:10001";
   function setUnauthorizedHandler(fn) {
     unauthorizedHandler = typeof fn === "function" ? fn : null;
   }
   const getBaseUrl = () => {
     const storedBaseUrl = uni.getStorageSync("apiBaseUrl");
-    if (storedBaseUrl)
-      return storedBaseUrl;
-    return "http://10.0.2.2:8000";
+    if (storedBaseUrl) {
+      const normalizedBaseUrl = String(storedBaseUrl).trim().replace(/\/+$/, "");
+      if (!/^https?:\/\/(10\.0\.2\.2|127\.0\.0\.1|localhost)(:\d+)?$/i.test(normalizedBaseUrl)) {
+        return normalizedBaseUrl;
+      }
+    }
+    return DEFAULT_API_BASE_URL;
   };
   const normalizeError = (statusCode, data) => {
     if (typeof data === "string")
@@ -355,10 +369,10 @@ if (uni.restoreGlobal) {
     if (data == null ? void 0 : data.message)
       return data.message;
     if (statusCode === 404)
-      return "请求的资源不存在";
+      return "Resource not found";
     if (statusCode >= 500)
-      return "服务器开小差了，请稍后再试";
-    return "请求失败，请稍后重试";
+      return "Server error, please retry later";
+    return "Request failed";
   };
   const request = (options) => {
     const token = uni.getStorageSync("token");
@@ -377,15 +391,27 @@ if (uni.restoreGlobal) {
         },
         success: (res) => {
           if (res.statusCode === 401) {
+            uni.removeStorageSync("token");
+            uni.removeStorageSync("userInfo");
             try {
               if (unauthorizedHandler)
                 unauthorizedHandler();
-            } catch (e) {
-              uni.removeStorageSync("token");
-              uni.removeStorageSync("userInfo");
+            } catch (error) {
             }
-            uni.reLaunch({ url: "/pages/home/index" });
-            reject(new Error("未授权"));
+            const now2 = Date.now();
+            if (!handling401 || now2 - last401At > 2e3) {
+              handling401 = true;
+              last401At = now2;
+              const pages = (getCurrentPages == null ? void 0 : getCurrentPages()) || [];
+              const currentRoute = pages.length ? `/${pages[pages.length - 1].route}` : "";
+              if (currentRoute !== "/pages/home/index") {
+                uni.reLaunch({ url: "/pages/home/index" });
+              }
+              setTimeout(() => {
+                handling401 = false;
+              }, 2200);
+            }
+            reject(new Error("Unauthorized"));
             return;
           }
           if (res.statusCode < 200 || res.statusCode >= 300) {
@@ -395,7 +421,7 @@ if (uni.restoreGlobal) {
           resolve(res.data);
         },
         fail: (error) => {
-          reject(new Error((error == null ? void 0 : error.errMsg) || "网络请求失败"));
+          reject(new Error((error == null ? void 0 : error.errMsg) || "Network request failed"));
         }
       });
     });
@@ -407,25 +433,21 @@ if (uni.restoreGlobal) {
     data: { prompt },
     timeout: 6e5
   });
-  const createClassroom = (topic) => request({ url: "/api/school/create", method: "POST", data: { topic }, timeout: 18e4 });
-  const getClassroomHistory = () => request({ url: "/api/school/history" });
-  const getClassroomDetail = (id) => request({ url: `/api/school/${id}`, timeout: 18e4 });
-  const sendClassroomMessage = (id, data) => request({ url: `/api/school/${id}/chat`, method: "POST", data, timeout: 18e4 });
-  const updateClassroomProgress = (id, data) => request({ url: `/api/school/${id}/progress`, method: "PUT", data });
-  const prepareClassroomSceneAudio = (classroomId, sceneId) => request({ url: `/api/school/${classroomId}/scenes/${sceneId}/audio`, method: "POST", timeout: 18e4 });
-  const scoreClassroomQuiz = (classroomId, data) => request({
-    url: `/api/school/${classroomId}/quiz/score`,
+  const routeWorkshopInput = (text) => request({
+    url: "/api/workshop/router",
     method: "POST",
-    data,
+    data: { text },
     timeout: 18e4
   });
+  const getWorkshopHistoryRemote = () => request({ url: "/api/workshop/history", timeout: 18e4 });
+  const saveWorkshopHistoryRemote = (list) => request({ url: "/api/workshop/history", method: "PUT", data: { list }, timeout: 18e4 });
+  const getClassroomHistory = () => request({ url: "/api/school/history" });
   const getUserInfo = () => request({ url: "/api/user/info" });
   const updateUserInfo = (data) => request({ url: "/api/user/info", method: "PUT", data });
   const updateApiBaseUrl = (baseUrl) => request({ url: "/api/user/settings", method: "PUT", data: { apiBaseUrl: baseUrl } });
   const ROOT_PAGES = /* @__PURE__ */ new Set([
     "/pages/home/index",
     "/pages/crawl/index",
-    "/pages/school/input",
     "/pages/profile/index"
   ]);
   const navigateByPath = (path) => {
@@ -454,6 +476,65 @@ if (uni.restoreGlobal) {
       safeAreaInsetsBottom: ((_a = systemInfo.safeAreaInsets) == null ? void 0 : _a.bottom) ?? 0
     };
   };
+  const WorkshopIntent = {
+    GenerateWorkshop: "generate_workshop",
+    News: "news",
+    School: "school",
+    Help: "help"
+  };
+  const GENERATE_KEYWORDS = [
+    "生成",
+    "制作",
+    "开发",
+    "写一个",
+    "做一个",
+    "做个",
+    "页面",
+    "网页",
+    "网站",
+    "小程序",
+    "小游戏",
+    "应用",
+    "app",
+    "h5",
+    "html",
+    "ui",
+    "登录页",
+    "贪吃蛇"
+  ];
+  const NEWS_KEYWORDS = [
+    "资讯",
+    "新闻",
+    "热点",
+    "榜单",
+    "crawl"
+  ];
+  const SCHOOL_KEYWORDS = [
+    "学堂",
+    "课堂",
+    "课程",
+    "教学",
+    "学习",
+    "school",
+    "openmaic"
+  ];
+  const containsAnyKeyword = (text, keywords) => keywords.some((keyword) => text.includes(keyword));
+  const classifyWorkshopInput = (input = "") => {
+    const normalized = String(input).trim().toLowerCase();
+    if (!normalized) {
+      return { intent: WorkshopIntent.Help };
+    }
+    if (containsAnyKeyword(normalized, GENERATE_KEYWORDS)) {
+      return { intent: WorkshopIntent.GenerateWorkshop };
+    }
+    if (containsAnyKeyword(normalized, NEWS_KEYWORDS)) {
+      return { intent: WorkshopIntent.News };
+    }
+    if (containsAnyKeyword(normalized, SCHOOL_KEYWORDS)) {
+      return { intent: WorkshopIntent.School };
+    }
+    return { intent: WorkshopIntent.Help };
+  };
   const WORKSHOP_HISTORY_KEY = "workshopHistory";
   const normalizeHistoryItem = (item = {}) => ({
     id: item.id || `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
@@ -480,7 +561,7 @@ if (uni.restoreGlobal) {
     return nextConversation;
   };
   const loadingText = "正在生成页面并准备在线预览，请稍等片刻。";
-  const _sfc_main$d = {
+  const _sfc_main$7 = {
     __name: "index",
     setup(__props, { expose: __expose }) {
       __expose();
@@ -495,6 +576,9 @@ if (uni.restoreGlobal) {
       const workshopHistory = vue.ref([]);
       const currentConversationId = vue.ref("");
       let loadingTimer = null;
+      const workshopSyncInFlight = vue.ref(false);
+      const workshopSyncLastAt = vue.ref(0);
+      const workshopSyncLastSignature = vue.ref("");
       const loadingPhases = [
         "正在理解需求",
         "正在生成页面结构",
@@ -507,6 +591,29 @@ if (uni.restoreGlobal) {
         return !!((_a = generatedResult.value) == null ? void 0 : _a.previewUrl);
       });
       const activeLoadingPhase = vue.computed(() => loadingPhases[loadingPhase.value % loadingPhases.length]);
+      const isAssistantReply = vue.computed(() => {
+        var _a;
+        return ((_a = generatedResult.value) == null ? void 0 : _a.kind) === "assistant";
+      });
+      const assistantActions = vue.computed(() => {
+        var _a;
+        return (((_a = generatedResult.value) == null ? void 0 : _a.quickActions) || []).filter((x) => (x == null ? void 0 : x.label) && (x == null ? void 0 : x.path));
+      });
+      const aiTitle = vue.computed(() => {
+        if (loading.value)
+          return "正在生成中";
+        if (isAssistantReply.value)
+          return "灵境助手";
+        return "应用创建成功";
+      });
+      const aiBodyText = vue.computed(() => {
+        var _a;
+        if (loading.value)
+          return loadingText;
+        if (isAssistantReply.value)
+          return ((_a = generatedResult.value) == null ? void 0 : _a.text) || "";
+        return introText.value;
+      });
       const introText = vue.computed(() => {
         var _a;
         if (!lastPrompt.value) {
@@ -515,6 +622,8 @@ if (uni.restoreGlobal) {
         return ((_a = generatedResult.value) == null ? void 0 : _a.summary) || `围绕“${lastPrompt.value}”，我已经整理出页面结构和交互骨架。`;
       });
       const highlights = vue.computed(() => {
+        if (isAssistantReply.value)
+          return [];
         if (loading.value) {
           return ["模型已开始生成应用结构", "结果完成后会自动切换到预览卡片", "如果预览可用，可以直接打开试玩"];
         }
@@ -523,6 +632,7 @@ if (uni.restoreGlobal) {
         }
         return ["保留核心玩法和页面骨架", "先生成可继续修改的代码结果", "下一步可以接入 WebView 或沙盒预览"];
       });
+      const showHighlights = vue.computed(() => loading.value || !isAssistantReply.value && !!generatedResult.value);
       const toggleSidebar = () => {
         sidebarVisible.value = !sidebarVisible.value;
       };
@@ -551,6 +661,65 @@ if (uni.restoreGlobal) {
         lastPrompt.value = conversation.prompt || "";
         generatedResult.value = conversation.result || null;
       };
+      const mergeWorkshopHistory = (local = [], remote = []) => {
+        const byId = /* @__PURE__ */ new Map();
+        [...remote, ...local].forEach((item) => {
+          if (!item || !item.id)
+            return;
+          const existing = byId.get(item.id);
+          if (!existing) {
+            byId.set(item.id, item);
+            return;
+          }
+          const a = Number(existing.createdAt || 0);
+          const b = Number(item.createdAt || 0);
+          if (b > a)
+            byId.set(item.id, item);
+        });
+        return Array.from(byId.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      };
+      const historySignature = (list = []) => {
+        try {
+          return JSON.stringify(
+            (Array.isArray(list) ? list : []).map((x) => ({ id: (x == null ? void 0 : x.id) || "", createdAt: Number((x == null ? void 0 : x.createdAt) || 0) })).filter((x) => x.id).slice(0, 60)
+          );
+        } catch (e) {
+          return "";
+        }
+      };
+      const syncWorkshopHistoryRemote = async ({ silent = true } = {}) => {
+        const now2 = Date.now();
+        if (workshopSyncInFlight.value)
+          return;
+        if (now2 - workshopSyncLastAt.value < 12e3)
+          return;
+        const local = getWorkshopHistory();
+        workshopHistory.value = local;
+        try {
+          workshopSyncInFlight.value = true;
+          const res = await getWorkshopHistoryRemote();
+          const remote = Array.isArray(res.list) ? res.list : [];
+          const merged = mergeWorkshopHistory(local, remote);
+          workshopHistory.value = merged;
+          uni.setStorageSync("workshopHistory", merged);
+          const mergedSig = historySignature(merged);
+          const remoteSig = historySignature(remote);
+          if (mergedSig && mergedSig !== remoteSig && mergedSig !== workshopSyncLastSignature.value) {
+            try {
+              await saveWorkshopHistoryRemote(merged);
+              workshopSyncLastSignature.value = mergedSig;
+            } catch (e) {
+            }
+          }
+          workshopSyncLastAt.value = now2;
+        } catch (error) {
+          if (!silent) {
+            uni.showToast({ title: error.message || "云端历史同步失败", icon: "none" });
+          }
+        } finally {
+          workshopSyncInFlight.value = false;
+        }
+      };
       const startLoadingAnimation = () => {
         if (loadingTimer)
           clearInterval(loadingTimer);
@@ -573,6 +742,55 @@ if (uni.restoreGlobal) {
           url: `/pages/workshop/preview?url=${encodeURIComponent(generatedResult.value.previewUrl)}&title=${encodeURIComponent(generatedResult.value.title || "工坊预览")}`
         });
       };
+      const runAssistantAction = (action) => {
+        if (!(action == null ? void 0 : action.path))
+          return;
+        navigateByPath(action.path);
+      };
+      const buildAssistantReply = ({ intent }) => {
+        const examples = ["做一个贪吃蛇小游戏", "生成一个登录页", "做一个记账小程序页面"];
+        if (intent === "news") {
+          return {
+            kind: "assistant",
+            text: `我可以带你去看 AI 资讯榜单。
+
+你也可以继续在工坊里输入“${examples[0]}”这类指令来生成小游戏/页面原型。`,
+            quickActions: [
+              { label: "去 AI 资讯页", path: "/pages/crawl/index" },
+              { label: "去 AI 学堂", path: "/pages/school/input" }
+            ]
+          };
+        }
+        if (intent === "school") {
+          return {
+            kind: "assistant",
+            text: `我可以带你去 AI 学堂生成白板课堂。
+
+如果你想在工坊生成小游戏/页面，请直接说：
+- ${examples[0]}
+- ${examples[1]}`,
+            quickActions: [
+              { label: "去 AI 学堂", path: "/pages/school/input" },
+              { label: "去 AI 资讯页", path: "/pages/crawl/index" }
+            ]
+          };
+        }
+        return {
+          kind: "assistant",
+          text: `我能做两件事：
+1) 在工坊帮你生成小游戏/页面原型
+2) 带你跳转到 AI 资讯 / AI 学堂
+
+如果你要生成，请这样说：
+- ${examples[0]}
+- ${examples[1]}
+- ${examples[2]}`,
+          quickActions: [
+            { label: "去 AI 资讯页", path: "/pages/crawl/index" },
+            { label: "去 AI 学堂", path: "/pages/school/input" }
+          ]
+        };
+      };
       const handleGenerate = async () => {
         const prompt = userInput.value.trim();
         if (!prompt || loading.value) {
@@ -581,21 +799,40 @@ if (uni.restoreGlobal) {
           return;
         }
         lastPrompt.value = prompt;
+        userInput.value = "";
+        try {
+          const routed = await routeWorkshopInput(prompt);
+          if (!(routed == null ? void 0 : routed.shouldGenerate)) {
+            generatedResult.value = {
+              kind: "assistant",
+              text: (routed == null ? void 0 : routed.replyText) || buildAssistantReply({ intent: (routed == null ? void 0 : routed.intent) || "help" }).text,
+              quickActions: Array.isArray(routed == null ? void 0 : routed.quickActions) ? routed.quickActions : buildAssistantReply({ intent: (routed == null ? void 0 : routed.intent) || "help" }).quickActions
+            };
+            return;
+          }
+          lastPrompt.value = prompt;
+        } catch (e) {
+          const fallback = classifyWorkshopInput(prompt);
+          if (fallback.intent !== WorkshopIntent.GenerateWorkshop) {
+            generatedResult.value = buildAssistantReply({ intent: "help" });
+            return;
+          }
+        }
         loading.value = true;
         generatedResult.value = null;
-        userInput.value = "";
         startLoadingAnimation();
         try {
-          const response = await generateCode(prompt);
+          const response = await generateCode(lastPrompt.value);
           generatedResult.value = response.result;
           const savedConversation = saveWorkshopConversation({
-            id: currentConversationId.value || `${Date.now()}`,
-            prompt,
+            id: currentConversationId.value || `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
+            prompt: lastPrompt.value,
             result: response.result,
             createdAt: Date.now()
           });
           currentConversationId.value = savedConversation.id;
           syncWorkshopHistory();
+          workshopSyncLastAt.value = 0;
         } catch (error) {
           uni.showToast({ title: error.message, icon: "none" });
           userInput.value = prompt;
@@ -608,7 +845,7 @@ if (uni.restoreGlobal) {
         stopLoadingAnimation();
       });
       onLoad((query) => {
-        syncWorkshopHistory();
+        syncWorkshopHistoryRemote({ silent: true });
         sidebarVisible.value = query.openSidebar === "1";
         if (query.reset === "1") {
           clearConversation();
@@ -619,22 +856,32 @@ if (uni.restoreGlobal) {
         }
       });
       onShow(() => {
-        syncWorkshopHistory();
+        syncWorkshopHistoryRemote({ silent: true });
       });
       const __returned__ = { systemInfo, statusBarHeight, safeAreaInsetsBottom, sidebarVisible, userInput, loading, generatedResult, lastPrompt, loadingPhase, workshopHistory, currentConversationId, get loadingTimer() {
         return loadingTimer;
       }, set loadingTimer(v) {
         loadingTimer = v;
-      }, loadingPhases, chatHeight, hasPreview, loadingText, activeLoadingPhase, introText, highlights, toggleSidebar, closeSidebar, handleNavigate, clearConversation, syncWorkshopHistory, loadConversation, startLoadingAnimation, stopLoadingAnimation, openPreview, handleGenerate, computed: vue.computed, onUnmounted: vue.onUnmounted, ref: vue.ref, get onLoad() {
+      }, workshopSyncInFlight, workshopSyncLastAt, workshopSyncLastSignature, loadingPhases, chatHeight, hasPreview, loadingText, activeLoadingPhase, isAssistantReply, assistantActions, aiTitle, aiBodyText, introText, highlights, showHighlights, toggleSidebar, closeSidebar, handleNavigate, clearConversation, syncWorkshopHistory, loadConversation, mergeWorkshopHistory, historySignature, syncWorkshopHistoryRemote, startLoadingAnimation, stopLoadingAnimation, openPreview, runAssistantAction, buildAssistantReply, handleGenerate, computed: vue.computed, onUnmounted: vue.onUnmounted, ref: vue.ref, get onLoad() {
         return onLoad;
       }, get onShow() {
         return onShow;
       }, Sidebar, get generateCode() {
         return generateCode;
+      }, get getWorkshopHistoryRemote() {
+        return getWorkshopHistoryRemote;
+      }, get routeWorkshopInput() {
+        return routeWorkshopInput;
+      }, get saveWorkshopHistoryRemote() {
+        return saveWorkshopHistoryRemote;
       }, get navigateByPath() {
         return navigateByPath;
       }, get getLayoutMetrics() {
         return getLayoutMetrics;
+      }, get classifyWorkshopInput() {
+        return classifyWorkshopInput;
+      }, get WorkshopIntent() {
+        return WorkshopIntent;
       }, get getWorkshopConversation() {
         return getWorkshopConversation;
       }, get getWorkshopHistory() {
@@ -646,22 +893,15 @@ if (uni.restoreGlobal) {
       return __returned__;
     }
   };
-  function _sfc_render$c(_ctx, _cache, $props, $setup, $data, $options) {
+  function _sfc_render$6(_ctx, _cache, $props, $setup, $data, $options) {
     return vue.openBlock(), vue.createElementBlock("view", { class: "workshop-page" }, [
       vue.createElementVNode(
         "view",
         {
-          class: "status-bar",
+          class: "top-safe",
           style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
         },
-        [
-          vue.createElementVNode("text", { class: "status-time" }, "11:37"),
-          vue.createElementVNode("view", { class: "status-icons" }, [
-            vue.createElementVNode("text", { class: "status-glyph" }, "◌"),
-            vue.createElementVNode("text", { class: "status-glyph" }, "◎"),
-            vue.createElementVNode("text", { class: "status-glyph" }, "▣")
-          ])
-        ],
+        null,
         4
         /* STYLE */
       ),
@@ -709,14 +949,14 @@ if (uni.restoreGlobal) {
                   vue.createElementVNode(
                     "text",
                     { class: "ai-title" },
-                    vue.toDisplayString($setup.loading ? "正在生成中" : "应用创建成功"),
+                    vue.toDisplayString($setup.aiTitle),
                     1
                     /* TEXT */
                   ),
                   vue.createElementVNode(
                     "text",
                     { class: "ai-text" },
-                    vue.toDisplayString($setup.loading ? $setup.loadingText : $setup.introText),
+                    vue.toDisplayString($setup.aiBodyText),
                     1
                     /* TEXT */
                   ),
@@ -777,7 +1017,10 @@ if (uni.restoreGlobal) {
                       vue.createElementVNode("view", { class: "loading-progress-bar" })
                     ])
                   ])) : vue.createCommentVNode("v-if", true),
-                  vue.createElementVNode("view", { class: "idea-card" }, [
+                  $setup.showHighlights ? (vue.openBlock(), vue.createElementBlock("view", {
+                    key: 1,
+                    class: "idea-card"
+                  }, [
                     vue.createElementVNode("text", { class: "idea-title" }, "这次生成重点"),
                     (vue.openBlock(true), vue.createElementBlock(
                       vue.Fragment,
@@ -800,9 +1043,9 @@ if (uni.restoreGlobal) {
                       128
                       /* KEYED_FRAGMENT */
                     ))
-                  ]),
-                  $setup.generatedResult ? (vue.openBlock(), vue.createElementBlock("view", {
-                    key: 1,
+                  ])) : vue.createCommentVNode("v-if", true),
+                  $setup.generatedResult && !$setup.isAssistantReply ? (vue.openBlock(), vue.createElementBlock("view", {
+                    key: 2,
                     class: "result-card"
                   }, [
                     vue.createElementVNode("view", { class: "result-toolbar" }, [
@@ -884,6 +1127,32 @@ if (uni.restoreGlobal) {
                         )
                       ])
                     ]))
+                  ])) : vue.createCommentVNode("v-if", true),
+                  $setup.isAssistantReply && $setup.assistantActions.length ? (vue.openBlock(), vue.createElementBlock("view", {
+                    key: 3,
+                    class: "assist-actions"
+                  }, [
+                    (vue.openBlock(true), vue.createElementBlock(
+                      vue.Fragment,
+                      null,
+                      vue.renderList($setup.assistantActions, (action) => {
+                        return vue.openBlock(), vue.createElementBlock("view", {
+                          key: action.path,
+                          class: "assist-action",
+                          onClick: ($event) => $setup.runAssistantAction(action)
+                        }, [
+                          vue.createElementVNode(
+                            "text",
+                            { class: "assist-action-text" },
+                            vue.toDisplayString(action.label),
+                            1
+                            /* TEXT */
+                          )
+                        ], 8, ["onClick"]);
+                      }),
+                      128
+                      /* KEYED_FRAGMENT */
+                    ))
                   ])) : vue.createCommentVNode("v-if", true)
                 ]),
                 vue.createElementVNode("text", { class: "message-time" }, "刚刚")
@@ -900,7 +1169,7 @@ if (uni.restoreGlobal) {
         4
         /* STYLE */
       ),
-      $setup.generatedResult && $setup.hasPreview ? (vue.openBlock(), vue.createElementBlock("view", {
+      $setup.generatedResult && $setup.hasPreview && !$setup.isAssistantReply ? (vue.openBlock(), vue.createElementBlock("view", {
         key: 0,
         class: "floating-action",
         onClick: $setup.openPreview
@@ -961,8 +1230,8 @@ if (uni.restoreGlobal) {
       }, null, 8, ["visible", "workshop-history"])
     ]);
   }
-  const PagesHomeIndex = /* @__PURE__ */ _export_sfc(_sfc_main$d, [["render", _sfc_render$c], ["__scopeId", "data-v-4978fed5"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/home/index.vue"]]);
-  const _sfc_main$c = {
+  const PagesHomeIndex = /* @__PURE__ */ _export_sfc(_sfc_main$7, [["render", _sfc_render$6], ["__scopeId", "data-v-4978fed5"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/home/index.vue"]]);
+  const _sfc_main$6 = {
     __name: "index",
     setup(__props, { expose: __expose }) {
       __expose();
@@ -1013,13 +1282,13 @@ if (uni.restoreGlobal) {
       return __returned__;
     }
   };
-  function _sfc_render$b(_ctx, _cache, $props, $setup, $data, $options) {
+  function _sfc_render$5(_ctx, _cache, $props, $setup, $data, $options) {
     return vue.openBlock(), vue.createElementBlock("view", { class: "news-page" }, [
       vue.createElementVNode(
         "view",
         {
-          class: "status-bar",
-          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
+          class: "top-safe",
+          style: vue.normalizeStyle({ height: `${$setup.statusBarHeight}px` })
         },
         [
           vue.createElementVNode("text", { class: "status-time" }, "9:41"),
@@ -1161,1827 +1430,118 @@ if (uni.restoreGlobal) {
       ], 40, ["refresher-triggered"])
     ]);
   }
-  const PagesCrawlIndex = /* @__PURE__ */ _export_sfc(_sfc_main$c, [["render", _sfc_render$b], ["__scopeId", "data-v-be3def88"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/crawl/index.vue"]]);
-  const _sfc_main$b = {
+  const PagesCrawlIndex = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["render", _sfc_render$5], ["__scopeId", "data-v-be3def88"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/crawl/index.vue"]]);
+  const DEFAULT_OPENMAIC_URL = "http://121.89.87.255:10200";
+  const _sfc_main$5 = {
     __name: "input",
     setup(__props, { expose: __expose }) {
       __expose();
-      const { statusBarHeight, safeAreaInsetsBottom } = getLayoutMetrics();
-      const topic = vue.ref("");
-      const historyList = vue.ref([]);
-      const loading = vue.ref(false);
-      const goBackToWorkshop = () => {
-        uni.reLaunch({ url: "/pages/home/index?openSidebar=1" });
-      };
-      const loadHistory = async () => {
-        try {
-          const response = await getClassroomHistory();
-          historyList.value = response.list || [];
-        } catch (error) {
-          historyList.value = [];
-        }
-      };
-      const handleSubmit = async () => {
-        const value = topic.value.trim();
-        if (!value) {
-          uni.showToast({ title: "请输入学习主题", icon: "none" });
-          return;
-        }
-        loading.value = true;
-        try {
-          const response = await createClassroom(value);
-          uni.navigateTo({ url: `/pages/school/role-loading?id=${response.classroomId}&topic=${encodeURIComponent(value)}` });
-        } catch (error) {
-          uni.showToast({ title: error.message, icon: "none" });
-        } finally {
-          loading.value = false;
-        }
-      };
-      const goToClassroom = (item) => {
-        uni.navigateTo({ url: `/pages/school/classroom?id=${item.id}` });
-      };
-      vue.onMounted(() => {
-        loadHistory();
-      });
-      onShow(() => {
-        loadHistory();
-      });
-      const __returned__ = { statusBarHeight, safeAreaInsetsBottom, topic, historyList, loading, goBackToWorkshop, loadHistory, handleSubmit, goToClassroom, onMounted: vue.onMounted, ref: vue.ref, get onShow() {
-        return onShow;
-      }, get createClassroom() {
-        return createClassroom;
-      }, get getClassroomHistory() {
-        return getClassroomHistory;
-      }, get getLayoutMetrics() {
-        return getLayoutMetrics;
-      } };
-      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
-      return __returned__;
-    }
-  };
-  function _sfc_render$a(_ctx, _cache, $props, $setup, $data, $options) {
-    return vue.openBlock(), vue.createElementBlock("view", { class: "school-page" }, [
-      vue.createElementVNode(
-        "view",
-        {
-          class: "status-bar",
-          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
-        },
-        [
-          vue.createElementVNode("text", { class: "status-time" }, "9:41"),
-          vue.createElementVNode("view", { class: "status-icons" }, [
-            vue.createElementVNode("text", { class: "status-glyph" }, "⌁"),
-            vue.createElementVNode("text", { class: "status-glyph" }, "◉"),
-            vue.createElementVNode("text", { class: "status-glyph" }, "▣")
-          ])
-        ],
-        4
-        /* STYLE */
-      ),
-      vue.createElementVNode("view", { class: "page-header" }, [
-        vue.createElementVNode("text", {
-          class: "header-action",
-          onClick: $setup.goBackToWorkshop
-        }, "←"),
-        vue.createElementVNode("text", { class: "header-title" }, "AI 学堂"),
-        vue.createElementVNode("view", { class: "header-placeholder" })
-      ]),
-      vue.createElementVNode("scroll-view", {
-        class: "school-scroll",
-        "scroll-y": ""
-      }, [
-        vue.createElementVNode("view", { class: "hero-section" }, [
-          vue.createElementVNode("view", { class: "hero-badge" }),
-          vue.createElementVNode("text", { class: "hero-title" }, "OpenMAIC"),
-          vue.createElementVNode("text", { class: "hero-copy" }, "多智能体交互式课堂的生成式学习")
-        ]),
-        vue.createElementVNode("view", { class: "search-bar" }, [
-          vue.withDirectives(vue.createElementVNode(
-            "input",
-            {
-              class: "search-input",
-              "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => $setup.topic = $event),
-              placeholder: "输入你想学的任何内容，例如：提示词工程、RAG、AI Agent...",
-              "placeholder-class": "search-placeholder",
-              maxlength: "100",
-              onConfirm: $setup.handleSubmit
-            },
-            null,
-            544
-            /* NEED_HYDRATION, NEED_PATCH */
-          ), [
-            [vue.vModelText, $setup.topic]
-          ])
-        ]),
-        $setup.historyList.length > 0 ? (vue.openBlock(), vue.createElementBlock("view", {
-          key: 0,
-          class: "course-list"
-        }, [
-          (vue.openBlock(true), vue.createElementBlock(
-            vue.Fragment,
-            null,
-            vue.renderList($setup.historyList, (item) => {
-              return vue.openBlock(), vue.createElementBlock("view", {
-                key: item.id,
-                class: "course-card",
-                onClick: ($event) => $setup.goToClassroom(item)
-              }, [
-                vue.createElementVNode(
-                  "text",
-                  { class: "course-title" },
-                  vue.toDisplayString(item.title),
-                  1
-                  /* TEXT */
-                ),
-                vue.createElementVNode(
-                  "text",
-                  { class: "course-subtitle" },
-                  vue.toDisplayString(item.pages || 0) + " 页 · " + vue.toDisplayString(item.date || "最近学习"),
-                  1
-                  /* TEXT */
-                ),
-                vue.createElementVNode("view", { class: "course-tag" }, [
-                  vue.createElementVNode("text", { class: "course-tag-text" }, "继续学习")
-                ])
-              ], 8, ["onClick"]);
-            }),
-            128
-            /* KEYED_FRAGMENT */
-          ))
-        ])) : (vue.openBlock(), vue.createElementBlock("view", {
-          key: 1,
-          class: "empty-card"
-        }, [
-          vue.createElementVNode("text", { class: "empty-title" }, "还没有课程记录"),
-          vue.createElementVNode("text", { class: "empty-copy" }, "输入一个学习目标，系统会为你生成一节定制化课堂。")
-        ]))
-      ]),
-      vue.createElementVNode(
-        "view",
-        {
-          class: vue.normalizeClass(["bottom-action", { disabled: $setup.loading }]),
-          style: vue.normalizeStyle({ paddingBottom: $setup.safeAreaInsetsBottom + "px" }),
-          onClick: $setup.handleSubmit
-        },
-        [
-          vue.createElementVNode(
-            "text",
-            { class: "bottom-action-text" },
-            vue.toDisplayString($setup.loading ? "正在创建课堂..." : "立即开课"),
-            1
-            /* TEXT */
-          )
-        ],
-        6
-        /* CLASS, STYLE */
-      )
-    ]);
-  }
-  const PagesSchoolInput = /* @__PURE__ */ _export_sfc(_sfc_main$b, [["render", _sfc_render$a], ["__scopeId", "data-v-6684b8ff"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/school/input.vue"]]);
-  const _sfc_main$a = {
-    __name: "role-loading",
-    setup(__props, { expose: __expose }) {
-      __expose();
       const { statusBarHeight } = getLayoutMetrics();
-      const loadingTip = vue.ref("正在根据课程内容生成角色...");
-      let firstTimer = null;
-      let secondTimer = null;
-      let classroomId = "";
-      let topic = "";
-      const goBack = () => safeNavigateBack("/pages/school/input");
-      const clearTimers = () => {
-        clearTimeout(firstTimer);
-        clearTimeout(secondTimer);
-        firstTimer = null;
-        secondTimer = null;
-      };
-      const startFlow = async () => {
-        clearTimers();
-        loadingTip.value = "正在根据课程内容生成角色...";
-        firstTimer = setTimeout(() => {
-          loadingTip.value = "正在组织老师、助教和学生代表的人设...";
-        }, 900);
+      const openmaicUrl = vue.ref("");
+      const resolveOpenmaicUrl = () => {
         try {
-          if (!classroomId) {
-            loadingTip.value = "正在创建课堂...";
-            const res = await createClassroom(topic);
-            classroomId = (res == null ? void 0 : res.classroomId) || "";
-          }
-          if (!classroomId) {
-            throw new Error("课堂创建失败，请稍后重试");
-          }
-          secondTimer = setTimeout(() => {
-            uni.redirectTo({ url: `/pages/school/role-intro?id=${classroomId}&topic=${encodeURIComponent(topic)}` });
-          }, 800);
+          const apiBaseUrl = getBaseUrl();
+          const url = new URL(apiBaseUrl);
+          url.port = "10200";
+          url.pathname = "/";
+          url.search = "";
+          url.hash = "";
+          return url.toString().replace(/\/$/, "");
         } catch (error) {
-          const msg = (error == null ? void 0 : error.message) || "课堂创建失败，请稍后重试";
-          loadingTip.value = msg;
-          uni.showToast({ title: msg, icon: "none" });
-        }
-      };
-      onLoad((query) => {
-        classroomId = query.id || "";
-        try {
-          topic = decodeURIComponent(String(query.topic || "")).trim();
-        } catch (e) {
-          topic = String(query.topic || "").trim();
-        }
-        if (!topic) {
-          loadingTip.value = "缺少课程主题，请返回重试";
-          return;
-        }
-        startFlow();
-      });
-      onUnload(() => {
-        clearTimers();
-      });
-      const __returned__ = { statusBarHeight, loadingTip, get firstTimer() {
-        return firstTimer;
-      }, set firstTimer(v) {
-        firstTimer = v;
-      }, get secondTimer() {
-        return secondTimer;
-      }, set secondTimer(v) {
-        secondTimer = v;
-      }, get classroomId() {
-        return classroomId;
-      }, set classroomId(v) {
-        classroomId = v;
-      }, get topic() {
-        return topic;
-      }, set topic(v) {
-        topic = v;
-      }, goBack, clearTimers, startFlow, get onLoad() {
-        return onLoad;
-      }, get onUnload() {
-        return onUnload;
-      }, ref: vue.ref, get getLayoutMetrics() {
-        return getLayoutMetrics;
-      }, get createClassroom() {
-        return createClassroom;
-      }, get safeNavigateBack() {
-        return safeNavigateBack;
-      } };
-      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
-      return __returned__;
-    }
-  };
-  function _sfc_render$9(_ctx, _cache, $props, $setup, $data, $options) {
-    return vue.openBlock(), vue.createElementBlock("view", { class: "loading-page" }, [
-      vue.createElementVNode(
-        "view",
-        {
-          class: "top-safe",
-          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
-        },
-        null,
-        4
-        /* STYLE */
-      ),
-      vue.createElementVNode("view", { class: "page-header" }, [
-        vue.createElementVNode("text", {
-          class: "header-action",
-          onClick: $setup.goBack
-        }, "←"),
-        vue.createElementVNode("text", { class: "header-title" }, "生成课堂"),
-        vue.createElementVNode("view", { class: "header-placeholder" })
-      ]),
-      vue.createElementVNode("view", { class: "loading-content" }, [
-        vue.createElementVNode("text", { class: "loading-title" }, "生成课堂角色"),
-        vue.createElementVNode(
-          "text",
-          { class: "loading-copy" },
-          vue.toDisplayString($setup.loadingTip),
-          1
-          /* TEXT */
-        ),
-        vue.createElementVNode("view", { class: "cards-row" }, [
-          vue.createElementVNode("view", { class: "role-card teacher" }, [
-            vue.createElementVNode("text", { class: "role-card-text" }, "教师")
-          ]),
-          vue.createElementVNode("view", { class: "role-card assistant" }, [
-            vue.createElementVNode("text", { class: "role-card-text" }, "助教")
-          ]),
-          vue.createElementVNode("view", { class: "role-card student" }, [
-            vue.createElementVNode("text", { class: "role-card-text" }, "学生")
-          ])
-        ]),
-        vue.createElementVNode("text", { class: "loading-foot" }, "AI 智能体工作中...")
-      ])
-    ]);
-  }
-  const PagesSchoolRoleLoading = /* @__PURE__ */ _export_sfc(_sfc_main$a, [["render", _sfc_render$9], ["__scopeId", "data-v-2974fbbe"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/school/role-loading.vue"]]);
-  const _sfc_main$9 = {
-    __name: "role-intro",
-    setup(__props, { expose: __expose }) {
-      __expose();
-      const { statusBarHeight } = getLayoutMetrics();
-      const classroom = vue.ref(null);
-      let classroomId = "";
-      const goBack = () => uni.navigateBack();
-      const loadClassroom = async () => {
-        try {
-          const response = await getClassroomDetail(classroomId);
-          classroom.value = response.classroom;
-        } catch (error) {
-          uni.showToast({ title: error.message, icon: "none" });
-        }
-      };
-      const startGenerate = () => {
-        uni.navigateTo({ url: `/pages/school/outline-loading?id=${classroomId}` });
-      };
-      onLoad((query) => {
-        classroomId = query.id || "";
-        loadClassroom();
-      });
-      const __returned__ = { statusBarHeight, classroom, get classroomId() {
-        return classroomId;
-      }, set classroomId(v) {
-        classroomId = v;
-      }, goBack, loadClassroom, startGenerate, get onLoad() {
-        return onLoad;
-      }, ref: vue.ref, get getClassroomDetail() {
-        return getClassroomDetail;
-      }, get getLayoutMetrics() {
-        return getLayoutMetrics;
-      } };
-      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
-      return __returned__;
-    }
-  };
-  function _sfc_render$8(_ctx, _cache, $props, $setup, $data, $options) {
-    return vue.openBlock(), vue.createElementBlock("view", { class: "role-page" }, [
-      vue.createElementVNode(
-        "view",
-        {
-          class: "status-bar",
-          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
-        },
-        [
-          vue.createElementVNode("text", { class: "status-time" }, "9:41"),
-          vue.createElementVNode("view", { class: "status-icons" }, [
-            vue.createElementVNode("text", { class: "status-glyph" }, "⌁"),
-            vue.createElementVNode("text", { class: "status-glyph" }, "◉"),
-            vue.createElementVNode("text", { class: "status-glyph" }, "▣")
-          ])
-        ],
-        4
-        /* STYLE */
-      ),
-      vue.createElementVNode("view", { class: "page-header" }, [
-        vue.createElementVNode("text", {
-          class: "header-action",
-          onClick: $setup.goBack
-        }, "←"),
-        vue.createElementVNode("text", { class: "header-title" }, "课堂角色"),
-        vue.createElementVNode("view", { class: "header-placeholder" })
-      ]),
-      $setup.classroom ? (vue.openBlock(), vue.createElementBlock("scroll-view", {
-        key: 0,
-        class: "role-scroll",
-        "scroll-y": ""
-      }, [
-        vue.createElementVNode("view", { class: "title-area" }, [
-          vue.createElementVNode("text", { class: "big-title" }, "你的课堂角色"),
-          vue.createElementVNode("text", { class: "sub-copy" }, "AI 为你生成了专属的学习伙伴")
-        ]),
-        vue.createElementVNode("view", { class: "cards-area" }, [
-          (vue.openBlock(true), vue.createElementBlock(
-            vue.Fragment,
-            null,
-            vue.renderList($setup.classroom.roles, (role) => {
-              return vue.openBlock(), vue.createElementBlock(
-                "view",
-                {
-                  key: role.id,
-                  class: vue.normalizeClass(["role-card", role.id])
-                },
-                [
-                  vue.createElementVNode("view", { class: "role-head" }, [
-                    vue.createElementVNode(
-                      "view",
-                      {
-                        class: vue.normalizeClass(["role-avatar", role.id])
-                      },
-                      [
-                        vue.createElementVNode(
-                          "text",
-                          { class: "role-avatar-text" },
-                          vue.toDisplayString(role.name.slice(0, 1)),
-                          1
-                          /* TEXT */
-                        )
-                      ],
-                      2
-                      /* CLASS */
-                    ),
-                    vue.createElementVNode("view", { class: "role-meta" }, [
-                      vue.createElementVNode(
-                        "text",
-                        { class: "role-type" },
-                        vue.toDisplayString(role.type),
-                        1
-                        /* TEXT */
-                      ),
-                      vue.createElementVNode(
-                        "text",
-                        { class: "role-name" },
-                        vue.toDisplayString(role.name),
-                        1
-                        /* TEXT */
-                      )
-                    ])
-                  ]),
-                  vue.createElementVNode(
-                    "text",
-                    { class: "role-desc" },
-                    vue.toDisplayString(role.description),
-                    1
-                    /* TEXT */
-                  )
-                ],
-                2
-                /* CLASS */
-              );
-            }),
-            128
-            /* KEYED_FRAGMENT */
-          ))
-        ])
-      ])) : vue.createCommentVNode("v-if", true),
-      vue.createElementVNode("view", {
-        class: "bottom-button",
-        onClick: $setup.startGenerate
-      }, [
-        vue.createElementVNode("text", { class: "bottom-button-text" }, "继续")
-      ])
-    ]);
-  }
-  const PagesSchoolRoleIntro = /* @__PURE__ */ _export_sfc(_sfc_main$9, [["render", _sfc_render$8], ["__scopeId", "data-v-84653446"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/school/role-intro.vue"]]);
-  const _sfc_main$8 = {
-    __name: "outline-loading",
-    setup(__props, { expose: __expose }) {
-      __expose();
-      const { statusBarHeight } = getLayoutMetrics();
-      const loadingTip = vue.ref("正在构建学习路径...");
-      let firstTimer = null;
-      let secondTimer = null;
-      let classroomId = "";
-      const goBack = () => safeNavigateBack("/pages/school/input");
-      onLoad((query) => {
-        classroomId = query.id || "";
-        if (!classroomId) {
-          loadingTip.value = "缺少课堂 ID，请返回重试";
-          uni.showToast({ title: "缺少课堂 ID", icon: "none" });
-          return;
-        }
-        firstTimer = setTimeout(() => {
-          loadingTip.value = "正在组织课堂内容和互动消息...";
-        }, 900);
-        secondTimer = setTimeout(() => {
-          uni.redirectTo({ url: `/pages/school/classroom?id=${classroomId}` });
-        }, 1600);
-      });
-      onUnload(() => {
-        clearTimeout(firstTimer);
-        clearTimeout(secondTimer);
-      });
-      const __returned__ = { statusBarHeight, loadingTip, get firstTimer() {
-        return firstTimer;
-      }, set firstTimer(v) {
-        firstTimer = v;
-      }, get secondTimer() {
-        return secondTimer;
-      }, set secondTimer(v) {
-        secondTimer = v;
-      }, get classroomId() {
-        return classroomId;
-      }, set classroomId(v) {
-        classroomId = v;
-      }, goBack, get onLoad() {
-        return onLoad;
-      }, get onUnload() {
-        return onUnload;
-      }, ref: vue.ref, get getLayoutMetrics() {
-        return getLayoutMetrics;
-      }, get safeNavigateBack() {
-        return safeNavigateBack;
-      } };
-      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
-      return __returned__;
-    }
-  };
-  function _sfc_render$7(_ctx, _cache, $props, $setup, $data, $options) {
-    return vue.openBlock(), vue.createElementBlock("view", { class: "loading-page" }, [
-      vue.createElementVNode(
-        "view",
-        {
-          class: "top-safe",
-          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
-        },
-        null,
-        4
-        /* STYLE */
-      ),
-      vue.createElementVNode("view", { class: "page-header" }, [
-        vue.createElementVNode("text", {
-          class: "header-action",
-          onClick: $setup.goBack
-        }, "←"),
-        vue.createElementVNode("text", { class: "header-title" }, "生成课堂"),
-        vue.createElementVNode("view", { class: "header-placeholder" })
-      ]),
-      vue.createElementVNode("view", { class: "loading-content" }, [
-        vue.createElementVNode("text", { class: "loading-title" }, "生成课程大纲"),
-        vue.createElementVNode(
-          "text",
-          { class: "loading-copy" },
-          vue.toDisplayString($setup.loadingTip),
-          1
-          /* TEXT */
-        ),
-        vue.createElementVNode("view", { class: "doc-card" }, [
-          vue.createElementVNode("text", { class: "doc-icon" }, "▤"),
-          vue.createElementVNode("view", { class: "progress-track" }, [
-            vue.createElementVNode("view", { class: "progress-fill" })
-          ])
-        ]),
-        vue.createElementVNode("text", { class: "loading-foot" }, "即将进入课堂")
-      ])
-    ]);
-  }
-  const PagesSchoolOutlineLoading = /* @__PURE__ */ _export_sfc(_sfc_main$8, [["render", _sfc_render$7], ["__scopeId", "data-v-c5ad6f9e"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/school/outline-loading.vue"]]);
-  const _sfc_main$7 = {
-    __name: "WhiteboardPlayer",
-    props: {
-      whiteboard: {
-        type: Object,
-        default: () => ({})
-      },
-      activeElementId: {
-        type: String,
-        default: ""
-      }
-    },
-    setup(__props, { expose: __expose }) {
-      __expose();
-      const props = __props;
-      const viewportWidth = vue.computed(() => {
-        var _a;
-        return Number(((_a = props.whiteboard) == null ? void 0 : _a.viewportSize) || 1e3);
-      });
-      const viewportHeight = vue.computed(() => {
-        var _a, _b;
-        return Number(((_a = props.whiteboard) == null ? void 0 : _a.viewportHeight) || viewportWidth.value * Number(((_b = props.whiteboard) == null ? void 0 : _b.viewportRatio) || 0.5625));
-      });
-      const ratioPercent = vue.computed(() => {
-        if (!viewportWidth.value)
-          return 56.25;
-        return viewportHeight.value / viewportWidth.value * 100;
-      });
-      const backgroundColor = vue.computed(() => {
-        var _a;
-        const background = ((_a = props.whiteboard) == null ? void 0 : _a.background) || {};
-        return background.color || "#ffffff";
-      });
-      const percentX = (value) => `${(Number(value || 0) / viewportWidth.value * 100).toFixed(4)}%`;
-      const percentY = (value) => `${(Number(value || 0) / viewportHeight.value * 100).toFixed(4)}%`;
-      const renderedElements = vue.computed(
-        () => {
-          var _a;
-          return (((_a = props.whiteboard) == null ? void 0 : _a.elements) || []).map((element) => ({
-            ...element,
-            style: {
-              left: percentX(element.left),
-              top: percentY(element.top),
-              width: percentX(element.width),
-              height: percentY(element.height),
-              transform: element.rotate ? `rotate(${element.rotate}deg)` : "none"
-            }
-          }));
-        }
-      );
-      const __returned__ = { props, viewportWidth, viewportHeight, ratioPercent, backgroundColor, percentX, percentY, renderedElements, computed: vue.computed };
-      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
-      return __returned__;
-    }
-  };
-  function _sfc_render$6(_ctx, _cache, $props, $setup, $data, $options) {
-    return vue.openBlock(), vue.createElementBlock("view", { class: "whiteboard-player" }, [
-      vue.createElementVNode(
-        "view",
-        {
-          class: "whiteboard-stage",
-          style: vue.normalizeStyle({ paddingTop: `${$setup.ratioPercent}%`, background: $setup.backgroundColor })
-        },
-        [
-          vue.createElementVNode("view", { class: "whiteboard-layer" }, [
-            (vue.openBlock(true), vue.createElementBlock(
-              vue.Fragment,
-              null,
-              vue.renderList($setup.renderedElements, (element) => {
-                return vue.openBlock(), vue.createElementBlock(
-                  "view",
-                  {
-                    key: element.id,
-                    class: vue.normalizeClass(["whiteboard-element", [`type-${element.type}`, { active: element.id === $props.activeElementId }]]),
-                    style: vue.normalizeStyle(element.style)
-                  },
-                  [
-                    element.type === "text" ? (vue.openBlock(), vue.createElementBlock("rich-text", {
-                      key: 0,
-                      class: "whiteboard-text",
-                      nodes: element.content
-                    }, null, 8, ["nodes"])) : (vue.openBlock(), vue.createElementBlock(
-                      "view",
-                      {
-                        key: 1,
-                        class: "whiteboard-shape",
-                        style: vue.normalizeStyle({ background: element.fill || "#EDE9FE" })
-                      },
-                      null,
-                      4
-                      /* STYLE */
-                    ))
-                  ],
-                  6
-                  /* CLASS, STYLE */
-                );
-              }),
-              128
-              /* KEYED_FRAGMENT */
-            ))
-          ])
-        ],
-        4
-        /* STYLE */
-      )
-    ]);
-  }
-  const WhiteboardPlayer = /* @__PURE__ */ _export_sfc(_sfc_main$7, [["render", _sfc_render$6], ["__scopeId", "data-v-9cb1a4be"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/components/WhiteboardPlayer.vue"]]);
-  const _sfc_main$6 = {
-    __name: "QuizPlayer",
-    props: {
-      questions: {
-        type: Array,
-        required: true
-      },
-      showResult: {
-        type: Boolean,
-        default: false
-      },
-      correctAnswers: {
-        type: Object,
-        default: () => ({})
-      }
-    },
-    emits: ["submit", "complete"],
-    setup(__props, { expose: __expose, emit: __emit }) {
-      __expose();
-      const props = __props;
-      const emit = __emit;
-      const userAnswers = vue.reactive({});
-      const TYPE_LABELS = { single: "单选", multiple: "多选", short_answer: "简答" };
-      const typeLabel = (type) => TYPE_LABELS[type] || type;
-      const isChosen = (qId, value) => (userAnswers[qId] || []).includes(value);
-      const textOf = (qId) => (userAnswers[qId] || [""])[0] || "";
-      const isCorrectAnswer = (qId, value) => (props.correctAnswers[qId] || []).includes(value);
-      const isWrongPick = (qId, value) => isChosen(qId, value) && !isCorrectAnswer(qId, value);
-      const optionClasses = (q, opt) => {
-        const chosen = isChosen(q.id, opt.value);
-        if (!props.showResult)
-          return { selected: chosen };
-        const correct = isCorrectAnswer(q.id, opt.value);
-        return {
-          selected: chosen,
-          "res-correct": chosen && correct,
-          "res-wrong": chosen && !correct,
-          "res-missed": !chosen && correct
-        };
-      };
-      const maxScore = vue.computed(
-        () => props.questions.reduce((s, q) => s + (q.points || 0), 0)
-      );
-      const totalScore = vue.computed(() => {
-        if (!props.showResult)
-          return 0;
-        return props.questions.reduce((sum, q) => {
-          const ca = props.correctAnswers[q.id] || [];
-          const ua = userAnswers[q.id] || [];
-          if (q.type === "short_answer") {
-            return sum + (ca[0] && ua[0] === ca[0] ? q.points || 0 : 0);
-          }
-          if (!ca.length)
-            return sum;
-          const match = ca.length === ua.length && ca.every((v) => ua.includes(v));
-          return sum + (match ? q.points || 0 : 0);
-        }, 0);
-      });
-      const progressPercent = vue.computed(
-        () => maxScore.value ? Math.round(totalScore.value / maxScore.value * 100) : 0
-      );
-      const answeredCount = vue.computed(
-        () => Object.keys(userAnswers).filter((k) => {
-          const v = userAnswers[k];
-          return v && v.length > 0 && (typeof v[0] !== "string" || v[0].trim() !== "");
-        }).length
-      );
-      const tapOption = (q, opt) => {
-        if (props.showResult)
-          return;
-        if (q.type === "single") {
-          userAnswers[q.id] = [opt.value];
-        } else if (q.type === "multiple") {
-          const arr = userAnswers[q.id] || [];
-          userAnswers[q.id] = arr.includes(opt.value) ? arr.filter((v) => v !== opt.value) : [...arr, opt.value];
-        }
-      };
-      const onTextInput = (e, qId) => {
-        userAnswers[qId] = [e.detail.value];
-      };
-      const handleSubmit = () => {
-        if (props.showResult) {
-          emit("complete");
-          return;
-        }
-        const answers = {};
-        props.questions.forEach((q) => {
-          answers[q.id] = userAnswers[q.id] || [];
-        });
-        emit("submit", { answers, score: null });
-      };
-      const __returned__ = { props, emit, userAnswers, TYPE_LABELS, typeLabel, isChosen, textOf, isCorrectAnswer, isWrongPick, optionClasses, maxScore, totalScore, progressPercent, answeredCount, tapOption, onTextInput, handleSubmit, reactive: vue.reactive, computed: vue.computed };
-      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
-      return __returned__;
-    }
-  };
-  function _sfc_render$5(_ctx, _cache, $props, $setup, $data, $options) {
-    return vue.openBlock(), vue.createElementBlock("scroll-view", {
-      class: "quiz-player",
-      "scroll-y": ""
-    }, [
-      vue.createElementVNode("view", { class: "quiz-inner" }, [
-        $props.showResult ? (vue.openBlock(), vue.createElementBlock("view", {
-          key: 0,
-          class: "score-panel"
-        }, [
-          vue.createElementVNode("view", { class: "score-row" }, [
-            vue.createElementVNode("view", { class: "score-info" }, [
-              vue.createElementVNode("text", { class: "score-title" }, "测验得分"),
-              vue.createElementVNode(
-                "text",
-                { class: "score-detail" },
-                "共 " + vue.toDisplayString($props.questions.length) + " 题 · 满分 " + vue.toDisplayString($setup.maxScore) + " 分",
-                1
-                /* TEXT */
-              )
-            ]),
-            vue.createElementVNode(
-              "text",
-              { class: "score-value" },
-              vue.toDisplayString($setup.totalScore),
-              1
-              /* TEXT */
-            )
-          ]),
-          vue.createElementVNode("view", { class: "score-track" }, [
-            vue.createElementVNode(
-              "view",
-              {
-                class: "score-fill",
-                style: vue.normalizeStyle({ width: $setup.progressPercent + "%" })
-              },
-              null,
-              4
-              /* STYLE */
-            )
-          ])
-        ])) : vue.createCommentVNode("v-if", true),
-        (vue.openBlock(true), vue.createElementBlock(
-          vue.Fragment,
-          null,
-          vue.renderList($props.questions, (q, idx) => {
-            return vue.openBlock(), vue.createElementBlock("view", {
-              key: q.id,
-              class: "q-card"
-            }, [
-              vue.createElementVNode("view", { class: "q-header" }, [
-                vue.createElementVNode("view", { class: "q-header-left" }, [
-                  vue.createElementVNode(
-                    "text",
-                    { class: "q-num" },
-                    vue.toDisplayString(idx + 1),
-                    1
-                    /* TEXT */
-                  ),
-                  vue.createElementVNode(
-                    "view",
-                    {
-                      class: vue.normalizeClass(["q-badge", `badge-${q.type}`])
-                    },
-                    [
-                      vue.createElementVNode(
-                        "text",
-                        { class: "q-badge-text" },
-                        vue.toDisplayString($setup.typeLabel(q.type)),
-                        1
-                        /* TEXT */
-                      )
-                    ],
-                    2
-                    /* CLASS */
-                  )
-                ]),
-                q.points ? (vue.openBlock(), vue.createElementBlock(
-                  "text",
-                  {
-                    key: 0,
-                    class: "q-pts"
-                  },
-                  vue.toDisplayString(q.points) + " 分",
-                  1
-                  /* TEXT */
-                )) : vue.createCommentVNode("v-if", true)
-              ]),
-              vue.createElementVNode(
-                "text",
-                { class: "q-body" },
-                vue.toDisplayString(q.question),
-                1
-                /* TEXT */
-              ),
-              q.type !== "short_answer" ? (vue.openBlock(), vue.createElementBlock("view", {
-                key: 0,
-                class: "opt-list"
-              }, [
-                (vue.openBlock(true), vue.createElementBlock(
-                  vue.Fragment,
-                  null,
-                  vue.renderList(q.options, (opt) => {
-                    return vue.openBlock(), vue.createElementBlock("view", {
-                      key: opt.value,
-                      class: vue.normalizeClass(["opt-item", $setup.optionClasses(q, opt)]),
-                      onClick: ($event) => $setup.tapOption(q, opt)
-                    }, [
-                      vue.createElementVNode(
-                        "view",
-                        {
-                          class: vue.normalizeClass(["opt-indicator", q.type === "single" ? "is-radio" : "is-checkbox"])
-                        },
-                        [
-                          $setup.isChosen(q.id, opt.value) ? (vue.openBlock(), vue.createElementBlock("view", {
-                            key: 0,
-                            class: "indicator-fill"
-                          })) : vue.createCommentVNode("v-if", true)
-                        ],
-                        2
-                        /* CLASS */
-                      ),
-                      vue.createElementVNode(
-                        "text",
-                        { class: "opt-text" },
-                        vue.toDisplayString(opt.value) + ". " + vue.toDisplayString(opt.label),
-                        1
-                        /* TEXT */
-                      ),
-                      $props.showResult && $setup.isCorrectAnswer(q.id, opt.value) ? (vue.openBlock(), vue.createElementBlock("text", {
-                        key: 0,
-                        class: "result-icon icon-correct"
-                      }, "✓")) : vue.createCommentVNode("v-if", true),
-                      $props.showResult && $setup.isWrongPick(q.id, opt.value) ? (vue.openBlock(), vue.createElementBlock("text", {
-                        key: 1,
-                        class: "result-icon icon-wrong"
-                      }, "✗")) : vue.createCommentVNode("v-if", true)
-                    ], 10, ["onClick"]);
-                  }),
-                  128
-                  /* KEYED_FRAGMENT */
-                ))
-              ])) : vue.createCommentVNode("v-if", true),
-              q.type === "short_answer" ? (vue.openBlock(), vue.createElementBlock("view", {
-                key: 1,
-                class: "sa-area"
-              }, [
-                vue.createElementVNode("textarea", {
-                  class: vue.normalizeClass(["sa-input", { "sa-locked": $props.showResult }]),
-                  value: $setup.textOf(q.id),
-                  placeholder: "请输入你的答案…",
-                  "placeholder-style": "color:#64748b;font-size:26rpx",
-                  disabled: $props.showResult,
-                  "auto-height": "",
-                  onInput: ($event) => $setup.onTextInput($event, q.id)
-                }, null, 42, ["value", "disabled", "onInput"]),
-                $props.showResult && $props.correctAnswers[q.id] ? (vue.openBlock(), vue.createElementBlock("view", {
-                  key: 0,
-                  class: "sa-ref"
-                }, [
-                  vue.createElementVNode("text", { class: "sa-ref-label" }, "参考答案"),
-                  vue.createElementVNode(
-                    "text",
-                    { class: "sa-ref-content" },
-                    vue.toDisplayString(($props.correctAnswers[q.id] || []).join("")),
-                    1
-                    /* TEXT */
-                  )
-                ])) : vue.createCommentVNode("v-if", true)
-              ])) : vue.createCommentVNode("v-if", true),
-              $props.showResult && q.analysis ? (vue.openBlock(), vue.createElementBlock("view", {
-                key: 2,
-                class: "q-analysis"
-              }, [
-                vue.createElementVNode("view", { class: "analysis-divider" }),
-                vue.createElementVNode("view", { class: "analysis-head" }, [
-                  vue.createElementVNode("text", { class: "analysis-tag" }, "解析")
-                ]),
-                vue.createElementVNode(
-                  "text",
-                  { class: "analysis-text" },
-                  vue.toDisplayString(q.analysis),
-                  1
-                  /* TEXT */
-                )
-              ])) : vue.createCommentVNode("v-if", true)
-            ]);
-          }),
-          128
-          /* KEYED_FRAGMENT */
-        )),
-        vue.createElementVNode("view", { class: "quiz-foot" }, [
-          vue.createElementVNode(
-            "view",
-            {
-              class: vue.normalizeClass(["submit-btn", { "is-result": $props.showResult }]),
-              onClick: $setup.handleSubmit
-            },
-            [
-              vue.createElementVNode(
-                "text",
-                { class: "submit-btn-text" },
-                vue.toDisplayString($props.showResult ? "完成测验" : "提交答案"),
-                1
-                /* TEXT */
-              )
-            ],
-            2
-            /* CLASS */
-          ),
-          !$props.showResult ? (vue.openBlock(), vue.createElementBlock(
-            "text",
-            {
-              key: 0,
-              class: "foot-hint"
-            },
-            " 已答 " + vue.toDisplayString($setup.answeredCount) + " / " + vue.toDisplayString($props.questions.length) + " 题 ",
-            1
-            /* TEXT */
-          )) : vue.createCommentVNode("v-if", true)
-        ])
-      ])
-    ]);
-  }
-  const QuizPlayer = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["render", _sfc_render$5], ["__scopeId", "data-v-f99460f8"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/components/QuizPlayer.vue"]]);
-  const MAX_REFRESH_ATTEMPTS = 60;
-  const _sfc_main$5 = {
-    __name: "classroom",
-    setup(__props, { expose: __expose }) {
-      __expose();
-      const systemInfo = uni.getSystemInfoSync();
-      const { safeAreaInsetsBottom, statusBarHeight } = getLayoutMetrics();
-      const audioContext = uni.createInnerAudioContext();
-      audioContext.autoplay = false;
-      audioContext.loop = false;
-      const speedOptions = ["1.0", "1.25", "1.5"];
-      const isPlaying = vue.ref(false);
-      const volumeOn = vue.ref(true);
-      const playSpeed = vue.ref("1.0");
-      const chatInput = vue.ref("");
-      const chatMessages = vue.ref([]);
-      const classroom = vue.ref(null);
-      const currentStep = vue.ref(0);
-      const sending = vue.ref(false);
-      const videoError = vue.ref("");
-      const failureNoticeShown = vue.ref(false);
-      const loadingClassroom = vue.ref(false);
-      const audioPreparing = vue.ref(false);
-      const audioError = vue.ref("");
-      const activeElementId = vue.ref("");
-      const activeSubtitle = vue.ref("");
-      const currentSegmentIndex = vue.ref(-1);
-      const quizShowResult = vue.ref(false);
-      const quizCorrectAnswers = vue.ref({});
-      let classroomId = "";
-      let refreshTimer = null;
-      let refreshAttempts = 0;
-      const chatHeight = Math.max(
-        systemInfo.windowHeight - statusBarHeight - 620 - safeAreaInsetsBottom,
-        220
-      );
-      const currentOutline = vue.computed(() => {
-        var _a, _b;
-        return ((_b = (_a = classroom.value) == null ? void 0 : _a.outline) == null ? void 0 : _b[currentStep.value]) || null;
-      });
-      const generationStatus = vue.computed(() => {
-        var _a, _b;
-        return ((_b = (_a = classroom.value) == null ? void 0 : _a.generation) == null ? void 0 : _b.status) || "";
-      });
-      const generationFailed = vue.computed(() => generationStatus.value === "failed");
-      const generationError = vue.computed(() => {
-        var _a, _b;
-        return ((_b = (_a = classroom.value) == null ? void 0 : _a.generation) == null ? void 0 : _b.error) || "OpenMAIC 当前不可用，请稍后重试。";
-      });
-      const isGenerating = vue.computed(() => ["queued", "running"].includes(generationStatus.value));
-      const currentVideoUrl = vue.computed(() => {
-        var _a, _b;
-        return ((_b = (_a = currentOutline.value) == null ? void 0 : _a.video) == null ? void 0 : _b.url) || "";
-      });
-      const currentAudioSegments = vue.computed(() => {
-        var _a, _b;
-        return ((_b = (_a = currentOutline.value) == null ? void 0 : _a.audio) == null ? void 0 : _b.segments) || [];
-      });
-      const sceneHasWhiteboard = vue.computed(
-        () => {
-          var _a, _b, _c, _d;
-          return ((_a = currentOutline.value) == null ? void 0 : _a.sceneType) === "slide" && (((_d = (_c = (_b = currentOutline.value) == null ? void 0 : _b.whiteboard) == null ? void 0 : _c.elements) == null ? void 0 : _d.length) || 0) > 0;
-        }
-      );
-      const sceneIsQuiz = vue.computed(
-        () => {
-          var _a, _b, _c;
-          return ((_a = currentOutline.value) == null ? void 0 : _a.sceneType) === "quiz" && (((_c = (_b = currentOutline.value) == null ? void 0 : _b.questions) == null ? void 0 : _c.length) || 0) > 0;
-        }
-      );
-      const quizQuestions = vue.computed(() => {
-        var _a;
-        return ((_a = currentOutline.value) == null ? void 0 : _a.questions) || [];
-      });
-      const sceneAudioReady = vue.computed(
-        () => currentAudioSegments.value.length > 0 && currentAudioSegments.value.every((segment) => !!segment.url)
-      );
-      const currentSubtitle = vue.computed(() => activeSubtitle.value || "");
-      const sceneTypeLabel = vue.computed(() => {
-        var _a;
-        const sceneType = ((_a = currentOutline.value) == null ? void 0 : _a.sceneType) || "slide";
-        if (sceneType === "interactive")
-          return "互动";
-        if (sceneType === "quiz")
-          return "测验";
-        return "白板课";
-      });
-      const fallbackMediaTitle = vue.computed(() => {
-        var _a;
-        if (generationFailed.value)
-          return "课堂已回退到文本模式";
-        return ((_a = currentOutline.value) == null ? void 0 : _a.sceneType) === "interactive" ? "互动场景待升级" : "课堂内容预览";
-      });
-      const fallbackMediaCopy = vue.computed(() => {
-        var _a, _b, _c;
-        if (generationFailed.value)
-          return generationError.value;
-        if (((_a = currentOutline.value) == null ? void 0 : _a.sceneType) === "interactive") {
-          return "这一类场景后续会升级成原生互动播放器，当前先保留概要内容。";
-        }
-        if (((_b = currentOutline.value) == null ? void 0 : _b.sceneType) === "quiz") {
-          return "当前测验题目暂不可用，先浏览课堂概要内容。";
-        }
-        return ((_c = currentOutline.value) == null ? void 0 : _c.summary) || "当前页没有可播放的白板内容。";
-      });
-      const outlineBullets = vue.computed(() => {
-        var _a, _b, _c;
-        const bullets = ((_a = currentOutline.value) == null ? void 0 : _a.bullets) || [];
-        if (bullets.length)
-          return bullets;
-        const summary = (_c = (_b = currentOutline.value) == null ? void 0 : _b.summary) == null ? void 0 : _c.trim();
-        if (summary) {
-          return [
-            summary,
-            `围绕“${currentOutline.value.title}”建立完整理解`,
-            "结合对话提问，边学边消化"
-          ];
-        }
-        return [
-          "拆解核心概念并形成知识结构",
-          "结合案例理解每一步的作用",
-          "在互动提问里完成巩固"
-        ];
-      });
-      const roleShortName = (role, name) => {
-        if (role === "teacher")
-          return "师";
-        if (role === "assistant")
-          return "助";
-        if (role === "student")
-          return "生";
-        if (role === "user")
-          return "我";
-        return (name || "?").slice(0, 1);
-      };
-      const applyClassroom = (nextClassroom) => {
-        classroom.value = nextClassroom;
-        chatMessages.value = (nextClassroom == null ? void 0 : nextClassroom.messages) || [];
-        currentStep.value = (nextClassroom == null ? void 0 : nextClassroom.currentStep) || 0;
-      };
-      const resolveMediaUrl = (url) => {
-        if (!url)
-          return "";
-        if (url.startsWith("http://") || url.startsWith("https://"))
-          return url;
-        return `${getBaseUrl()}${url}`;
-      };
-      const stopPlayback = ({ clearState = true } = {}) => {
-        isPlaying.value = false;
-        try {
-          audioContext.stop();
-        } catch (error) {
-        }
-        if (clearState) {
-          currentSegmentIndex.value = -1;
-          activeElementId.value = "";
-          activeSubtitle.value = "";
-        }
-      };
-      const updateAudioRuntimeConfig = () => {
-        audioContext.volume = volumeOn.value ? 1 : 0;
-        audioContext.playbackRate = Number(playSpeed.value) || 1;
-      };
-      const handleVideoError = () => {
-        videoError.value = "视频加载失败，请检查网络或稍后重试";
-      };
-      const stopRefreshTimer = () => {
-        if (refreshTimer) {
-          clearTimeout(refreshTimer);
-          refreshTimer = null;
-        }
-        refreshAttempts = 0;
-      };
-      const scheduleRefresh = (id, delay = 3e3) => {
-        stopRefreshTimer();
-        refreshAttempts++;
-        if (refreshAttempts > MAX_REFRESH_ATTEMPTS) {
-          refreshAttempts = 0;
-          uni.showToast({ title: "生成超时，请手动刷新", icon: "none" });
-          return;
-        }
-        refreshTimer = setTimeout(() => {
-          loadClassroom(id, { silent: true });
-        }, delay);
-      };
-      const persistCurrentStep = async () => {
-        if (!classroomId)
-          return;
-        try {
-          await updateClassroomProgress(classroomId, { currentStep: currentStep.value });
-        } catch (error) {
-        }
-      };
-      const playSegmentAt = async (segmentIndex = 0) => {
-        const segment = currentAudioSegments.value[segmentIndex];
-        if (!segment) {
-          stopPlayback();
-          return;
-        }
-        if (!segment.url) {
-          audioError.value = "当前页语音尚未准备完成，请稍后重试。";
-          stopPlayback({ clearState: false });
-          return;
-        }
-        currentSegmentIndex.value = segmentIndex;
-        activeElementId.value = segment.relatedElementId || "";
-        activeSubtitle.value = segment.text || "";
-        audioError.value = "";
-        updateAudioRuntimeConfig();
-        audioContext.src = resolveMediaUrl(segment.url);
-        isPlaying.value = true;
-        try {
-          audioContext.play();
-        } catch (error) {
-          isPlaying.value = false;
-          audioError.value = "语音播放失败，请检查网络或稍后重试。";
-        }
-      };
-      const ensureCurrentSceneAudio = async ({ autoplay = false, silent = false } = {}) => {
-        var _a, _b, _c, _d, _e;
-        const scene = currentOutline.value;
-        if (!scene || scene.sceneType !== "slide" || !((_b = (_a = scene.audio) == null ? void 0 : _a.segments) == null ? void 0 : _b.length)) {
-          return false;
-        }
-        if (sceneAudioReady.value) {
-          if (autoplay)
-            await playSegmentAt(0);
-          return true;
-        }
-        if (audioPreparing.value)
-          return false;
-        audioPreparing.value = true;
-        audioError.value = "";
-        try {
-          const response = await prepareClassroomSceneAudio(classroomId, scene.id);
-          if (response.classroom) {
-            applyClassroom(response.classroom);
-          }
-          if (autoplay && ((_c = currentOutline.value) == null ? void 0 : _c.id) === scene.id) {
-            await playSegmentAt(0);
-          }
-          return !!(((_e = (_d = response.scene) == null ? void 0 : _d.audio) == null ? void 0 : _e.segments) || []).every((segment) => !!segment.url);
-        } catch (error) {
-          audioError.value = error.message || "语音生成失败，请稍后重试。";
-          if (!silent) {
-            uni.showToast({ title: audioError.value, icon: "none" });
-          }
-          return false;
-        } finally {
-          audioPreparing.value = false;
-        }
-      };
-      const cycleSpeed = () => {
-        const currentIndex = speedOptions.indexOf(playSpeed.value);
-        playSpeed.value = speedOptions[(currentIndex + 1) % speedOptions.length];
-        updateAudioRuntimeConfig();
-      };
-      const toggleVolume = () => {
-        volumeOn.value = !volumeOn.value;
-      };
-      const handleQuizSubmit = async ({ answers }) => {
-        var _a;
-        const sid = (_a = currentOutline.value) == null ? void 0 : _a.id;
-        if (!classroomId || !sid) {
-          uni.showToast({ title: "测验数据不完整", icon: "none" });
-          return;
-        }
-        try {
-          uni.showLoading({ title: "批改中…", mask: true });
-          const res = await scoreClassroomQuiz(classroomId, { sceneId: sid, answers });
-          quizCorrectAnswers.value = res.correctAnswers || {};
-          quizShowResult.value = true;
-        } catch (error) {
-          uni.showToast({ title: error.message || "评分失败", icon: "none" });
-        } finally {
-          uni.hideLoading();
+          return DEFAULT_OPENMAIC_URL;
         }
       };
       const goBack = () => {
-        uni.navigateBack();
+        safeNavigateBack("/pages/home/index");
       };
-      const togglePlay = async () => {
-        if (isGenerating.value)
+      const openExternal = () => {
+        if (!openmaicUrl.value)
           return;
-        if (isPlaying.value) {
-          audioContext.pause();
-          isPlaying.value = false;
-          return;
-        }
-        if (sceneHasWhiteboard.value && currentAudioSegments.value.length) {
-          if (!sceneAudioReady.value) {
-            const prepared = await ensureCurrentSceneAudio({ autoplay: false });
-            if (!prepared)
+        uni.showModal({
+          title: "提示",
+          content: "将使用系统浏览器打开 AI 学堂首页，是否继续？",
+          success: (res) => {
+            if (!res.confirm)
               return;
+            plus.runtime.openURL(openmaicUrl.value);
           }
-          if (currentSegmentIndex.value >= 0 && currentSegmentIndex.value < currentAudioSegments.value.length) {
-            updateAudioRuntimeConfig();
-            isPlaying.value = true;
-            audioContext.play();
-            return;
-          }
-          await playSegmentAt(0);
-        } else if (currentVideoUrl.value) {
-          uni.showToast({ title: "视频播放请直接操作播放器", icon: "none" });
-        } else if (sceneIsQuiz.value) {
-          return;
-        }
+        });
       };
-      const changeLesson = async (direction) => {
-        var _a, _b, _c;
-        if (!((_b = (_a = classroom.value) == null ? void 0 : _a.outline) == null ? void 0 : _b.length))
-          return;
-        const wasPlaying = isPlaying.value;
-        stopPlayback();
-        currentStep.value = Math.min(
-          Math.max(currentStep.value + direction, 0),
-          classroom.value.outline.length - 1
-        );
-        await persistCurrentStep();
-        if (((_c = currentOutline.value) == null ? void 0 : _c.sceneType) === "slide") {
-          await ensureCurrentSceneAudio({ autoplay: wasPlaying, silent: true });
-        }
-      };
-      const prevLesson = async () => {
-        await changeLesson(-1);
-      };
-      const nextLesson = async () => {
-        await changeLesson(1);
-      };
-      const sendMessage = async () => {
-        if (!chatInput.value.trim() || sending.value || !classroomId)
-          return;
-        const message = chatInput.value.trim();
-        chatInput.value = "";
-        sending.value = true;
-        try {
-          const response = await sendClassroomMessage(classroomId, {
-            message,
-            currentStep: currentStep.value
-          });
-          chatMessages.value.push(...response.messages || []);
-          if (typeof response.currentStep === "number") {
-            currentStep.value = response.currentStep;
-          }
-        } catch (error) {
-          uni.showToast({ title: error.message, icon: "none" });
-          chatInput.value = message;
-        } finally {
-          sending.value = false;
-        }
-      };
-      const loadClassroom = async (id, { silent = false } = {}) => {
-        var _a, _b, _c, _d, _e, _f, _g;
-        if (!id || loadingClassroom.value)
-          return;
-        loadingClassroom.value = true;
-        try {
-          const response = await getClassroomDetail(id);
-          applyClassroom(response.classroom);
-          if (((_a = response.classroom) == null ? void 0 : _a.source) === "openmaic" && ["queued", "running"].includes((_c = (_b = response.classroom) == null ? void 0 : _b.generation) == null ? void 0 : _c.status)) {
-            scheduleRefresh(id);
-          } else {
-            stopRefreshTimer();
-          }
-          if (((_e = (_d = response.classroom) == null ? void 0 : _d.generation) == null ? void 0 : _e.status) === "failed" && !failureNoticeShown.value) {
-            failureNoticeShown.value = true;
-            uni.showToast({ title: "课堂生成失败，已切换文本模式", icon: "none" });
-          }
-          if (((_f = currentOutline.value) == null ? void 0 : _f.sceneType) === "slide") {
-            ensureCurrentSceneAudio({ silent: true });
-          }
-        } catch (error) {
-          if (!silent) {
-            uni.showToast({ title: error.message, icon: "none" });
-          }
-          if (((_g = classroom.value) == null ? void 0 : _g.source) === "openmaic" && isGenerating.value) {
-            scheduleRefresh(id, 5e3);
-          }
-        } finally {
-          loadingClassroom.value = false;
-        }
-      };
-      vue.watch(volumeOn, () => {
-        updateAudioRuntimeConfig();
+      onLoad(() => {
+        openmaicUrl.value = resolveOpenmaicUrl();
       });
-      vue.watch(playSpeed, () => {
-        updateAudioRuntimeConfig();
+      onBackPress(() => {
+        goBack();
+        return true;
       });
-      vue.watch(
-        () => {
-          var _a;
-          return (_a = currentOutline.value) == null ? void 0 : _a.id;
-        },
-        (nextId, prevId) => {
-          var _a;
-          if (!nextId || nextId === prevId)
-            return;
-          stopPlayback();
-          quizShowResult.value = false;
-          quizCorrectAnswers.value = {};
-          if (((_a = currentOutline.value) == null ? void 0 : _a.sceneType) === "slide") {
-            ensureCurrentSceneAudio({ silent: true });
-          }
-        }
-      );
-      audioContext.onEnded(() => {
-        if (!isPlaying.value)
-          return;
-        playSegmentAt(currentSegmentIndex.value + 1);
-      });
-      audioContext.onError((error) => {
-        isPlaying.value = false;
-        audioError.value = (error == null ? void 0 : error.errMsg) || "语音播放失败，请稍后重试。";
-      });
-      onLoad((query) => {
-        if (query.id) {
-          classroomId = query.id;
-          loadClassroom(query.id);
-        }
-      });
-      onShow(() => {
-        if (classroomId) {
-          loadClassroom(classroomId, { silent: true });
-        }
-      });
-      vue.onUnmounted(() => {
-        stopRefreshTimer();
-        stopPlayback();
-        audioContext.destroy();
-      });
-      const __returned__ = { systemInfo, safeAreaInsetsBottom, statusBarHeight, audioContext, speedOptions, isPlaying, volumeOn, playSpeed, chatInput, chatMessages, classroom, currentStep, sending, videoError, failureNoticeShown, loadingClassroom, audioPreparing, audioError, activeElementId, activeSubtitle, currentSegmentIndex, quizShowResult, quizCorrectAnswers, get classroomId() {
-        return classroomId;
-      }, set classroomId(v) {
-        classroomId = v;
-      }, get refreshTimer() {
-        return refreshTimer;
-      }, set refreshTimer(v) {
-        refreshTimer = v;
-      }, get refreshAttempts() {
-        return refreshAttempts;
-      }, set refreshAttempts(v) {
-        refreshAttempts = v;
-      }, MAX_REFRESH_ATTEMPTS, chatHeight, currentOutline, generationStatus, generationFailed, generationError, isGenerating, currentVideoUrl, currentAudioSegments, sceneHasWhiteboard, sceneIsQuiz, quizQuestions, sceneAudioReady, currentSubtitle, sceneTypeLabel, fallbackMediaTitle, fallbackMediaCopy, outlineBullets, roleShortName, applyClassroom, resolveMediaUrl, stopPlayback, updateAudioRuntimeConfig, handleVideoError, stopRefreshTimer, scheduleRefresh, persistCurrentStep, playSegmentAt, ensureCurrentSceneAudio, cycleSpeed, toggleVolume, handleQuizSubmit, goBack, togglePlay, changeLesson, prevLesson, nextLesson, sendMessage, loadClassroom, computed: vue.computed, onUnmounted: vue.onUnmounted, ref: vue.ref, watch: vue.watch, get onLoad() {
+      const __returned__ = { statusBarHeight, openmaicUrl, DEFAULT_OPENMAIC_URL, resolveOpenmaicUrl, goBack, openExternal, ref: vue.ref, get onBackPress() {
+        return onBackPress;
+      }, get onLoad() {
         return onLoad;
-      }, get onShow() {
-        return onShow;
-      }, WhiteboardPlayer, QuizPlayer, get getClassroomDetail() {
-        return getClassroomDetail;
-      }, get prepareClassroomSceneAudio() {
-        return prepareClassroomSceneAudio;
-      }, get scoreClassroomQuiz() {
-        return scoreClassroomQuiz;
-      }, get sendClassroomMessage() {
-        return sendClassroomMessage;
-      }, get updateClassroomProgress() {
-        return updateClassroomProgress;
-      }, get getBaseUrl() {
-        return getBaseUrl;
       }, get getLayoutMetrics() {
         return getLayoutMetrics;
+      }, get safeNavigateBack() {
+        return safeNavigateBack;
+      }, get getBaseUrl() {
+        return getBaseUrl;
       } };
       Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
       return __returned__;
     }
   };
   function _sfc_render$4(_ctx, _cache, $props, $setup, $data, $options) {
-    var _a, _b, _c, _d;
-    return vue.openBlock(), vue.createElementBlock("view", { class: "classroom-page" }, [
-      vue.createElementVNode(
-        "view",
-        {
-          class: "status-bar",
-          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
-        },
-        [
-          vue.createElementVNode("text", { class: "status-time" }, "9:41"),
-          vue.createElementVNode("view", { class: "status-icons" }, [
-            vue.createElementVNode("text", { class: "status-glyph" }, "⌁"),
-            vue.createElementVNode("text", { class: "status-glyph" }, "◉"),
-            vue.createElementVNode("text", { class: "status-glyph" }, "▣")
-          ])
-        ],
-        4
-        /* STYLE */
-      ),
-      vue.createElementVNode("view", { class: "page-header" }, [
-        vue.createElementVNode("text", {
-          class: "header-icon",
-          onClick: $setup.goBack
-        }, "←"),
-        vue.createElementVNode(
-          "text",
-          { class: "header-title" },
-          vue.toDisplayString(((_a = $setup.classroom) == null ? void 0 : _a.topic) || "课程主题"),
-          1
-          /* TEXT */
-        ),
-        vue.createElementVNode("text", { class: "header-icon" }, "⋯")
-      ]),
-      vue.createElementVNode("view", { class: "control-bar" }, [
-        vue.createElementVNode(
-          "text",
-          {
-            class: "control-label",
-            onClick: $setup.toggleVolume
-          },
-          vue.toDisplayString($setup.volumeOn ? "音量开" : "音量关"),
-          1
-          /* TEXT */
-        ),
-        vue.createElementVNode("view", {
-          class: "speed-pill",
-          onClick: $setup.cycleSpeed
-        }, [
-          vue.createElementVNode(
-            "text",
-            { class: "speed-text" },
-            vue.toDisplayString($setup.playSpeed) + "x",
-            1
-            /* TEXT */
-          )
-        ]),
-        vue.createElementVNode("text", {
-          class: "control-label",
-          onClick: $setup.prevLesson
-        }, "上一节"),
-        vue.createElementVNode("view", {
-          class: "play-button",
-          onClick: $setup.togglePlay
-        }, [
-          vue.createElementVNode(
-            "text",
-            { class: "play-icon" },
-            vue.toDisplayString($setup.isPlaying ? "暂停" : "播放"),
-            1
-            /* TEXT */
-          )
-        ]),
-        vue.createElementVNode("text", {
-          class: "control-label",
-          onClick: $setup.nextLesson
-        }, "下一节")
-      ]),
-      $setup.isGenerating ? (vue.openBlock(), vue.createElementBlock("view", {
+    return vue.openBlock(), vue.createElementBlock("view", { class: "school-web-page" }, [
+      $setup.openmaicUrl ? (vue.openBlock(), vue.createElementBlock("view", {
         key: 0,
-        class: "media-area"
+        class: "webview-wrap"
       }, [
-        vue.createElementVNode("view", { class: "video-placeholder" }, [
-          vue.createElementVNode("view", {
-            class: "generation-orbit",
-            "aria-hidden": "true"
-          }, [
-            vue.createElementVNode("view", { class: "orbit-ring" }),
-            vue.createElementVNode("view", { class: "orbit-ring orbit-ring-inner" }),
-            vue.createElementVNode("view", { class: "orbit-core" }),
-            vue.createElementVNode("view", { class: "orbit-dot orbit-dot-a" }),
-            vue.createElementVNode("view", { class: "orbit-dot orbit-dot-b" }),
-            vue.createElementVNode("view", { class: "orbit-dot orbit-dot-c" })
-          ]),
-          vue.createElementVNode("text", { class: "video-placeholder-title" }, "课堂生成中…"),
-          vue.createElementVNode("text", { class: "video-placeholder-copy" }, "OpenMAIC 正在生成白板课件、讲解脚本和互动内容，请稍等片刻。")
-        ])
-      ])) : $setup.sceneHasWhiteboard ? (vue.openBlock(), vue.createElementBlock("view", {
-        key: 1,
-        class: "media-area"
-      }, [
-        vue.createElementVNode("view", { class: "scene-card" }, [
-          vue.createVNode($setup["WhiteboardPlayer"], {
-            whiteboard: (_b = $setup.currentOutline) == null ? void 0 : _b.whiteboard,
-            "active-element-id": $setup.activeElementId
-          }, null, 8, ["whiteboard", "active-element-id"])
-        ])
-      ])) : $setup.sceneIsQuiz ? (vue.openBlock(), vue.createElementBlock("view", {
-        key: 2,
-        class: "media-area quiz-area"
-      }, [
-        (vue.openBlock(), vue.createBlock($setup["QuizPlayer"], {
-          key: (_c = $setup.currentOutline) == null ? void 0 : _c.id,
-          questions: $setup.quizQuestions,
-          "show-result": $setup.quizShowResult,
-          "correct-answers": $setup.quizCorrectAnswers,
-          onSubmit: $setup.handleQuizSubmit
-        }, null, 8, ["questions", "show-result", "correct-answers"]))
-      ])) : $setup.currentVideoUrl ? (vue.openBlock(), vue.createElementBlock("view", {
-        key: 3,
-        class: "media-area"
-      }, [
-        vue.createElementVNode("video", {
-          class: "lesson-video",
-          src: $setup.currentVideoUrl,
-          autoplay: $setup.isPlaying,
-          muted: !$setup.volumeOn,
-          "show-mute-btn": true,
-          controls: true,
-          "play-strategy": 3,
-          "object-fit": "contain",
-          onError: $setup.handleVideoError
-        }, null, 40, ["src", "autoplay", "muted"])
+        vue.createElementVNode(
+          "cover-view",
+          {
+            class: "webview-overlay",
+            style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight + 12}px` })
+          },
+          [
+            vue.createElementVNode("cover-view", {
+              class: "back-pill",
+              onClick: $setup.goBack
+            }, "返回 AI工坊")
+          ],
+          4
+          /* STYLE */
+        ),
+        vue.createElementVNode("web-view", { src: $setup.openmaicUrl }, null, 8, ["src"])
       ])) : (vue.openBlock(), vue.createElementBlock("view", {
-        key: 4,
-        class: "media-area"
+        key: 1,
+        class: "empty-state"
       }, [
         vue.createElementVNode(
           "view",
           {
-            class: vue.normalizeClass(["video-placeholder", { failed: $setup.generationFailed }])
+            class: "top-safe",
+            style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
           },
-          [
-            vue.createElementVNode(
-              "text",
-              { class: "video-placeholder-title" },
-              vue.toDisplayString($setup.fallbackMediaTitle),
-              1
-              /* TEXT */
-            ),
-            vue.createElementVNode(
-              "text",
-              { class: "video-placeholder-copy" },
-              vue.toDisplayString($setup.fallbackMediaCopy),
-              1
-              /* TEXT */
-            )
-          ],
-          2
-          /* CLASS */
-        )
-      ])),
-      $setup.generationFailed ? (vue.openBlock(), vue.createElementBlock("view", {
-        key: 5,
-        class: "status-card failed"
-      }, [
-        vue.createElementVNode("text", { class: "status-card-title" }, "已切换到课堂文本模式"),
-        vue.createElementVNode(
-          "text",
-          { class: "status-card-copy" },
-          vue.toDisplayString($setup.generationError),
-          1
-          /* TEXT */
-        )
-      ])) : vue.createCommentVNode("v-if", true),
-      $setup.audioPreparing ? (vue.openBlock(), vue.createElementBlock("view", {
-        key: 6,
-        class: "status-card"
-      }, [
-        vue.createElementVNode("text", { class: "status-card-title" }, "语音准备中"),
-        vue.createElementVNode("text", { class: "status-card-copy" }, "正在为当前白板内容生成讲解语音，首次进入这一页会稍慢一些。")
-      ])) : $setup.audioError ? (vue.openBlock(), vue.createElementBlock("view", {
-        key: 7,
-        class: "status-card"
-      }, [
-        vue.createElementVNode("text", { class: "status-card-title" }, "语音提示"),
-        vue.createElementVNode(
-          "text",
-          { class: "status-card-copy" },
-          vue.toDisplayString($setup.audioError),
-          1
-          /* TEXT */
-        )
-      ])) : vue.createCommentVNode("v-if", true),
-      $setup.currentSubtitle ? (vue.openBlock(), vue.createElementBlock("view", {
-        key: 8,
-        class: "status-card"
-      }, [
-        vue.createElementVNode("text", { class: "status-card-title" }, "当前讲解"),
-        vue.createElementVNode(
-          "text",
-          { class: "status-card-copy" },
-          vue.toDisplayString($setup.currentSubtitle),
-          1
-          /* TEXT */
-        )
-      ])) : vue.createCommentVNode("v-if", true),
-      $setup.videoError ? (vue.openBlock(), vue.createElementBlock("view", {
-        key: 9,
-        class: "status-card"
-      }, [
-        vue.createElementVNode("text", { class: "status-card-title" }, "视频提示"),
-        vue.createElementVNode(
-          "text",
-          { class: "status-card-copy" },
-          vue.toDisplayString($setup.videoError),
-          1
-          /* TEXT */
-        )
-      ])) : vue.createCommentVNode("v-if", true),
-      vue.createElementVNode("view", { class: "slide-area" }, [
-        vue.createElementVNode("view", { class: "slide-card" }, [
-          vue.createElementVNode("view", { class: "slide-header" }, [
-            vue.createElementVNode(
-              "text",
-              { class: "slide-card-title" },
-              vue.toDisplayString(((_d = $setup.currentOutline) == null ? void 0 : _d.title) || "课程知识点"),
-              1
-              /* TEXT */
-            ),
-            vue.createElementVNode(
-              "text",
-              { class: "scene-type-tag" },
-              vue.toDisplayString($setup.sceneTypeLabel),
-              1
-              /* TEXT */
-            )
-          ]),
-          vue.createElementVNode("view", { class: "bullet-list" }, [
-            (vue.openBlock(true), vue.createElementBlock(
-              vue.Fragment,
-              null,
-              vue.renderList($setup.outlineBullets, (item, index) => {
-                return vue.openBlock(), vue.createElementBlock("view", {
-                  key: `${$setup.currentStep}-${index}`,
-                  class: "bullet-item"
-                }, [
-                  vue.createElementVNode("text", { class: "bullet-dot" }, "•"),
-                  vue.createElementVNode(
-                    "text",
-                    { class: "bullet-text" },
-                    vue.toDisplayString(item),
-                    1
-                    /* TEXT */
-                  )
-                ]);
-              }),
-              128
-              /* KEYED_FRAGMENT */
-            ))
-          ])
-        ])
-      ]),
-      vue.createElementVNode(
-        "scroll-view",
-        {
-          class: "chat-area",
-          "scroll-y": "",
-          style: vue.normalizeStyle({ height: `${$setup.chatHeight}px` })
-        },
-        [
-          (vue.openBlock(true), vue.createElementBlock(
-            vue.Fragment,
-            null,
-            vue.renderList($setup.chatMessages, (msg) => {
-              return vue.openBlock(), vue.createElementBlock(
-                "view",
-                {
-                  key: msg.id,
-                  class: vue.normalizeClass(["message-row", msg.role])
-                },
-                [
-                  vue.createElementVNode(
-                    "view",
-                    {
-                      class: vue.normalizeClass(["message-avatar", msg.role])
-                    },
-                    [
-                      vue.createElementVNode(
-                        "text",
-                        { class: "avatar-text" },
-                        vue.toDisplayString($setup.roleShortName(msg.role, msg.name)),
-                        1
-                        /* TEXT */
-                      )
-                    ],
-                    2
-                    /* CLASS */
-                  ),
-                  vue.createElementVNode("view", { class: "message-card" }, [
-                    vue.createElementVNode(
-                      "text",
-                      { class: "message-name" },
-                      vue.toDisplayString(msg.name),
-                      1
-                      /* TEXT */
-                    ),
-                    vue.createElementVNode(
-                      "text",
-                      { class: "message-content" },
-                      vue.toDisplayString(msg.content),
-                      1
-                      /* TEXT */
-                    )
-                  ])
-                ],
-                2
-                /* CLASS */
-              );
-            }),
-            128
-            /* KEYED_FRAGMENT */
-          ))
-        ],
-        4
-        /* STYLE */
-      ),
-      vue.createElementVNode(
-        "view",
-        {
-          class: "bottom-bar",
-          style: vue.normalizeStyle({ paddingBottom: `${$setup.safeAreaInsetsBottom + 16}px` })
-        },
-        [
-          vue.createElementVNode("view", { class: "avatars-row" }, [
-            vue.createElementVNode("view", { class: "role-chip teacher" }),
-            vue.createElementVNode("view", { class: "role-chip assistant" }),
-            vue.createElementVNode("view", { class: "role-chip student" }),
-            vue.createElementVNode("view", { class: "role-chip observer" })
-          ]),
-          vue.createElementVNode("view", { class: "input-bar" }, [
-            vue.withDirectives(vue.createElementVNode(
-              "input",
-              {
-                class: "chat-input",
-                "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => $setup.chatInput = $event),
-                placeholder: "输入你的想法...",
-                "placeholder-class": "chat-input-placeholder",
-                "confirm-type": "send",
-                onConfirm: $setup.sendMessage
-              },
-              null,
-              544
-              /* NEED_HYDRATION, NEED_PATCH */
-            ), [
-              [vue.vModelText, $setup.chatInput]
-            ]),
-            vue.createElementVNode(
-              "view",
-              {
-                class: vue.normalizeClass(["send-button", { disabled: $setup.sending }]),
-                onClick: $setup.sendMessage
-              },
-              [
-                vue.createElementVNode("text", { class: "send-icon" }, "➤")
-              ],
-              2
-              /* CLASS */
-            )
-          ])
-        ],
-        4
-        /* STYLE */
-      )
+          null,
+          4
+          /* STYLE */
+        ),
+        vue.createElementVNode("view", { class: "page-header" }, [
+          vue.createElementVNode("text", {
+            class: "header-action",
+            onClick: $setup.goBack
+          }, "←"),
+          vue.createElementVNode("text", { class: "header-title" }, "AI 学堂"),
+          vue.createElementVNode("text", {
+            class: "header-action",
+            onClick: $setup.openExternal
+          }, "↗")
+        ]),
+        vue.createElementVNode("text", { class: "empty-title" }, "AI 学堂暂时不可用"),
+        vue.createElementVNode("text", { class: "empty-copy" }, " 当前没有可用的 OpenMAIC 地址，请先检查服务器和前端访问地址配置。 ")
+      ]))
     ]);
   }
-  const PagesSchoolClassroom = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["render", _sfc_render$4], ["__scopeId", "data-v-f6dcee15"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/school/classroom.vue"]]);
+  const PagesSchoolInput = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["render", _sfc_render$4], ["__scopeId", "data-v-6684b8ff"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/school/input.vue"]]);
   var isVue2 = false;
   function set(target, key, val) {
     if (Array.isArray(target)) {
@@ -4574,6 +3134,12 @@ This will fail in production.`);
           const user = await userStore.fetchUserInfo();
           apiBaseUrl.value = user.apiBaseUrl || userStore.apiBaseUrl;
           saveLocalProfile({ nickname: user.nickname || getLocalProfile().nickname });
+          if (user && (Object.prototype.hasOwnProperty.call(user, "bio") || Object.prototype.hasOwnProperty.call(user, "gender"))) {
+            saveLocalProfile({
+              bio: user.bio != null ? user.bio : getLocalProfile().bio,
+              gender: user.gender != null ? user.gender : getLocalProfile().gender
+            });
+          }
         } catch (error) {
           saveLocalProfile({ nickname: userInfo.value.nickname });
         }
@@ -4598,6 +3164,15 @@ This will fail in production.`);
             tasks.push(updateApiBaseUrl(cleaned));
             userStore.setApiBaseUrl(cleaned);
             apiBaseUrl.value = cleaned;
+          }
+          const lp = getLocalProfile();
+          const nextGender = lp.gender || "未设置";
+          const nextBio = lp.bio != null ? String(lp.bio) : "";
+          const prev = userStore.userInfo || {};
+          const prevGender = prev.gender != null ? String(prev.gender) : "未设置";
+          const prevBio = prev.bio != null ? String(prev.bio) : "";
+          if (nextGender !== prevGender || nextBio !== prevBio) {
+            tasks.push(updateUserInfo({ bio: nextBio, gender: nextGender }));
           }
           if (tasks.length) {
             await Promise.all(tasks);
@@ -4646,6 +3221,8 @@ This will fail in production.`);
         return getClassroomHistory;
       }, get updateApiBaseUrl() {
         return updateApiBaseUrl;
+      }, get updateUserInfo() {
+        return updateUserInfo;
       }, get useUserStore() {
         return useUserStore;
       }, get getLayoutMetrics() {
@@ -4793,7 +3370,7 @@ This will fail in production.`);
                 vue.createElementVNode("text", { class: "row-label" }, "后端地址"),
                 vue.createElementVNode("text", { class: "row-value compact" }, "联调配置")
               ]),
-              vue.createElementVNode("text", { class: "settings-tip" }, "真机调试时可填写局域网地址，例如 http://192.168.1.10:8000。"),
+              vue.createElementVNode("text", { class: "settings-tip" }, "真机测试可直接填写阿里云后端地址，例如 http://121.89.87.255:10001。"),
               vue.withDirectives(vue.createElementVNode(
                 "input",
                 {
@@ -5104,21 +3681,59 @@ This will fail in production.`);
       const previewUrl = vue.ref("");
       const pageTitle = vue.ref("工坊预览");
       const goBack = () => {
-        uni.navigateBack();
+        safeNavigateBack("/pages/home/index?openSidebar=1");
+      };
+      const isHttpUrl = (url) => /^https?:\/\/.+/i.test(url || "");
+      const copyLink = () => {
+        if (!previewUrl.value)
+          return;
+        if (!isHttpUrl(previewUrl.value)) {
+          uni.showToast({ title: "预览地址不合法", icon: "none" });
+          return;
+        }
+        uni.setClipboardData({ data: previewUrl.value });
       };
       const openExternal = () => {
         if (!previewUrl.value)
           return;
-        plus.runtime.openURL(previewUrl.value);
+        if (!isHttpUrl(previewUrl.value)) {
+          uni.showToast({ title: "预览地址不合法", icon: "none" });
+          return;
+        }
+        uni.showModal({
+          title: "提示",
+          content: "将使用系统浏览器打开预览链接，是否继续？",
+          success: (res) => {
+            if (!res.confirm)
+              return;
+            plus.runtime.openURL(previewUrl.value);
+          }
+        });
       };
       onLoad((query) => {
-        previewUrl.value = decodeURIComponent(query.url || "");
-        pageTitle.value = decodeURIComponent(query.title || "工坊预览");
+        let url = "";
+        let title = "工坊预览";
+        try {
+          url = decodeURIComponent(query.url || "");
+          title = decodeURIComponent(query.title || "工坊预览");
+        } catch (e) {
+          url = "";
+          title = "工坊预览";
+        }
+        pageTitle.value = title;
+        if (url && !isHttpUrl(url)) {
+          uni.showToast({ title: "预览地址不合法", icon: "none" });
+          previewUrl.value = "";
+          return;
+        }
+        previewUrl.value = url;
       });
-      const __returned__ = { statusBarHeight, safeAreaInsetsBottom, previewUrl, pageTitle, goBack, openExternal, get onLoad() {
+      const __returned__ = { statusBarHeight, safeAreaInsetsBottom, previewUrl, pageTitle, goBack, isHttpUrl, copyLink, openExternal, get onLoad() {
         return onLoad;
       }, ref: vue.ref, get getLayoutMetrics() {
         return getLayoutMetrics;
+      }, get safeNavigateBack() {
+        return safeNavigateBack;
       } };
       Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
       return __returned__;
@@ -5129,17 +3744,10 @@ This will fail in production.`);
       vue.createElementVNode(
         "view",
         {
-          class: "status-bar",
+          class: "top-safe",
           style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
         },
-        [
-          vue.createElementVNode("text", { class: "status-time" }, "11:37"),
-          vue.createElementVNode("view", { class: "status-icons" }, [
-            vue.createElementVNode("text", { class: "status-glyph" }, "◌"),
-            vue.createElementVNode("text", { class: "status-glyph" }, "◎"),
-            vue.createElementVNode("text", { class: "status-glyph" }, "▣")
-          ])
-        ],
+        null,
         4
         /* STYLE */
       ),
@@ -5157,8 +3765,8 @@ This will fail in production.`);
         ),
         vue.createElementVNode("text", {
           class: "header-action",
-          onClick: $setup.openExternal
-        }, "↗")
+          onClick: $setup.copyLink
+        }, "⧉")
       ]),
       $setup.previewUrl ? (vue.openBlock(), vue.createElementBlock("view", {
         key: 0,
@@ -5180,7 +3788,7 @@ This will fail in production.`);
           style: vue.normalizeStyle({ paddingBottom: `${$setup.safeAreaInsetsBottom + 18}px` })
         },
         [
-          vue.createElementVNode("text", { class: "fallback-copy" }, "如果内嵌预览打不开，可切换浏览器兜底"),
+          vue.createElementVNode("text", { class: "fallback-copy" }, "内嵌预览优先；如打不开可用浏览器兜底"),
           vue.createElementVNode("view", {
             class: "fallback-button",
             onClick: $setup.openExternal
@@ -5197,10 +3805,6 @@ This will fail in production.`);
   __definePage("pages/home/index", PagesHomeIndex);
   __definePage("pages/crawl/index", PagesCrawlIndex);
   __definePage("pages/school/input", PagesSchoolInput);
-  __definePage("pages/school/role-loading", PagesSchoolRoleLoading);
-  __definePage("pages/school/role-intro", PagesSchoolRoleIntro);
-  __definePage("pages/school/outline-loading", PagesSchoolOutlineLoading);
-  __definePage("pages/school/classroom", PagesSchoolClassroom);
   __definePage("pages/profile/index", PagesProfileIndex);
   __definePage("pages/profile/nickname", PagesProfileNickname);
   __definePage("pages/profile/bio", PagesProfileBio);

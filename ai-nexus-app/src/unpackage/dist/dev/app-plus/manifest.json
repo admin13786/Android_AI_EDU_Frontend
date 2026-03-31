@@ -4,8 +4,8 @@
     "iPhone",
     "iPad"
   ],
-  "id": "",
-  "name": "灵境",
+  "id": "__UNI__A143C57",
+  "name": "com.nexus.aiedu",
   "version": {
     "name": "1.0.0",
     "code": "100"
@@ -47,7 +47,9 @@
           "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>"
         ]
       },
-      "apple": {},
+      "apple": {
+        "dSYMs": false
+      },
       "plugins": {
         "audio": {
           "mp3": {

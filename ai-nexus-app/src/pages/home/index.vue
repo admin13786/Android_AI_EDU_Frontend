@@ -420,8 +420,8 @@ const handleGenerate = async () => {
       }
       return
     }
-    // Use normalized prompt if provided by router.
-    lastPrompt.value = (routed?.normalizedPrompt || prompt).trim()
+    // Keep the original user wording in both the UI and generation request.
+    lastPrompt.value = prompt
   } catch (e) {
     // If router fails, fall back to old behavior: require explicit keywords via local rules.
     // (Keep UX safe: do not generate on greetings.)
@@ -486,7 +486,7 @@ onShow(() => {
 
 .workshop-page { min-height: 100vh; background: #0a0a0a; display: flex; flex-direction: column; position: relative; }
 .top-safe { padding-left: 24rpx; padding-right: 24rpx; }
-.page-header { height: 68rpx; padding: 0 24rpx; display: flex; align-items: center; justify-content: space-between; }
+.page-header { position: sticky; top: 0; z-index: 20; height: 68rpx; padding: 0 24rpx; display: flex; align-items: center; justify-content: space-between; background: #0a0a0a; }
 .header-action, .header-placeholder { width: 44rpx; text-align: center; }
 .header-action { color: $text-white; font-size: 34rpx; }
 .header-title { color: $text-white; font-size: 34rpx; font-weight: 700; letter-spacing: 1rpx; }
@@ -531,7 +531,7 @@ onShow(() => {
 .idea-dot { color: #84cc16; font-size: 24rpx; line-height: 1.5; }
 .idea-text { flex: 1; color: #475569; font-size: 24rpx; line-height: 1.6; }
 .result-card { border-radius: 24rpx; background: #f4efe8; overflow: hidden; }
-.result-toolbar { height: 72rpx; padding: 0 20rpx; display: flex; align-items: center; justify-content: space-between; color: #444; font-size: 24rpx; }
+.result-toolbar { display: none; }
 .result-tool { color: #4b5563; font-size: 24rpx; }
 .preview-shell { margin: 0 14rpx 14rpx; border-radius: 20rpx; background: #111827; padding: 18rpx; display: flex; flex-direction: column; gap: 16rpx; }
 .preview-clickable { border: 2rpx solid rgba(34,211,238,0.35); }
@@ -549,7 +549,7 @@ onShow(() => {
 .empty-state { margin-top: 60rpx; border-radius: 28rpx; background: #121212; border: 2rpx dashed rgba(255,255,255,0.08); padding: 36rpx 28rpx; }
 .empty-title { display: block; color: $text-white; font-size: 32rpx; font-weight: 700; margin-bottom: 14rpx; }
 .empty-copy { color: $text-muted; font-size: 26rpx; line-height: 1.7; }
-.floating-action { position: absolute; right: 28rpx; bottom: 180rpx; width: 92rpx; height: 92rpx; border-radius: 50%; background: linear-gradient(180deg, #8b5cf6, #7c3aed); box-shadow: 0 18rpx 32rpx rgba(124,58,237,0.28); display: flex; align-items: center; justify-content: center; }
+.floating-action { display: none; }
 .floating-action-text { color: $text-white; font-size: 34rpx; }
 .input-area { padding: 12rpx 24rpx 0; display: flex; align-items: center; gap: 16rpx; }
 .input-shell { flex: 1; height: 88rpx; border-radius: 999rpx; background: #1c1c1e; border: 2rpx solid #06b6d4; padding: 0 16rpx 0 10rpx; display: flex; align-items: center; gap: 12rpx; }
