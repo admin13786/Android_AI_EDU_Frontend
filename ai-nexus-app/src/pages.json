@@ -18,8 +18,21 @@
       "path": "pages/school/input",
       "style": {
         "navigationBarTitleText": "AI学堂",
+        "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#FFFFFF",
-        "navigationBarTextStyle": "black"
+        "app-plus": {
+          "background": "#FFFFFF",
+          "titleNView": {
+            "backgroundColor": "#FFFFFF",
+            "titleText": "AI学堂",
+            "titleColor": "#0F172A",
+            "autoBackButton": true,
+            "backButton": {
+              "color": "#0F172A",
+              "colorPressed": "#475569"
+            }
+          }
+        }
       }
     },
     {

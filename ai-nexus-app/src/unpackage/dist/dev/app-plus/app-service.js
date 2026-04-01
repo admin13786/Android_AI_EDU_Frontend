@@ -34,6 +34,7 @@ if (uni.restoreGlobal) {
   const ON_SHOW = "onShow";
   const ON_LOAD = "onLoad";
   const ON_BACK_PRESS = "onBackPress";
+  const ON_NAVIGATION_BAR_BUTTON_TAP = "onNavigationBarButtonTap";
   const createLifeCycleHook = (lifecycle, flag = 0) => (hook, target = vue.getCurrentInstance()) => {
     !vue.isInSSRComponentSetup && vue.injectHook(lifecycle, hook, target);
   };
@@ -49,6 +50,11 @@ if (uni.restoreGlobal) {
   );
   const onBackPress = /* @__PURE__ */ createLifeCycleHook(
     ON_BACK_PRESS,
+    2
+    /* HookFlags.PAGE */
+  );
+  const onNavigationBarButtonTap = /* @__PURE__ */ createLifeCycleHook(
+    ON_NAVIGATION_BAR_BUTTON_TAP,
     2
     /* HookFlags.PAGE */
   );
@@ -348,19 +354,30 @@ if (uni.restoreGlobal) {
   let handling401 = false;
   let last401At = 0;
   const DEFAULT_API_BASE_URL = "http://121.89.87.255:10001";
+  const DEFAULT_NEWS_BASE_URL = "http://8.135.4.46:8000";
+  const DEFAULT_OPENMAIC_BASE_URL = "http://121.89.87.255:10200";
   function setUnauthorizedHandler(fn) {
     unauthorizedHandler = typeof fn === "function" ? fn : null;
   }
-  const getBaseUrl = () => {
-    const storedBaseUrl = uni.getStorageSync("apiBaseUrl");
-    if (storedBaseUrl) {
-      const normalizedBaseUrl = String(storedBaseUrl).trim().replace(/\/+$/, "");
-      if (!/^https?:\/\/(10\.0\.2\.2|127\.0\.0\.1|localhost)(:\d+)?$/i.test(normalizedBaseUrl)) {
-        return normalizedBaseUrl;
-      }
-    }
-    return DEFAULT_API_BASE_URL;
+  const normalizeStoredUrl = (value) => {
+    if (!value)
+      return "";
+    const normalizedUrl = String(value).trim().replace(/\/+$/, "");
+    if (!normalizedUrl)
+      return "";
+    if (/^https?:\/\/(10\.0\.2\.2|127\.0\.0\.1|localhost)(:\d+)?$/i.test(normalizedUrl))
+      return "";
+    return normalizedUrl;
   };
+  const getConfiguredBaseUrl = (storageKey, fallbackUrl) => {
+    const storedBaseUrl = normalizeStoredUrl(uni.getStorageSync(storageKey));
+    if (storedBaseUrl)
+      return storedBaseUrl;
+    return fallbackUrl;
+  };
+  const getBaseUrl = () => getConfiguredBaseUrl("apiBaseUrl", DEFAULT_API_BASE_URL);
+  const getNewsBaseUrl = () => getConfiguredBaseUrl("newsBaseUrl", DEFAULT_NEWS_BASE_URL);
+  const getOpenmaicBaseUrl = () => getConfiguredBaseUrl("openmaicBaseUrl", DEFAULT_OPENMAIC_BASE_URL);
   const normalizeError = (statusCode, data) => {
     if (typeof data === "string")
       return data;
@@ -377,9 +394,10 @@ if (uni.restoreGlobal) {
   const request = (options) => {
     const token = uni.getStorageSync("token");
     const unifiedKey = uni.getStorageSync("unifiedApiKey");
+    const baseUrl = options.baseUrl || getBaseUrl();
     return new Promise((resolve, reject) => {
       uni.request({
-        url: getBaseUrl() + options.url,
+        url: baseUrl + options.url,
         method: options.method || "GET",
         data: options.data,
         timeout: options.timeout || 18e4,
@@ -426,7 +444,37 @@ if (uni.restoreGlobal) {
       });
     });
   };
-  const getNewsList = (type = "business") => request({ url: `/api/news?type=${type}`, timeout: 18e4 });
+  const NEWS_BOARD_BY_TYPE = {
+    business: "main",
+    personal: "sub"
+  };
+  const normalizeNewsItem = (item = {}, index = 0) => {
+    const score = item.viewsNum || item.total_score || item.score || "0";
+    const source = item.source || item.tag || "AI资讯";
+    const summary = item.summary || item.brief || item.description || `${source} 热榜内容，点击查看原文详情。`;
+    return {
+      id: item.newsId || item.id || `news-${index}`,
+      title: item.title || "未命名资讯",
+      summary,
+      url: item.url || "",
+      source,
+      score,
+      coverUrl: item.coverUrl || item.cover_url || "",
+      raw: item
+    };
+  };
+  const getNewsList = async (type = "business") => {
+    const board = NEWS_BOARD_BY_TYPE[type] || NEWS_BOARD_BY_TYPE.business;
+    const response = await request({
+      baseUrl: getNewsBaseUrl(),
+      url: `/api/ranks/${board}/weibo`,
+      timeout: 18e4
+    });
+    return {
+      ...response,
+      list: Array.isArray(response == null ? void 0 : response.list) ? response.list.map((item, index) => normalizeNewsItem(item, index)) : []
+    };
+  };
   const generateCode = (prompt) => request({
     url: "/api/workshop/generate",
     method: "POST",
@@ -441,7 +489,6 @@ if (uni.restoreGlobal) {
   });
   const getWorkshopHistoryRemote = () => request({ url: "/api/workshop/history", timeout: 18e4 });
   const saveWorkshopHistoryRemote = (list) => request({ url: "/api/workshop/history", method: "PUT", data: { list }, timeout: 18e4 });
-  const getClassroomHistory = () => request({ url: "/api/school/history" });
   const getUserInfo = () => request({ url: "/api/user/info" });
   const updateUserInfo = (data) => request({ url: "/api/user/info", method: "PUT", data });
   const updateApiBaseUrl = (baseUrl) => request({ url: "/api/user/settings", method: "PUT", data: { apiBaseUrl: baseUrl } });
@@ -1431,111 +1478,59 @@ if (uni.restoreGlobal) {
     ]);
   }
   const PagesCrawlIndex = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["render", _sfc_render$5], ["__scopeId", "data-v-be3def88"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/crawl/index.vue"]]);
-  const DEFAULT_OPENMAIC_URL = "http://121.89.87.255:10200";
   const _sfc_main$5 = {
     __name: "input",
     setup(__props, { expose: __expose }) {
       __expose();
-      const { statusBarHeight } = getLayoutMetrics();
       const openmaicUrl = vue.ref("");
       const resolveOpenmaicUrl = () => {
         try {
-          const apiBaseUrl = getBaseUrl();
-          const url = new URL(apiBaseUrl);
-          url.port = "10200";
+          const url = new URL(getOpenmaicBaseUrl());
           url.pathname = "/";
           url.search = "";
+          url.searchParams.set("host", "uniapp");
           url.hash = "";
           return url.toString().replace(/\/$/, "");
         } catch (error) {
-          return DEFAULT_OPENMAIC_URL;
+          return "http://121.89.87.255:10200?host=uniapp";
         }
       };
       const goBack = () => {
-        safeNavigateBack("/pages/home/index");
-      };
-      const openExternal = () => {
-        if (!openmaicUrl.value)
-          return;
-        uni.showModal({
-          title: "提示",
-          content: "将使用系统浏览器打开 AI 学堂首页，是否继续？",
-          success: (res) => {
-            if (!res.confirm)
-              return;
-            plus.runtime.openURL(openmaicUrl.value);
-          }
-        });
+        uni.reLaunch({ url: "/pages/home/index?openSidebar=1" });
       };
       onLoad(() => {
         openmaicUrl.value = resolveOpenmaicUrl();
+      });
+      onNavigationBarButtonTap(() => {
+        goBack();
       });
       onBackPress(() => {
         goBack();
         return true;
       });
-      const __returned__ = { statusBarHeight, openmaicUrl, DEFAULT_OPENMAIC_URL, resolveOpenmaicUrl, goBack, openExternal, ref: vue.ref, get onBackPress() {
+      const __returned__ = { openmaicUrl, resolveOpenmaicUrl, goBack, ref: vue.ref, get onBackPress() {
         return onBackPress;
       }, get onLoad() {
         return onLoad;
-      }, get getLayoutMetrics() {
-        return getLayoutMetrics;
-      }, get safeNavigateBack() {
-        return safeNavigateBack;
-      }, get getBaseUrl() {
-        return getBaseUrl;
+      }, get onNavigationBarButtonTap() {
+        return onNavigationBarButtonTap;
+      }, get getOpenmaicBaseUrl() {
+        return getOpenmaicBaseUrl;
       } };
       Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
       return __returned__;
     }
   };
   function _sfc_render$4(_ctx, _cache, $props, $setup, $data, $options) {
-    return vue.openBlock(), vue.createElementBlock("view", { class: "school-web-page" }, [
-      $setup.openmaicUrl ? (vue.openBlock(), vue.createElementBlock("view", {
+    return vue.openBlock(), vue.createElementBlock("view", { class: "school-page" }, [
+      $setup.openmaicUrl ? (vue.openBlock(), vue.createElementBlock("web-view", {
         key: 0,
-        class: "webview-wrap"
-      }, [
-        vue.createElementVNode(
-          "cover-view",
-          {
-            class: "webview-overlay",
-            style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight + 12}px` })
-          },
-          [
-            vue.createElementVNode("cover-view", {
-              class: "back-pill",
-              onClick: $setup.goBack
-            }, "返回 AI工坊")
-          ],
-          4
-          /* STYLE */
-        ),
-        vue.createElementVNode("web-view", { src: $setup.openmaicUrl }, null, 8, ["src"])
-      ])) : (vue.openBlock(), vue.createElementBlock("view", {
+        class: "school-webview",
+        src: $setup.openmaicUrl
+      }, null, 8, ["src"])) : (vue.openBlock(), vue.createElementBlock("view", {
         key: 1,
         class: "empty-state"
       }, [
-        vue.createElementVNode(
-          "view",
-          {
-            class: "top-safe",
-            style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
-          },
-          null,
-          4
-          /* STYLE */
-        ),
-        vue.createElementVNode("view", { class: "page-header" }, [
-          vue.createElementVNode("text", {
-            class: "header-action",
-            onClick: $setup.goBack
-          }, "←"),
-          vue.createElementVNode("text", { class: "header-title" }, "AI 学堂"),
-          vue.createElementVNode("text", {
-            class: "header-action",
-            onClick: $setup.openExternal
-          }, "↗")
-        ]),
         vue.createElementVNode("text", { class: "empty-title" }, "AI 学堂暂时不可用"),
         vue.createElementVNode("text", { class: "empty-copy" }, " 当前没有可用的 OpenMAIC 地址，请先检查服务器和前端访问地址配置。 ")
       ]))
@@ -3129,7 +3124,6 @@ This will fail in production.`);
         });
       };
       const loadPageData = async () => {
-        var _a;
         try {
           const user = await userStore.fetchUserInfo();
           apiBaseUrl.value = user.apiBaseUrl || userStore.apiBaseUrl;
@@ -3143,13 +3137,11 @@ This will fail in production.`);
         } catch (error) {
           saveLocalProfile({ nickname: userInfo.value.nickname });
         }
-        try {
-          const history = await getClassroomHistory();
-          stats.value.courses = ((_a = history.list) == null ? void 0 : _a.length) || 0;
-          stats.value.hours = stats.value.courses * 2;
-        } catch (error) {
-          stats.value.courses = 0;
-        }
+        const workshopHistory = uni.getStorageSync("workshopHistory");
+        const workshopCount = Array.isArray(workshopHistory) ? workshopHistory.length : 0;
+        stats.value.courses = 0;
+        stats.value.hours = 0;
+        stats.value.codes = Math.max(workshopCount, 1);
       };
       const handleSave = async () => {
         try {
@@ -3217,8 +3209,6 @@ This will fail in production.`);
       });
       const __returned__ = { statusBarHeight, safeAreaInsetsBottom, userStore, apiBaseUrl, unifiedApiKey, stats, localProfile, genderSheetVisible, genderOptions, userInfo, mergedProfile, goBack, syncProfile, goToNickname, goToBio, openGenderSheet, closeGenderSheet, selectGender, loadPageData, handleSave, handleLogout, computed: vue.computed, ref: vue.ref, get onShow() {
         return onShow;
-      }, get getClassroomHistory() {
-        return getClassroomHistory;
       }, get updateApiBaseUrl() {
         return updateApiBaseUrl;
       }, get updateUserInfo() {
@@ -3245,17 +3235,10 @@ This will fail in production.`);
       vue.createElementVNode(
         "view",
         {
-          class: "status-bar",
-          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
+          class: "top-safe",
+          style: vue.normalizeStyle({ height: `${$setup.statusBarHeight}px` })
         },
-        [
-          vue.createElementVNode("text", { class: "status-time" }, "13:10"),
-          vue.createElementVNode("view", { class: "status-icons" }, [
-            vue.createElementVNode("text", { class: "status-glyph" }, "⌁"),
-            vue.createElementVNode("text", { class: "status-glyph" }, "◉"),
-            vue.createElementVNode("text", { class: "status-glyph" }, "▣")
-          ])
-        ],
+        null,
         4
         /* STYLE */
       ),
@@ -3367,16 +3350,16 @@ This will fail in production.`);
             ]),
             vue.createElementVNode("view", { class: "settings-card" }, [
               vue.createElementVNode("view", { class: "info-row" }, [
-                vue.createElementVNode("text", { class: "row-label" }, "后端地址"),
+                vue.createElementVNode("text", { class: "row-label" }, "AI工坊后端"),
                 vue.createElementVNode("text", { class: "row-value compact" }, "联调配置")
               ]),
-              vue.createElementVNode("text", { class: "settings-tip" }, "真机测试可直接填写阿里云后端地址，例如 http://121.89.87.255:10001。"),
+              vue.createElementVNode("text", { class: "settings-tip" }, "这里只影响 AI工坊 和个人资料接口，当前默认仍是你自己的云后端，例如 http://121.89.87.255:10001。"),
               vue.withDirectives(vue.createElementVNode(
                 "input",
                 {
                   class: "settings-input",
                   "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => $setup.apiBaseUrl = $event),
-                  placeholder: "可选：填写后端地址",
+                  placeholder: "可选：填写 AI工坊 后端地址",
                   "placeholder-class": "row-placeholder"
                 },
                 null,
@@ -3385,7 +3368,8 @@ This will fail in production.`);
               ), [
                 [vue.vModelText, $setup.apiBaseUrl]
               ]),
-              vue.createElementVNode("text", { class: "settings-tip" }, "若服务端设置了 UNIFIED_API_KEY，在此填写相同密钥（仅保存在本机，用于请求头 X-Api-Key）。"),
+              vue.createElementVNode("text", { class: "settings-tip" }, "AI观察哨 已固定走公司云 http://8.135.4.46:8000，AI学堂 已切回你们自己的 OpenMAIC http://121.89.87.255:10200。"),
+              vue.createElementVNode("text", { class: "settings-tip" }, "若 AI工坊 后端设置了 UNIFIED_API_KEY，在此填写相同密钥，仅保存在本机并用于请求头 X-Api-Key。"),
               vue.withDirectives(vue.createElementVNode(
                 "input",
                 {

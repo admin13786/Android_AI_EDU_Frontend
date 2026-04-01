@@ -4,25 +4,14 @@
   display: flex;
   flex-direction: column;
 }
-.status-bar[data-v-201c0da5], .page-header[data-v-201c0da5] {
+.top-safe[data-v-201c0da5], .page-header[data-v-201c0da5] {
   padding: 0 0.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.status-bar[data-v-201c0da5] {
-  height: 1.375rem;
-}
-.status-time[data-v-201c0da5], .status-glyph[data-v-201c0da5], .header-title[data-v-201c0da5], .header-action[data-v-201c0da5] {
+.header-title[data-v-201c0da5], .header-action[data-v-201c0da5] {
   color: #FFFFFF;
-}
-.status-time[data-v-201c0da5], .status-glyph[data-v-201c0da5] {
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-.status-icons[data-v-201c0da5] {
-  display: flex;
-  gap: 0.3125rem;
 }
 .page-header[data-v-201c0da5] {
   height: 1.75rem;
