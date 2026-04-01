@@ -2,27 +2,32 @@ let unauthorizedHandler = null
 let handling401 = false
 let last401At = 0
 const DEFAULT_API_BASE_URL = 'http://121.89.87.255:10001'
+const DEFAULT_NEWS_BASE_URL = 'http://8.135.4.46:8000'
+const DEFAULT_OPENMAIC_BASE_URL = 'http://121.89.87.255:10200'
 
 export function setUnauthorizedHandler(fn) {
   unauthorizedHandler = typeof fn === 'function' ? fn : null
 }
 
-const getBaseUrl = () => {
-  const storedBaseUrl = uni.getStorageSync('apiBaseUrl')
-  if (storedBaseUrl) {
-    const normalizedBaseUrl = String(storedBaseUrl).trim().replace(/\/+$/, '')
-    if (!/^https?:\/\/(10\.0\.2\.2|127\.0\.0\.1|localhost)(:\d+)?$/i.test(normalizedBaseUrl)) {
-      return normalizedBaseUrl
-    }
-  }
-
-  // #ifdef H5
-  return DEFAULT_API_BASE_URL
-  // #endif
-  // #ifndef H5
-  return DEFAULT_API_BASE_URL
-  // #endif
+const normalizeStoredUrl = (value) => {
+  if (!value) return ''
+  const normalizedUrl = String(value).trim().replace(/\/+$/, '')
+  if (!normalizedUrl) return ''
+  if (/^https?:\/\/(10\.0\.2\.2|127\.0\.0\.1|localhost)(:\d+)?$/i.test(normalizedUrl)) return ''
+  return normalizedUrl
 }
+
+const getConfiguredBaseUrl = (storageKey, fallbackUrl) => {
+  const storedBaseUrl = normalizeStoredUrl(uni.getStorageSync(storageKey))
+  if (storedBaseUrl) return storedBaseUrl
+  return fallbackUrl
+}
+
+const getBaseUrl = () => getConfiguredBaseUrl('apiBaseUrl', DEFAULT_API_BASE_URL)
+
+const getNewsBaseUrl = () => getConfiguredBaseUrl('newsBaseUrl', DEFAULT_NEWS_BASE_URL)
+
+const getOpenmaicBaseUrl = () => getConfiguredBaseUrl('openmaicBaseUrl', DEFAULT_OPENMAIC_BASE_URL)
 
 const normalizeError = (statusCode, data) => {
   if (typeof data === 'string') return data
@@ -36,10 +41,11 @@ const normalizeError = (statusCode, data) => {
 const request = (options) => {
   const token = uni.getStorageSync('token')
   const unifiedKey = uni.getStorageSync('unifiedApiKey')
+  const baseUrl = options.baseUrl || getBaseUrl()
 
   return new Promise((resolve, reject) => {
     uni.request({
-      url: getBaseUrl() + options.url,
+      url: baseUrl + options.url,
       method: options.method || 'GET',
       data: options.data,
       timeout: options.timeout || 180000,
@@ -93,4 +99,11 @@ const request = (options) => {
 }
 
 export default request
-export { DEFAULT_API_BASE_URL, getBaseUrl }
+export {
+  DEFAULT_API_BASE_URL,
+  DEFAULT_NEWS_BASE_URL,
+  DEFAULT_OPENMAIC_BASE_URL,
+  getBaseUrl,
+  getNewsBaseUrl,
+  getOpenmaicBaseUrl,
+}

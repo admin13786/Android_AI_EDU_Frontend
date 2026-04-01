@@ -1,37 +1,27 @@
-.school-web-page[data-v-6684b8ff] {
+.school-page[data-v-6684b8ff] {
   min-height: 100vh;
   background: #ffffff;
 }
+.school-webview[data-v-6684b8ff] {
+  min-height: 100vh;
+}
 .empty-state[data-v-6684b8ff] {
   min-height: 100vh;
-  padding: 2.5rem 1.5rem;
-  background: #0a0a0a;
+  padding: 1.5rem;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  background: #ffffff;
 }
 .empty-title[data-v-6684b8ff] {
-  color: #FFFFFF;
+  color: #0f172a;
   font-size: 1rem;
   font-weight: 700;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4375rem;
 }
 .empty-copy[data-v-6684b8ff] {
-  color: #94A3B8;
-  font-size: 0.8125rem;
-  line-height: 1.7;
-}
-.empty-button[data-v-6684b8ff] {
-  margin-top: 1rem;
-  width: 6.875rem;
-  height: 2.25rem;
-  border-radius: 31.21875rem;
-  background: linear-gradient(135deg, #38bdf8, #2563eb);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.empty-button-text[data-v-6684b8ff] {
-  color: #ffffff;
+  color: #64748b;
   font-size: 0.75rem;
-  font-weight: 600;
+  line-height: 1.7;
 }

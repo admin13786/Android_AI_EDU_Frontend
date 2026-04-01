@@ -1,9 +1,6 @@
 <template>
   <view class="profile-page">
-    <view class="status-bar" :style="{ paddingTop: `${statusBarHeight}px` }">
-      <text class="status-time">13:10</text>
-      <view class="status-icons"><text class="status-glyph">⌁</text><text class="status-glyph">◉</text><text class="status-glyph">▣</text></view>
-    </view>
+    <view class="top-safe" :style="{ height: `${statusBarHeight}px` }"></view>
     <view class="page-header">
       <text class="header-action" @click="goBack">←</text>
       <text class="header-title">个人信息</text>
@@ -42,10 +39,11 @@
         </view>
 
         <view class="settings-card">
-          <view class="info-row"><text class="row-label">后端地址</text><text class="row-value compact">联调配置</text></view>
-          <text class="settings-tip">真机测试可直接填写阿里云后端地址，例如 http://121.89.87.255:10001。</text>
-          <input class="settings-input" v-model="apiBaseUrl" placeholder="可选：填写后端地址" placeholder-class="row-placeholder" />
-          <text class="settings-tip">若服务端设置了 UNIFIED_API_KEY，在此填写相同密钥（仅保存在本机，用于请求头 X-Api-Key）。</text>
+          <view class="info-row"><text class="row-label">AI工坊后端</text><text class="row-value compact">联调配置</text></view>
+          <text class="settings-tip">这里只影响 AI工坊 和个人资料接口，当前默认仍是你自己的云后端，例如 http://121.89.87.255:10001。</text>
+          <input class="settings-input" v-model="apiBaseUrl" placeholder="可选：填写 AI工坊 后端地址" placeholder-class="row-placeholder" />
+          <text class="settings-tip">AI观察哨 已固定走公司云 http://8.135.4.46:8000，AI学堂 已切回你们自己的 OpenMAIC http://121.89.87.255:10200。</text>
+          <text class="settings-tip">若 AI工坊 后端设置了 UNIFIED_API_KEY，在此填写相同密钥，仅保存在本机并用于请求头 X-Api-Key。</text>
           <input
             class="settings-input"
             v-model="unifiedApiKey"
@@ -77,7 +75,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import { getClassroomHistory, updateApiBaseUrl, updateUserInfo } from '@/services/api'
+import { updateApiBaseUrl, updateUserInfo } from '@/services/api'
 import { useUserStore } from '@/stores/user'
 import { getLayoutMetrics } from '@/utils/layout'
 import {
@@ -149,7 +147,6 @@ const loadPageData = async () => {
     const user = await userStore.fetchUserInfo()
     apiBaseUrl.value = user.apiBaseUrl || userStore.apiBaseUrl
     saveLocalProfile({ nickname: user.nickname || getLocalProfile().nickname })
-    // Mirror cloud profile fields into local (so edit pages show latest).
     if (user && (Object.prototype.hasOwnProperty.call(user, 'bio') || Object.prototype.hasOwnProperty.call(user, 'gender'))) {
       saveLocalProfile({
         bio: user.bio != null ? user.bio : getLocalProfile().bio,
@@ -159,13 +156,12 @@ const loadPageData = async () => {
   } catch (error) {
     saveLocalProfile({ nickname: userInfo.value.nickname })
   }
-  try {
-    const history = await getClassroomHistory()
-    stats.value.courses = history.list?.length || 0
-    stats.value.hours = stats.value.courses * 2
-  } catch (error) {
-    stats.value.courses = 0
-  }
+
+  const workshopHistory = uni.getStorageSync('workshopHistory')
+  const workshopCount = Array.isArray(workshopHistory) ? workshopHistory.length : 0
+  stats.value.courses = 0
+  stats.value.hours = 0
+  stats.value.codes = Math.max(workshopCount, 1)
 }
 
 const handleSave = async () => {
@@ -184,7 +180,6 @@ const handleSave = async () => {
       apiBaseUrl.value = cleaned
     }
 
-    // Sync profile (bio/gender) to backend; keep nickname handled by nickname page.
     const lp = getLocalProfile()
     const nextGender = lp.gender || '未设置'
     const nextBio = lp.bio != null ? String(lp.bio) : ''
@@ -246,11 +241,8 @@ onShow(async () => {
 <style lang="scss" scoped>
 @import '../../theme.scss';
 .profile-page { min-height: 100vh; background: #0a0a0a; display: flex; flex-direction: column; }
-.status-bar, .page-header { padding: 0 16rpx; display: flex; align-items: center; justify-content: space-between; }
-.status-bar { height: 44rpx; }
-.status-time, .status-glyph, .header-title, .header-action { color: $text-white; }
-.status-time, .status-glyph { font-size: 24rpx; font-weight: 600; }
-.status-icons { display: flex; gap: 10rpx; }
+.top-safe, .page-header { padding: 0 16rpx; display: flex; align-items: center; justify-content: space-between; }
+.header-title, .header-action { color: $text-white; }
 .page-header { height: 56rpx; }
 .header-action, .header-placeholder { width: 40rpx; text-align: center; }
 .header-title { font-size: 30rpx; font-weight: 700; }
