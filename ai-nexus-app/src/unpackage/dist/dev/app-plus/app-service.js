@@ -343,7 +343,7 @@ if (uni.restoreGlobal) {
       )
     ])) : vue.createCommentVNode("v-if", true);
   }
-  const Sidebar = /* @__PURE__ */ _export_sfc(_sfc_main$8, [["render", _sfc_render$7], ["__scopeId", "data-v-3801e5de"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/components/Sidebar.vue"]]);
+  const Sidebar = /* @__PURE__ */ _export_sfc(_sfc_main$8, [["render", _sfc_render$7], ["__scopeId", "data-v-3801e5de"], ["__file", "D:/Learning/HKU/sem2/work/web_ver2/Android_AI_EDU_Frontend/ai-nexus-app/src/components/Sidebar.vue"]]);
   let unauthorizedHandler = null;
   let handling401 = false;
   let last401At = 0;
@@ -1230,7 +1230,7 @@ if (uni.restoreGlobal) {
       }, null, 8, ["visible", "workshop-history"])
     ]);
   }
-  const PagesHomeIndex = /* @__PURE__ */ _export_sfc(_sfc_main$7, [["render", _sfc_render$6], ["__scopeId", "data-v-4978fed5"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/home/index.vue"]]);
+  const PagesHomeIndex = /* @__PURE__ */ _export_sfc(_sfc_main$7, [["render", _sfc_render$6], ["__scopeId", "data-v-4978fed5"], ["__file", "D:/Learning/HKU/sem2/work/web_ver2/Android_AI_EDU_Frontend/ai-nexus-app/src/pages/home/index.vue"]]);
   const _sfc_main$6 = {
     __name: "index",
     setup(__props, { expose: __expose }) {
@@ -1430,13 +1430,12 @@ if (uni.restoreGlobal) {
       ], 40, ["refresher-triggered"])
     ]);
   }
-  const PagesCrawlIndex = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["render", _sfc_render$5], ["__scopeId", "data-v-be3def88"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/crawl/index.vue"]]);
+  const PagesCrawlIndex = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["render", _sfc_render$5], ["__scopeId", "data-v-be3def88"], ["__file", "D:/Learning/HKU/sem2/work/web_ver2/Android_AI_EDU_Frontend/ai-nexus-app/src/pages/crawl/index.vue"]]);
   const DEFAULT_OPENMAIC_URL = "http://121.89.87.255:10200";
   const _sfc_main$5 = {
     __name: "input",
     setup(__props, { expose: __expose }) {
       __expose();
-      const { statusBarHeight } = getLayoutMetrics();
       const openmaicUrl = vue.ref("");
       const resolveOpenmaicUrl = () => {
         try {
@@ -1454,19 +1453,6 @@ if (uni.restoreGlobal) {
       const goBack = () => {
         safeNavigateBack("/pages/home/index");
       };
-      const openExternal = () => {
-        if (!openmaicUrl.value)
-          return;
-        uni.showModal({
-          title: "提示",
-          content: "将使用系统浏览器打开 AI 学堂首页，是否继续？",
-          success: (res) => {
-            if (!res.confirm)
-              return;
-            plus.runtime.openURL(openmaicUrl.value);
-          }
-        });
-      };
       onLoad(() => {
         openmaicUrl.value = resolveOpenmaicUrl();
       });
@@ -1474,12 +1460,10 @@ if (uni.restoreGlobal) {
         goBack();
         return true;
       });
-      const __returned__ = { statusBarHeight, openmaicUrl, DEFAULT_OPENMAIC_URL, resolveOpenmaicUrl, goBack, openExternal, ref: vue.ref, get onBackPress() {
+      const __returned__ = { openmaicUrl, DEFAULT_OPENMAIC_URL, resolveOpenmaicUrl, goBack, ref: vue.ref, get onBackPress() {
         return onBackPress;
       }, get onLoad() {
         return onLoad;
-      }, get getLayoutMetrics() {
-        return getLayoutMetrics;
       }, get safeNavigateBack() {
         return safeNavigateBack;
       }, get getBaseUrl() {
@@ -1491,57 +1475,25 @@ if (uni.restoreGlobal) {
   };
   function _sfc_render$4(_ctx, _cache, $props, $setup, $data, $options) {
     return vue.openBlock(), vue.createElementBlock("view", { class: "school-web-page" }, [
-      $setup.openmaicUrl ? (vue.openBlock(), vue.createElementBlock("view", {
+      $setup.openmaicUrl ? (vue.openBlock(), vue.createElementBlock("web-view", {
         key: 0,
-        class: "webview-wrap"
-      }, [
-        vue.createElementVNode(
-          "cover-view",
-          {
-            class: "webview-overlay",
-            style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight + 12}px` })
-          },
-          [
-            vue.createElementVNode("cover-view", {
-              class: "back-pill",
-              onClick: $setup.goBack
-            }, "返回 AI工坊")
-          ],
-          4
-          /* STYLE */
-        ),
-        vue.createElementVNode("web-view", { src: $setup.openmaicUrl }, null, 8, ["src"])
-      ])) : (vue.openBlock(), vue.createElementBlock("view", {
+        src: $setup.openmaicUrl
+      }, null, 8, ["src"])) : (vue.openBlock(), vue.createElementBlock("view", {
         key: 1,
         class: "empty-state"
       }, [
-        vue.createElementVNode(
-          "view",
-          {
-            class: "top-safe",
-            style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
-          },
-          null,
-          4
-          /* STYLE */
-        ),
-        vue.createElementVNode("view", { class: "page-header" }, [
-          vue.createElementVNode("text", {
-            class: "header-action",
-            onClick: $setup.goBack
-          }, "←"),
-          vue.createElementVNode("text", { class: "header-title" }, "AI 学堂"),
-          vue.createElementVNode("text", {
-            class: "header-action",
-            onClick: $setup.openExternal
-          }, "↗")
-        ]),
-        vue.createElementVNode("text", { class: "empty-title" }, "AI 学堂暂时不可用"),
-        vue.createElementVNode("text", { class: "empty-copy" }, " 当前没有可用的 OpenMAIC 地址，请先检查服务器和前端访问地址配置。 ")
+        vue.createElementVNode("text", { class: "empty-title" }, "AI学堂暂时不可用"),
+        vue.createElementVNode("text", { class: "empty-copy" }, "当前没有可用的 OpenMAIC 地址，请先检查服务器和前端访问地址配置。"),
+        vue.createElementVNode("view", {
+          class: "empty-button",
+          onClick: $setup.goBack
+        }, [
+          vue.createElementVNode("text", { class: "empty-button-text" }, "返回 AI工坊")
+        ])
       ]))
     ]);
   }
-  const PagesSchoolInput = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["render", _sfc_render$4], ["__scopeId", "data-v-6684b8ff"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/school/input.vue"]]);
+  const PagesSchoolInput = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["render", _sfc_render$4], ["__scopeId", "data-v-6684b8ff"], ["__file", "D:/Learning/HKU/sem2/work/web_ver2/Android_AI_EDU_Frontend/ai-nexus-app/src/pages/school/input.vue"]]);
   var isVue2 = false;
   function set(target, key, val) {
     if (Array.isArray(target)) {
@@ -3486,7 +3438,7 @@ This will fail in production.`);
       ])) : vue.createCommentVNode("v-if", true)
     ]);
   }
-  const PagesProfileIndex = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["render", _sfc_render$3], ["__scopeId", "data-v-201c0da5"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/profile/index.vue"]]);
+  const PagesProfileIndex = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["render", _sfc_render$3], ["__scopeId", "data-v-201c0da5"], ["__file", "D:/Learning/HKU/sem2/work/web_ver2/Android_AI_EDU_Frontend/ai-nexus-app/src/pages/profile/index.vue"]]);
   const _sfc_main$3 = {
     __name: "nickname",
     setup(__props, { expose: __expose }) {
@@ -3588,7 +3540,7 @@ This will fail in production.`);
       ])
     ]);
   }
-  const PagesProfileNickname = /* @__PURE__ */ _export_sfc(_sfc_main$3, [["render", _sfc_render$2], ["__scopeId", "data-v-fe5128e0"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/profile/nickname.vue"]]);
+  const PagesProfileNickname = /* @__PURE__ */ _export_sfc(_sfc_main$3, [["render", _sfc_render$2], ["__scopeId", "data-v-fe5128e0"], ["__file", "D:/Learning/HKU/sem2/work/web_ver2/Android_AI_EDU_Frontend/ai-nexus-app/src/pages/profile/nickname.vue"]]);
   const _sfc_main$2 = {
     __name: "bio",
     setup(__props, { expose: __expose }) {
@@ -3672,7 +3624,7 @@ This will fail in production.`);
       ])
     ]);
   }
-  const PagesProfileBio = /* @__PURE__ */ _export_sfc(_sfc_main$2, [["render", _sfc_render$1], ["__scopeId", "data-v-7b992428"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/profile/bio.vue"]]);
+  const PagesProfileBio = /* @__PURE__ */ _export_sfc(_sfc_main$2, [["render", _sfc_render$1], ["__scopeId", "data-v-7b992428"], ["__file", "D:/Learning/HKU/sem2/work/web_ver2/Android_AI_EDU_Frontend/ai-nexus-app/src/pages/profile/bio.vue"]]);
   const _sfc_main$1 = {
     __name: "preview",
     setup(__props, { expose: __expose }) {
@@ -3801,7 +3753,7 @@ This will fail in production.`);
       )) : vue.createCommentVNode("v-if", true)
     ]);
   }
-  const PagesWorkshopPreview = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["render", _sfc_render], ["__scopeId", "data-v-2ca49518"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/workshop/preview.vue"]]);
+  const PagesWorkshopPreview = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["render", _sfc_render], ["__scopeId", "data-v-2ca49518"], ["__file", "D:/Learning/HKU/sem2/work/web_ver2/Android_AI_EDU_Frontend/ai-nexus-app/src/pages/workshop/preview.vue"]]);
   __definePage("pages/home/index", PagesHomeIndex);
   __definePage("pages/crawl/index", PagesCrawlIndex);
   __definePage("pages/school/input", PagesSchoolInput);
@@ -3816,7 +3768,7 @@ This will fail in production.`);
       });
     }
   };
-  const App = /* @__PURE__ */ _export_sfc(_sfc_main, [["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/App.vue"]]);
+  const App = /* @__PURE__ */ _export_sfc(_sfc_main, [["__file", "D:/Learning/HKU/sem2/work/web_ver2/Android_AI_EDU_Frontend/ai-nexus-app/src/App.vue"]]);
   function createApp() {
     const app = vue.createVueApp(App);
     const pinia = createPinia();
