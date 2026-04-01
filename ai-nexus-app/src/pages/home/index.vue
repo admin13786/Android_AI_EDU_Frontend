@@ -169,7 +169,7 @@
 
 <script setup>
 import { computed, onUnmounted, ref } from 'vue'
-import { onLoad, onShow } from '@dcloudio/uni-app'
+import { onBackPress, onLoad, onShow } from '@dcloudio/uni-app'
 import Sidebar from '@/components/Sidebar.vue'
 import { generateCode, getWorkshopHistoryRemote, routeWorkshopInput, saveWorkshopHistoryRemote } from '@/services/api'
 import { navigateByPath } from '@/utils/navigation'
@@ -478,6 +478,27 @@ onLoad((query) => {
 
 onShow(() => {
   syncWorkshopHistoryRemote({ silent: true })
+})
+
+let lastBackPressAt = 0
+
+onBackPress(() => {
+  if (sidebarVisible.value) {
+    closeSidebar()
+    return true
+  }
+
+  const now = Date.now()
+  if (now - lastBackPressAt < 1500) {
+    // #ifdef APP-PLUS
+    plus.runtime.quit()
+    // #endif
+    return true
+  }
+
+  lastBackPressAt = now
+  uni.showToast({ title: '再按一次退出应用', icon: 'none' })
+  return true
 })
 </script>
 

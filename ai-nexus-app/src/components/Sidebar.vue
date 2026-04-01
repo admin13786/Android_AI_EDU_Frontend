@@ -120,7 +120,8 @@ const showWorkshopHistory = computed(
 )
 
 const handleMenuClick = (item) => {
-  if (item.id === 'workshop' && props.activeSection === 'workshop') {
+  if (item.id === 'workshop') {
+    startNewConversation()
     return
   }
 

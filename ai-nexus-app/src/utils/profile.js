@@ -1,5 +1,6 @@
 const PROFILE_STORAGE_KEY = 'localProfile'
 const PROFILE_TOAST_KEY = 'profilePendingToast'
+const PROFILE_TOAST_TTL = 15000
 
 const DEFAULT_PROFILE = {
   nickname: '灵境体验官',
@@ -31,13 +32,32 @@ export const saveLocalProfile = (patch = {}) => {
 
 export const setProfilePendingToast = (message) => {
   if (!message) return
-  uni.setStorageSync(PROFILE_TOAST_KEY, message)
+  uni.setStorageSync(PROFILE_TOAST_KEY, {
+    message,
+    createdAt: Date.now(),
+  })
 }
 
 export const consumeProfilePendingToast = () => {
-  const message = uni.getStorageSync(PROFILE_TOAST_KEY)
-  if (message) {
+  const payload = uni.getStorageSync(PROFILE_TOAST_KEY)
+  if (payload) {
     uni.removeStorageSync(PROFILE_TOAST_KEY)
   }
-  return message || ''
+
+  // Clear legacy string payloads left by older builds instead of showing stale toasts.
+  if (!payload || typeof payload !== 'object') {
+    return ''
+  }
+
+  const message = typeof payload.message === 'string' ? payload.message : ''
+  const createdAt = Number(payload.createdAt || 0)
+  if (!message || !createdAt) {
+    return ''
+  }
+
+  if (Date.now() - createdAt > PROFILE_TOAST_TTL) {
+    return ''
+  }
+
+  return message
 }
