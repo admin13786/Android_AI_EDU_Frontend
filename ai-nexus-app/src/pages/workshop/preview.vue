@@ -93,7 +93,11 @@ onLoad((query) => {
   previewUrl.value = url
 })
 
-onBackPress(() => {
+onBackPress((options = {}) => {
+  if (options.from === 'navigateBack') {
+    return false
+  }
+
   goBack()
   return true
 })
