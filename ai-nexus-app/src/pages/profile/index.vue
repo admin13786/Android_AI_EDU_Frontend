@@ -109,11 +109,18 @@
         </view>
       </view>
     </view>
+
+    <view v-if="toastState.visible" class="floating-toast">
+      <view class="floating-toast-panel">
+        <text v-if="toastState.type === 'success'" class="floating-toast-icon">✓</text>
+        <text class="floating-toast-text">{{ toastState.message }}</text>
+      </view>
+    </view>
   </view>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import { onBackPress, onShow } from '@dcloudio/uni-app'
 import { updateApiBaseUrl, updateUserInfo } from '@/services/api'
 import { useUserStore } from '@/stores/user'
@@ -140,6 +147,13 @@ const stats = ref({ courses: 0, hours: 0, codes: 1 })
 const localProfile = ref(getLocalProfile())
 const genderSheetVisible = ref(false)
 const genderOptions = ['未设置', '女', '男']
+const toastState = ref({
+  visible: false,
+  message: '',
+  type: 'success',
+})
+let toastTimer = null
+
 const userInfo = computed(() => userStore.userInfo || {
   id: '10001',
   nickname: '灵境用户',
@@ -150,6 +164,26 @@ const mergedProfile = computed(() => ({
   ...localProfile.value,
   nickname: userInfo.value.nickname || localProfile.value.nickname,
 }))
+
+const showInlineToast = (message, type = 'success', duration = 1800) => {
+  if (!message) return
+
+  if (toastTimer) {
+    clearTimeout(toastTimer)
+    toastTimer = null
+  }
+
+  toastState.value = {
+    visible: true,
+    message,
+    type,
+  }
+
+  toastTimer = setTimeout(() => {
+    toastState.value.visible = false
+    toastTimer = null
+  }, duration)
+}
 
 const goBack = () => {
   safeNavigateBack('/pages/home/index?openSidebar=1')
@@ -182,11 +216,7 @@ const selectGender = (gender) => {
   setProfilePendingToast('性别选项已保存')
   closeGenderSheet()
   syncProfile()
-
-  uni.showToast({
-    title: '性别选项已保存',
-    icon: 'success',
-  })
+  showInlineToast('性别选项已保存')
 }
 
 const loadPageData = async () => {
@@ -252,7 +282,7 @@ const handleSave = async () => {
     }
 
     await loadPageData()
-    uni.showToast({ title: '保存成功', icon: 'success' })
+    showInlineToast('保存成功')
   } catch (error) {
     uni.showToast({ title: error.message, icon: 'none' })
   }
@@ -277,10 +307,14 @@ onShow(async () => {
 
   const toastMessage = consumeProfilePendingToast()
   if (toastMessage) {
-    uni.showToast({
-      title: toastMessage,
-      icon: 'success',
-    })
+    showInlineToast(toastMessage)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (toastTimer) {
+    clearTimeout(toastTimer)
+    toastTimer = null
   }
 })
 
@@ -356,7 +390,6 @@ onBackPress((options = {}) => {
 }
 
 .header-back-icon,
-.header-back-text,
 .header-title {
   color: $text-white;
 }
@@ -578,5 +611,47 @@ onBackPress((options = {}) => {
 .sheet-option-text {
   color: $text-white;
   font-size: 28rpx;
+}
+
+.floating-toast {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.floating-toast-panel {
+  max-width: 540rpx;
+  min-width: 280rpx;
+  padding: 28rpx 32rpx;
+  border-radius: 28rpx;
+  background: rgba(8, 8, 8, 0.92);
+  box-shadow: 0 18rpx 40rpx rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14rpx;
+}
+
+.floating-toast-icon {
+  color: #ffffff;
+  font-size: 72rpx;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.floating-toast-text {
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+  white-space: normal;
+  word-break: break-all;
 }
 </style>

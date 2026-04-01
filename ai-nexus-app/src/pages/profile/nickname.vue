@@ -156,7 +156,7 @@ onBackPress((options = {}) => {
 
 .header-action-text {
   color: #22d3ee;
-  font-size: 26rpx;
+  font-size: 28rpx;
   font-weight: 700;
 }
 
@@ -174,16 +174,18 @@ onBackPress((options = {}) => {
 }
 
 .text-input {
-  min-height: 92rpx;
+  min-height: 104rpx;
   border-radius: 24rpx;
   background: #1a1a1a;
   color: $text-white;
-  font-size: 28rpx;
-  padding: 0 24rpx;
+  font-size: 30rpx;
+  line-height: 1.4;
+  padding: 0 28rpx;
   box-sizing: border-box;
 }
 
 .text-placeholder {
   color: #6b7280;
+  font-size: 26rpx;
 }
 </style>

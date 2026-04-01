@@ -139,7 +139,7 @@ onBackPress((options = {}) => {
 
 .header-action-text {
   color: #22d3ee;
-  font-size: 26rpx;
+  font-size: 28rpx;
   font-weight: 700;
 }
 
@@ -158,24 +158,26 @@ onBackPress((options = {}) => {
 
 .text-area {
   width: 100%;
-  min-height: 260rpx;
+  min-height: 280rpx;
   border-radius: 24rpx;
   background: #1a1a1a;
   color: $text-white;
-  font-size: 28rpx;
-  padding: 24rpx;
+  font-size: 30rpx;
+  line-height: 1.6;
+  padding: 28rpx;
   box-sizing: border-box;
 }
 
 .text-placeholder {
   color: #6b7280;
+  font-size: 26rpx;
 }
 
 .count-text {
   display: block;
   color: #8e8e93;
-  font-size: 22rpx;
+  font-size: 24rpx;
   text-align: right;
-  margin-top: 12rpx;
+  margin-top: 14rpx;
 }
 </style>
