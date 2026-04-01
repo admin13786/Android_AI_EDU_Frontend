@@ -22,7 +22,7 @@
 </template>
 
 <script setup>
-import { onLoad } from '@dcloudio/uni-app'
+import { onBackPress, onLoad } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 import { getLayoutMetrics } from '@/utils/layout'
 import { getLocalProfile, saveLocalProfile, setProfilePendingToast } from '@/utils/profile'
@@ -44,6 +44,15 @@ const handleSave = () => {
 
 onLoad(() => {
   bio.value = getLocalProfile().bio
+})
+
+onBackPress((options = {}) => {
+  if (options.from === 'navigateBack') {
+    return false
+  }
+
+  goBack()
+  return true
 })
 </script>
 

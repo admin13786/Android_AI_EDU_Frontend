@@ -74,10 +74,11 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
+import { onBackPress, onShow } from '@dcloudio/uni-app'
 import { updateApiBaseUrl, updateUserInfo } from '@/services/api'
 import { useUserStore } from '@/stores/user'
 import { getLayoutMetrics } from '@/utils/layout'
+import { safeNavigateBack } from '@/utils/navigation'
 import {
   consumeProfilePendingToast,
   getLocalProfile,
@@ -235,6 +236,15 @@ onShow(async () => {
       icon: 'success',
     })
   }
+})
+
+onBackPress((options = {}) => {
+  if (options.from === 'navigateBack') {
+    return false
+  }
+
+  goBack()
+  return true
 })
 </script>
 

@@ -72,6 +72,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
+import { onBackPress } from '@dcloudio/uni-app'
 import { getNewsList } from '@/services/api'
 import { getLayoutMetrics } from '@/utils/layout'
 
@@ -116,6 +117,11 @@ const viewDetail = (item) => {
 
 onMounted(() => {
   loadNews()
+})
+
+onBackPress(() => {
+  goBackToWorkshop()
+  return true
 })
 </script>
 

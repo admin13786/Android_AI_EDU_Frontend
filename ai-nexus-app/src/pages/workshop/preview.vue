@@ -29,7 +29,7 @@
 </template>
 
 <script setup>
-import { onLoad } from '@dcloudio/uni-app'
+import { onBackPress, onLoad } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 import { getLayoutMetrics } from '@/utils/layout'
 import { safeNavigateBack } from '@/utils/navigation'
@@ -91,6 +91,11 @@ onLoad((query) => {
     return
   }
   previewUrl.value = url
+})
+
+onBackPress(() => {
+  goBack()
+  return true
 })
 </script>
 
