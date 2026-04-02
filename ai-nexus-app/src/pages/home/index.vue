@@ -138,9 +138,6 @@
 
     <view class="input-area" :style="{ paddingBottom: `${safeAreaInsetsBottom + 16}px` }">
       <view class="input-shell">
-        <view class="voice-badge">
-          <text class="voice-badge-text">✦</text>
-        </view>
         <input
           class="prompt-input"
           v-model="userInput"
@@ -569,9 +566,7 @@ onBackPress(() => {
 .floating-action { display: none; }
 .floating-action-text { color: $text-white; font-size: 34rpx; }
 .input-area { padding: 12rpx 24rpx 0; display: flex; align-items: center; gap: 16rpx; }
-.input-shell { flex: 1; height: 88rpx; border-radius: 999rpx; background: #1c1c1e; border: 2rpx solid #06b6d4; padding: 0 16rpx 0 10rpx; display: flex; align-items: center; gap: 12rpx; }
-.voice-badge { width: 48rpx; height: 48rpx; border-radius: 16rpx; background: #faf6f0; display: flex; align-items: center; justify-content: center; }
-.voice-badge-text { color: #c77d2f; font-size: 20rpx; }
+.input-shell { flex: 1; height: 88rpx; border-radius: 999rpx; background: #1c1c1e; border: 2rpx solid #06b6d4; padding: 0 24rpx; display: flex; align-items: center; }
 .prompt-input { flex: 1; color: $text-white; font-size: 28rpx; }
 .prompt-placeholder { color: #999999; font-size: 28rpx; }
 .send-button { width: 88rpx; height: 88rpx; border-radius: 50%; background: #8a2be2; display: flex; align-items: center; justify-content: center; box-shadow: 0 16rpx 28rpx rgba(138,43,226,0.22); }

@@ -2545,7 +2545,8 @@ This will fail in production.`);
           ),
           vue.createElementVNode("scroll-view", {
             class: "sidebar-scroll",
-            "scroll-y": ""
+            "scroll-y": "",
+            "show-scrollbar": ""
           }, [
             vue.createElementVNode("view", {
               class: "quick-action",
@@ -3409,9 +3410,6 @@ This will fail in production.`);
         },
         [
           vue.createElementVNode("view", { class: "input-shell" }, [
-            vue.createElementVNode("view", { class: "voice-badge" }, [
-              vue.createElementVNode("text", { class: "voice-badge-text" }, "✦")
-            ]),
             vue.withDirectives(vue.createElementVNode(
               "input",
               {
@@ -4625,11 +4623,27 @@ This will fail in production.`);
           redirectToAuth(currentRoute);
         }
       });
+      const userStore = useUserStore();
+      if (!userStore.isAuthenticated) {
+        setTimeout(() => {
+          const pages = (getCurrentPages == null ? void 0 : getCurrentPages()) || [];
+          const currentRoute = pages.length ? `/${pages[pages.length - 1].route}` : "";
+          if (normalizeRoute(currentRoute) !== AUTH_ROUTE) {
+            redirectToAuth(currentRoute || "/pages/home/index");
+          }
+        }, 0);
+      }
     },
     onShow() {
       const userStore = useUserStore();
       const pages = (getCurrentPages == null ? void 0 : getCurrentPages()) || [];
       const currentRoute = pages.length ? `/${pages[pages.length - 1].route}` : "";
+      if (!currentRoute) {
+        if (!userStore.isAuthenticated) {
+          redirectToAuth("/pages/home/index");
+        }
+        return;
+      }
       if (!routeRequiresAuth(currentRoute))
         return;
       if (userStore.isAuthenticated)

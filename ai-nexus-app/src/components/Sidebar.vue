@@ -17,7 +17,7 @@
         </view>
       </view>
 
-      <scroll-view class="sidebar-scroll" scroll-y>
+      <scroll-view class="sidebar-scroll" scroll-y show-scrollbar>
         <view class="quick-action" @click="startNewConversation">
           <text class="quick-action-text">开启新对话</text>
         </view>
@@ -241,8 +241,8 @@ onUnmounted(() => {
 .sidebar-panel {
   position: absolute;
   inset: 0 auto 0 0;
-  width: 308rpx;
-  max-width: 82vw;
+  width: 360rpx;
+  max-width: 86vw;
   height: 100%;
   background: #0b0b0d;
   display: flex;
@@ -286,6 +286,15 @@ onUnmounted(() => {
   min-height: 0;
   padding: 22rpx 16rpx 20rpx;
   box-sizing: border-box;
+}
+
+.sidebar-scroll ::-webkit-scrollbar {
+  width: 6rpx;
+}
+
+.sidebar-scroll ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.28);
+  border-radius: 999rpx;
 }
 
 .quick-action {

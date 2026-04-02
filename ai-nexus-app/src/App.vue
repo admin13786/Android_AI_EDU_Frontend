@@ -13,12 +13,29 @@ export default {
         redirectToAuth(currentRoute)
       }
     })
+
+    const userStore = useUserStore()
+    if (!userStore.isAuthenticated) {
+      setTimeout(() => {
+        const pages = getCurrentPages?.() || []
+        const currentRoute = pages.length ? `/${pages[pages.length - 1].route}` : ''
+        if (normalizeRoute(currentRoute) !== AUTH_ROUTE) {
+          redirectToAuth(currentRoute || '/pages/home/index')
+        }
+      }, 0)
+    }
   },
 
   onShow() {
     const userStore = useUserStore()
     const pages = getCurrentPages?.() || []
     const currentRoute = pages.length ? `/${pages[pages.length - 1].route}` : ''
+    if (!currentRoute) {
+      if (!userStore.isAuthenticated) {
+        redirectToAuth('/pages/home/index')
+      }
+      return
+    }
     if (!routeRequiresAuth(currentRoute)) return
     if (userStore.isAuthenticated) return
     redirectToAuth(currentRoute)
