@@ -51,6 +51,11 @@
           <text class="submit-button-text">{{ submitting ? '提交中...' : submitLabel }}</text>
         </view>
 
+        <view class="mode-switch-row">
+          <text class="mode-switch-copy">{{ mode === 'login' ? '还没有账号？' : '已经有账号？' }}</text>
+          <text class="mode-switch-action" @click="toggleMode">{{ toggleLabel }}</text>
+        </view>
+
         <view class="agreement-row" @click="toggleAgreement">
           <view class="agreement-checkbox" :class="{ checked: agreementChecked }"></view>
           <text class="agreement-text">已阅读并同意服务协议和灵境隐私保护指引</text>
@@ -448,6 +453,25 @@ onBackPress((options = {}) => {
   font-size: 32rpx;
   font-weight: 700;
   letter-spacing: 2rpx;
+}
+
+.mode-switch-row {
+  margin-top: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}
+
+.mode-switch-copy {
+  color: rgba(207, 207, 224, 0.72);
+  font-size: 24rpx;
+}
+
+.mode-switch-action {
+  color: #49d6ff;
+  font-size: 24rpx;
+  font-weight: 700;
 }
 
 .agreement-row {

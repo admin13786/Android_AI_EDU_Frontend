@@ -2261,6 +2261,25 @@ This will fail in production.`);
               2
               /* CLASS */
             ),
+            vue.createElementVNode("view", { class: "mode-switch-row" }, [
+              vue.createElementVNode(
+                "text",
+                { class: "mode-switch-copy" },
+                vue.toDisplayString($setup.mode === "login" ? "还没有账号？" : "已经有账号？"),
+                1
+                /* TEXT */
+              ),
+              vue.createElementVNode(
+                "text",
+                {
+                  class: "mode-switch-action",
+                  onClick: $setup.toggleMode
+                },
+                vue.toDisplayString($setup.toggleLabel),
+                1
+                /* TEXT */
+              )
+            ]),
             vue.createElementVNode("view", {
               class: "agreement-row",
               onClick: $setup.toggleAgreement
