@@ -35,6 +35,13 @@ if (uni.restoreGlobal) {
   const ON_LOAD = "onLoad";
   const ON_BACK_PRESS = "onBackPress";
   const ON_NAVIGATION_BAR_BUTTON_TAP = "onNavigationBarButtonTap";
+  function formatAppLog(type, filename, ...args) {
+    if (uni.__log__) {
+      uni.__log__(type, filename, ...args);
+    } else {
+      console[type].apply(console, [...args, filename]);
+    }
+  }
   const createLifeCycleHook = (lifecycle, flag = 0) => (hook, target = vue.getCurrentInstance()) => {
     !vue.isInSSRComponentSetup && vue.injectHook(lifecycle, hook, target);
   };
@@ -230,7 +237,7 @@ if (uni.restoreGlobal) {
   let activePinia;
   const setActivePinia = (pinia) => activePinia = pinia;
   const piniaSymbol = Symbol("pinia");
-  function isPlainObject$1(o) {
+  function isPlainObject$2(o) {
     return o && typeof o === "object" && Object.prototype.toString.call(o) === "[object Object]" && typeof o.toJSON !== "function";
   }
   var MutationType;
@@ -1030,7 +1037,7 @@ Only state can be modified.`);
         continue;
       }
       const targetValue = newState[key];
-      if (isPlainObject$1(targetValue) && isPlainObject$1(subPatch) && !vue.isRef(subPatch) && !vue.isReactive(subPatch)) {
+      if (isPlainObject$2(targetValue) && isPlainObject$2(subPatch) && !vue.isRef(subPatch) && !vue.isReactive(subPatch)) {
         newState[key] = patchObject(targetValue, subPatch);
       } else {
         {
@@ -1074,7 +1081,7 @@ Only state can be modified.`);
         continue;
       const subPatch = patchToApply[key];
       const targetValue = target[key];
-      if (isPlainObject$1(targetValue) && isPlainObject$1(subPatch) && target.hasOwnProperty(key) && !vue.isRef(subPatch) && !vue.isReactive(subPatch)) {
+      if (isPlainObject$2(targetValue) && isPlainObject$2(subPatch) && target.hasOwnProperty(key) && !vue.isRef(subPatch) && !vue.isReactive(subPatch)) {
         target[key] = mergeReactiveObjects(targetValue, subPatch);
       } else {
         target[key] = subPatch;
@@ -1084,7 +1091,7 @@ Only state can be modified.`);
   }
   const skipHydrateSymbol = Symbol("pinia:skipHydration");
   function shouldHydrate(obj) {
-    return !isPlainObject$1(obj) || !obj.hasOwnProperty(skipHydrateSymbol);
+    return !isPlainObject$2(obj) || !obj.hasOwnProperty(skipHydrateSymbol);
   }
   const { assign } = Object;
   function isComputed(o) {
@@ -1349,7 +1356,7 @@ Only state can be modified.`);
           if (stateKey in store.$state) {
             const newStateTarget = newStore.$state[stateKey];
             const oldStateSource = store.$state[stateKey];
-            if (typeof newStateTarget === "object" && isPlainObject$1(newStateTarget) && isPlainObject$1(oldStateSource)) {
+            if (typeof newStateTarget === "object" && isPlainObject$2(newStateTarget) && isPlainObject$2(oldStateSource)) {
               patchObject(newStateTarget, oldStateSource);
             } else {
               newStore.$state[stateKey] = oldStateSource;
@@ -1505,8 +1512,36 @@ This will fail in production.`);
   const COMPANY_USER_INFO_KEY = "companyUserInfo";
   const LEGACY_TOKEN_KEY = "token";
   const LEGACY_USER_INFO_KEY = "userInfo";
+  const LAST_LOGIN_USERNAME_KEY = "lastLoginUsername";
   const PUBLIC_ROUTES = /* @__PURE__ */ new Set([AUTH_ROUTE]);
-  const isPlainObject = (value) => !!value && typeof value === "object" && !Array.isArray(value);
+  const isPlainObject$1 = (value) => !!value && typeof value === "object" && !Array.isArray(value);
+  const getRememberedUsername = () => String(uni.getStorageSync(LAST_LOGIN_USERNAME_KEY) || "").trim();
+  const buildFallbackUserInfo = (username) => {
+    const normalizedUsername = String(username || "").trim();
+    if (!normalizedUsername)
+      return null;
+    return {
+      id: normalizedUsername,
+      username: normalizedUsername,
+      displayName: normalizedUsername,
+      nickname: normalizedUsername
+    };
+  };
+  const normalizeStoredUserInfo = (userInfo) => {
+    if (!isPlainObject$1(userInfo))
+      return null;
+    const rememberedUsername = getRememberedUsername();
+    const username = String(userInfo.username || userInfo.id || rememberedUsername || "").trim();
+    if (!username)
+      return userInfo;
+    return {
+      ...userInfo,
+      id: String(userInfo.id || username).trim(),
+      username,
+      displayName: String(userInfo.displayName || userInfo.display_name || userInfo.nickname || username).trim(),
+      nickname: String(userInfo.nickname || userInfo.displayName || userInfo.display_name || username).trim()
+    };
+  };
   const normalizeRoute = (route) => {
     const normalized = String(route || "").trim();
     if (!normalized)
@@ -1525,6 +1560,7 @@ This will fail in production.`);
     ).trim();
     return nextToken;
   };
+  const hasStoredSessionToken = () => !!getStoredSessionToken();
   const setStoredSessionToken = (token) => {
     const nextToken = String(token || "").trim();
     if (nextToken) {
@@ -1536,18 +1572,29 @@ This will fail in production.`);
     uni.removeStorageSync(LEGACY_TOKEN_KEY);
   };
   const getStoredUserInfo = () => {
-    const primary = uni.getStorageSync(COMPANY_USER_INFO_KEY);
-    if (isPlainObject(primary))
+    const primary = normalizeStoredUserInfo(uni.getStorageSync(COMPANY_USER_INFO_KEY));
+    if (primary)
       return primary;
-    const legacy = uni.getStorageSync(LEGACY_USER_INFO_KEY);
-    if (isPlainObject(legacy))
+    const legacy = normalizeStoredUserInfo(uni.getStorageSync(LEGACY_USER_INFO_KEY));
+    if (legacy)
       return legacy;
+    if (getStoredSessionToken()) {
+      return buildFallbackUserInfo(getRememberedUsername());
+    }
     return null;
   };
+  const getStoredAuthSnapshot = () => ({
+    token: getStoredSessionToken(),
+    userInfo: getStoredUserInfo()
+  });
   const setStoredUserInfo = (userInfo) => {
-    if (isPlainObject(userInfo)) {
-      uni.setStorageSync(COMPANY_USER_INFO_KEY, userInfo);
-      uni.setStorageSync(LEGACY_USER_INFO_KEY, userInfo);
+    const normalized = normalizeStoredUserInfo(userInfo);
+    if (normalized) {
+      uni.setStorageSync(COMPANY_USER_INFO_KEY, normalized);
+      uni.setStorageSync(LEGACY_USER_INFO_KEY, normalized);
+      if (normalized.username) {
+        uni.setStorageSync(LAST_LOGIN_USERNAME_KEY, normalized.username);
+      }
       return;
     }
     uni.removeStorageSync(COMPANY_USER_INFO_KEY);
@@ -1573,6 +1620,103 @@ This will fail in production.`);
   const redirectToAuth = (redirectRoute = "") => {
     uni.reLaunch({ url: buildAuthRedirectUrl(redirectRoute) });
   };
+  const DEBUG_LOG_STORAGE_KEY = "aiNexusDebugLogs";
+  const DEBUG_LOG_FILE_PATH = "_doc/ai-nexus-debug/workshop-debug.log";
+  const DEBUG_LOG_MAX_ENTRIES = 200;
+  const isPlainObject = (value) => !!value && typeof value === "object" && !Array.isArray(value);
+  const safeSerialize = (value) => {
+    if (value === null || value === void 0)
+      return "";
+    if (typeof value === "string")
+      return value;
+    if (typeof value === "number" || typeof value === "boolean")
+      return String(value);
+    try {
+      return JSON.stringify(value);
+    } catch (error) {
+      return "[unserializable]";
+    }
+  };
+  const normalizeDetail = (detail) => {
+    if (detail === null || detail === void 0)
+      return "";
+    if (typeof detail === "string")
+      return detail;
+    if (Array.isArray(detail)) {
+      return detail.map((item) => safeSerialize(item)).join(" ");
+    }
+    if (isPlainObject(detail)) {
+      const next = {};
+      Object.keys(detail).forEach((key) => {
+        const value = detail[key];
+        if (value === void 0)
+          return;
+        next[key] = typeof value === "string" ? value : safeSerialize(value);
+      });
+      return safeSerialize(next);
+    }
+    return safeSerialize(detail);
+  };
+  const readDebugLogs = () => {
+    const stored = uni.getStorageSync(DEBUG_LOG_STORAGE_KEY);
+    return Array.isArray(stored) ? stored : [];
+  };
+  const writeDebugLogs = (list) => {
+    uni.setStorageSync(DEBUG_LOG_STORAGE_KEY, Array.isArray(list) ? list.slice(-DEBUG_LOG_MAX_ENTRIES) : []);
+  };
+  const appendFileLog = (line) => {
+    var _a;
+    try {
+      if (!((_a = plus == null ? void 0 : plus.io) == null ? void 0 : _a.requestFileSystem))
+        return;
+      plus.io.requestFileSystem(
+        plus.io.PRIVATE_DOC,
+        (fs) => {
+          fs.root.getFile(
+            DEBUG_LOG_FILE_PATH,
+            { create: true },
+            (entry) => {
+              entry.createWriter(
+                (writer) => {
+                  const previousError = writer.onerror;
+                  writer.onerror = (error) => {
+                    if (typeof previousError === "function")
+                      previousError(error);
+                  };
+                  writer.seek(writer.length);
+                  writer.write(`${line}
+`);
+                },
+                () => {
+                }
+              );
+            },
+            () => {
+            }
+          );
+        },
+        () => {
+        }
+      );
+    } catch (error) {
+    }
+  };
+  const appendDebugLog = (scope, event, detail = "") => {
+    const entry = {
+      at: (/* @__PURE__ */ new Date()).toISOString(),
+      scope: String(scope || "app").trim() || "app",
+      event: String(event || "event").trim() || "event",
+      detail: normalizeDetail(detail)
+    };
+    const line = `[${entry.at}] [${entry.scope}] ${entry.event}${entry.detail ? ` ${entry.detail}` : ""}`;
+    const logs = readDebugLogs();
+    logs.push(entry);
+    writeDebugLogs(logs);
+    formatAppLog("log", "at utils/debug-log.js:95", line);
+    appendFileLog(line);
+    return entry;
+  };
+  const DEBUG_LOG_FILE_HINT = DEBUG_LOG_FILE_PATH;
   let unauthorizedHandler = null;
   let handling401 = false;
   let last401At = 0;
@@ -1601,13 +1745,42 @@ This will fail in production.`);
   const getBaseUrl = () => getConfiguredBaseUrl("apiBaseUrl", DEFAULT_API_BASE_URL);
   const getNewsBaseUrl = () => getConfiguredBaseUrl("newsBaseUrl", DEFAULT_NEWS_BASE_URL);
   const getOpenmaicBaseUrl = () => getConfiguredBaseUrl("openmaicBaseUrl", DEFAULT_OPENMAIC_BASE_URL);
+  const stringifyErrorPayload = (value) => {
+    if (value === null || value === void 0)
+      return "";
+    if (typeof value === "string")
+      return value.trim();
+    if (typeof value === "number" || typeof value === "boolean")
+      return String(value);
+    if (Array.isArray(value)) {
+      const message = value.map((item) => stringifyErrorPayload(item)).filter(Boolean).join("；");
+      if (message)
+        return message;
+    }
+    if (typeof value === "object") {
+      const preferredKeys = ["detail", "message", "error", "msg", "title", "reason", "description"];
+      for (const key of preferredKeys) {
+        const message = stringifyErrorPayload(value[key]);
+        if (message)
+          return message;
+      }
+      for (const nestedValue of Object.values(value)) {
+        const message = stringifyErrorPayload(nestedValue);
+        if (message)
+          return message;
+      }
+      try {
+        return JSON.stringify(value);
+      } catch (error) {
+        return "";
+      }
+    }
+    return "";
+  };
   const normalizeError = (statusCode, data) => {
-    if (typeof data === "string")
-      return data;
-    if (data == null ? void 0 : data.detail)
-      return data.detail;
-    if (data == null ? void 0 : data.message)
-      return data.message;
+    const message = stringifyErrorPayload(data);
+    if (message)
+      return message;
     if (statusCode === 404)
       return "Resource not found";
     if (statusCode >= 500)
@@ -1619,6 +1792,15 @@ This will fail in production.`);
     const unifiedKey = uni.getStorageSync("unifiedApiKey");
     const baseUrl = options.baseUrl || getBaseUrl();
     const skipUnauthorizedRedirect = !!options.skipUnauthorizedRedirect;
+    const shouldDebugLog = !!options.debugLog || /\/api\/workshop\//.test(String(options.url || ""));
+    if (shouldDebugLog) {
+      appendDebugLog("request", "start", {
+        method: options.method || "GET",
+        url: `${baseUrl}${options.url}`,
+        withAuth: !!options.withAuth,
+        payload: options.data || ""
+      });
+    }
     return new Promise((resolve, reject) => {
       uni.request({
         url: baseUrl + options.url,
@@ -1633,6 +1815,14 @@ This will fail in production.`);
         },
         success: (res) => {
           if (res.statusCode === 401) {
+            if (shouldDebugLog) {
+              appendDebugLog("request", "unauthorized", {
+                method: options.method || "GET",
+                url: `${baseUrl}${options.url}`,
+                statusCode: res.statusCode,
+                response: res.data
+              });
+            }
             if (!options.withAuth || skipUnauthorizedRedirect) {
               const error = new Error(normalizeError(res.statusCode, res.data));
               error.statusCode = res.statusCode;
@@ -1662,14 +1852,37 @@ This will fail in production.`);
             return;
           }
           if (res.statusCode < 200 || res.statusCode >= 300) {
+            if (shouldDebugLog) {
+              appendDebugLog("request", "http_error", {
+                method: options.method || "GET",
+                url: `${baseUrl}${options.url}`,
+                statusCode: res.statusCode,
+                response: res.data
+              });
+            }
             const error = new Error(normalizeError(res.statusCode, res.data));
             error.statusCode = res.statusCode;
             reject(error);
             return;
           }
+          if (shouldDebugLog) {
+            appendDebugLog("request", "success", {
+              method: options.method || "GET",
+              url: `${baseUrl}${options.url}`,
+              statusCode: res.statusCode,
+              response: res.data
+            });
+          }
           resolve(res.data);
         },
         fail: (error) => {
+          if (shouldDebugLog) {
+            appendDebugLog("request", "network_fail", {
+              method: options.method || "GET",
+              url: `${baseUrl}${options.url}`,
+              error: (error == null ? void 0 : error.errMsg) || error
+            });
+          }
           reject(new Error((error == null ? void 0 : error.errMsg) || "Network request failed"));
         }
       });
@@ -1731,19 +1944,12 @@ This will fail in production.`);
     skipUnauthorizedRedirect: true
   });
   const generateCode = (prompt) => request({
+    baseUrl: getBaseUrl(),
     url: "/api/workshop/generate",
     method: "POST",
     data: { prompt },
     timeout: 6e5
   });
-  const routeWorkshopInput = (text) => request({
-    url: "/api/workshop/router",
-    method: "POST",
-    data: { text },
-    timeout: 18e4
-  });
-  const getWorkshopHistoryRemote = () => request({ url: "/api/workshop/history", timeout: 18e4 });
-  const saveWorkshopHistoryRemote = (list) => request({ url: "/api/workshop/history", method: "PUT", data: { list }, timeout: 18e4 });
   const normalizeUserInfo = (info) => {
     if (!info || typeof info !== "object")
       return null;
@@ -1765,8 +1971,8 @@ This will fail in production.`);
     const userInfo = vue.ref(normalizeUserInfo(getStoredUserInfo()) || null);
     const apiBaseUrl = vue.ref(uni.getStorageSync("apiBaseUrl") || "");
     const isAuthenticated = vue.computed(() => {
-      var _a;
-      return !!token.value && !!((_a = userInfo.value) == null ? void 0 : _a.username);
+      var _a, _b;
+      return !!token.value && !!(((_a = userInfo.value) == null ? void 0 : _a.username) || ((_b = userInfo.value) == null ? void 0 : _b.id));
     });
     const setToken = (t) => {
       const nextToken = String(t || "").trim();
@@ -1806,6 +2012,13 @@ This will fail in production.`);
     const fetchUserInfo = async () => {
       return userInfo.value;
     };
+    const restoreSession = () => {
+      var _a, _b;
+      const snapshot = getStoredAuthSnapshot();
+      token.value = String(snapshot.token || "").trim();
+      userInfo.value = normalizeUserInfo(snapshot.userInfo) || null;
+      return !!token.value && !!(((_a = userInfo.value) == null ? void 0 : _a.username) || ((_b = userInfo.value) == null ? void 0 : _b.id));
+    };
     const logout = () => {
       token.value = "";
       userInfo.value = null;
@@ -1837,6 +2050,7 @@ This will fail in production.`);
       login,
       register,
       fetchUserInfo,
+      restoreSession,
       logout,
       logoutRemote
     };
@@ -2004,6 +2218,12 @@ This will fail in production.`);
         uni.showToast({ title: "请先勾选协议", icon: "none" });
         return false;
       };
+      const shouldShowBackForRoute = (route) => {
+        const normalized = String(route || "").trim();
+        if (!normalized)
+          return false;
+        return normalized !== HOME_ROUTE;
+      };
       const redirectToTarget = () => {
         uni.reLaunch({ url: redirectUrl.value || HOME_ROUTE });
       };
@@ -2116,7 +2336,7 @@ This will fail in production.`);
           } catch (error) {
             redirectUrl.value = PROFILE_ROUTE;
           }
-          showBack.value = true;
+          showBack.value = shouldShowBackForRoute(redirectUrl.value);
         } else {
           redirectUrl.value = HOME_ROUTE;
           showBack.value = false;
@@ -2148,7 +2368,7 @@ This will fail in production.`);
         uni.showToast({ title: "再按一次退出应用", icon: "none" });
         return true;
       });
-      const __returned__ = { HOME_ROUTE, PROFILE_ROUTE, statusBarHeight, safeAreaInsetsBottom, userStore, mode, submitting, agreementChecked, redirectUrl, showBack, lastBackPressAt, form, rememberedAccount, providerCopy, modeCaption, submitLabel, toggleLabel, ensureAgreed, redirectToTarget, tryAutoEnter, hydrateLoginUsername, toggleMode, toggleAgreement, goBack, validateForm, handleSubmit, openMoreActions, computed: vue.computed, ref: vue.ref, get onBackPress() {
+      const __returned__ = { HOME_ROUTE, PROFILE_ROUTE, statusBarHeight, safeAreaInsetsBottom, userStore, mode, submitting, agreementChecked, redirectUrl, showBack, lastBackPressAt, form, rememberedAccount, providerCopy, modeCaption, submitLabel, toggleLabel, ensureAgreed, shouldShowBackForRoute, redirectToTarget, tryAutoEnter, hydrateLoginUsername, toggleMode, toggleAgreement, goBack, validateForm, handleSubmit, openMoreActions, computed: vue.computed, ref: vue.ref, get onBackPress() {
         return onBackPress;
       }, get onLoad() {
         return onLoad;
@@ -2791,6 +3011,8 @@ This will fail in production.`);
       __expose();
       const systemInfo = uni.getSystemInfoSync();
       const { statusBarHeight, safeAreaInsetsBottom } = getLayoutMetrics();
+      const headerBarHeight = uni.upx2px(68);
+      const headerShellHeight = statusBarHeight + headerBarHeight;
       const sidebarVisible = vue.ref(false);
       const userInput = vue.ref("");
       const loading = vue.ref(false);
@@ -2803,16 +3025,52 @@ This will fail in production.`);
       const workshopSyncInFlight = vue.ref(false);
       const workshopSyncLastAt = vue.ref(0);
       const workshopSyncLastSignature = vue.ref("");
+      const routeWorkshopInput = async () => {
+        throw new Error("workshop router disabled");
+      };
+      const getWorkshopHistoryRemote = async () => ({ list: [] });
+      const saveWorkshopHistoryRemote = async () => ({ success: true });
+      const coerceText = (value, fallback = "") => {
+        if (typeof value === "string") {
+          const normalized = value.trim();
+          return normalized || fallback;
+        }
+        if (typeof value === "number" || typeof value === "boolean") {
+          return String(value);
+        }
+        if (Array.isArray(value)) {
+          const normalized = value.map((item) => coerceText(item)).filter(Boolean).join(" ");
+          return normalized || fallback;
+        }
+        if (value && typeof value === "object") {
+          for (const key of ["summary", "message", "detail", "error", "text", "title"]) {
+            const normalized = coerceText(value[key], "");
+            if (normalized)
+              return normalized;
+          }
+          try {
+            const serialized = JSON.stringify(value);
+            return serialized === "{}" ? fallback : serialized;
+          } catch (error) {
+            return fallback;
+          }
+        }
+        return fallback;
+      };
+      const getErrorMessage = (error, fallback = "生成失败，请稍后重试") => {
+        const message = coerceText((error == null ? void 0 : error.message) || (error == null ? void 0 : error.detail) || (error == null ? void 0 : error.error), "");
+        return message || fallback;
+      };
       const loadingPhases = [
         "正在理解需求",
         "正在生成页面结构",
         "正在整理运行代码",
         "正在准备在线预览"
       ];
-      const chatHeight = Math.max(systemInfo.windowHeight - statusBarHeight - 190 - safeAreaInsetsBottom, 380);
+      const chatHeight = Math.max(systemInfo.windowHeight - headerShellHeight - 190 - safeAreaInsetsBottom, 380);
       const hasPreview = vue.computed(() => {
-        var _a;
-        return !!((_a = generatedResult.value) == null ? void 0 : _a.previewUrl);
+        var _a, _b;
+        return !!(((_a = generatedResult.value) == null ? void 0 : _a.previewUrl) || ((_b = generatedResult.value) == null ? void 0 : _b.url));
       });
       const activeLoadingPhase = vue.computed(() => loadingPhases[loadingPhase.value % loadingPhases.length]);
       const isAssistantReply = vue.computed(() => {
@@ -2924,8 +3182,13 @@ This will fail in production.`);
           const res = await getWorkshopHistoryRemote();
           const remote = Array.isArray(res.list) ? res.list : [];
           const merged = mergeWorkshopHistory(local, remote);
+          appendDebugLog("workshop", "history_sync", {
+            localCount: local.length,
+            remoteCount: remote.length,
+            mergedCount: merged.length
+          });
           workshopHistory.value = merged;
-          uni.setStorageSync("workshopHistory", merged);
+          setWorkshopHistory(merged);
           const mergedSig = historySignature(merged);
           const remoteSig = historySignature(remote);
           if (mergedSig && mergedSig !== remoteSig && mergedSig !== workshopSyncLastSignature.value) {
@@ -2937,8 +3200,11 @@ This will fail in production.`);
           }
           workshopSyncLastAt.value = now2;
         } catch (error) {
+          appendDebugLog("workshop", "history_sync_failed", {
+            error: getErrorMessage(error, "云端历史同步失败")
+          });
           if (!silent) {
-            uni.showToast({ title: error.message || "云端历史同步失败", icon: "none" });
+            uni.showToast({ title: getErrorMessage(error, "云端历史同步失败"), icon: "none" });
           }
         } finally {
           workshopSyncInFlight.value = false;
@@ -2959,11 +3225,21 @@ This will fail in production.`);
         loadingTimer = null;
       };
       const openPreview = () => {
-        var _a;
-        if (!((_a = generatedResult.value) == null ? void 0 : _a.previewUrl))
+        var _a, _b, _c;
+        const previewUrl = ((_a = generatedResult.value) == null ? void 0 : _a.previewUrl) || ((_b = generatedResult.value) == null ? void 0 : _b.url);
+        if (!previewUrl) {
+          appendDebugLog("workshop", "open_preview_skipped", {
+            reason: "missing preview url",
+            result: generatedResult.value || ""
+          });
           return;
+        }
+        appendDebugLog("workshop", "open_preview", {
+          title: ((_c = generatedResult.value) == null ? void 0 : _c.title) || "",
+          previewUrl
+        });
         uni.navigateTo({
-          url: `/pages/workshop/preview?url=${encodeURIComponent(generatedResult.value.previewUrl)}&title=${encodeURIComponent(generatedResult.value.title || "工坊预览")}`
+          url: `/pages/workshop/preview?url=${encodeURIComponent(previewUrl)}&title=${encodeURIComponent(generatedResult.value.title || "工坊预览")}`
         });
       };
       const runAssistantAction = (action) => {
@@ -3015,6 +3291,31 @@ This will fail in production.`);
           ]
         };
       };
+      const normalizeWorkshopResult = (response, prompt) => {
+        const raw = (response == null ? void 0 : response.result) && typeof response.result === "object" ? response.result : response;
+        const previewUrl = (raw == null ? void 0 : raw.previewUrl) || (raw == null ? void 0 : raw.url) || (response == null ? void 0 : response.url) || (response == null ? void 0 : response.previewUrl) || "";
+        const code = coerceText((raw == null ? void 0 : raw.code) || (raw == null ? void 0 : raw.html) || (response == null ? void 0 : response.html), "");
+        const summary = coerceText((raw == null ? void 0 : raw.summary) || (raw == null ? void 0 : raw.message) || (response == null ? void 0 : response.summary) || (response == null ? void 0 : response.message), "") || `已根据“${prompt}”生成结果，可直接打开预览。`;
+        const title = coerceText((raw == null ? void 0 : raw.title) || (response == null ? void 0 : response.title) || prompt, "工坊预览");
+        const normalizedResult = {
+          ...raw,
+          title,
+          summary,
+          code,
+          url: previewUrl,
+          previewUrl,
+          language: (raw == null ? void 0 : raw.language) || "html"
+        };
+        appendDebugLog("workshop", "normalize_result", {
+          prompt,
+          previewUrl,
+          title,
+          hasCode: !!code,
+          summary,
+          raw: response
+        });
+        return normalizedResult;
+      };
       const handleGenerate = async () => {
         const prompt = userInput.value.trim();
         if (!prompt || loading.value) {
@@ -3022,10 +3323,15 @@ This will fail in production.`);
             uni.showToast({ title: "请输入你的需求", icon: "none" });
           return;
         }
+        appendDebugLog("workshop", "generate_submit", {
+          prompt,
+          logFile: DEBUG_LOG_FILE_HINT
+        });
         lastPrompt.value = prompt;
         userInput.value = "";
         try {
           const routed = await routeWorkshopInput(prompt);
+          appendDebugLog("workshop", "route_result", routed || {});
           if (!(routed == null ? void 0 : routed.shouldGenerate)) {
             generatedResult.value = {
               kind: "assistant",
@@ -3036,9 +3342,13 @@ This will fail in production.`);
           }
           lastPrompt.value = prompt;
         } catch (error) {
+          appendDebugLog("workshop", "route_fallback", {
+            error: getErrorMessage(error, "router unavailable")
+          });
           const fallback = classifyWorkshopInput(prompt);
           if (fallback.intent !== WorkshopIntent.GenerateWorkshop) {
             generatedResult.value = buildAssistantReply({ intent: "help" });
+            appendDebugLog("workshop", "route_classified_as_help", fallback);
             return;
           }
         }
@@ -3047,18 +3357,24 @@ This will fail in production.`);
         startLoadingAnimation();
         try {
           const response = await generateCode(lastPrompt.value);
-          generatedResult.value = response.result;
+          appendDebugLog("workshop", "generate_response", response || {});
+          const nextResult = normalizeWorkshopResult(response, lastPrompt.value);
+          generatedResult.value = nextResult;
           const savedConversation = saveWorkshopConversation({
             id: currentConversationId.value || `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
             prompt: lastPrompt.value,
-            result: response.result,
+            result: nextResult,
             createdAt: Date.now()
           });
           currentConversationId.value = savedConversation.id;
           syncWorkshopHistory();
           workshopSyncLastAt.value = 0;
         } catch (error) {
-          uni.showToast({ title: error.message, icon: "none" });
+          appendDebugLog("workshop", "generate_failed", {
+            prompt,
+            error: getErrorMessage(error)
+          });
+          uni.showToast({ title: getErrorMessage(error), icon: "none" });
           userInput.value = prompt;
         } finally {
           loading.value = false;
@@ -3097,11 +3413,11 @@ This will fail in production.`);
         uni.showToast({ title: "再按一次退出应用", icon: "none" });
         return true;
       });
-      const __returned__ = { systemInfo, statusBarHeight, safeAreaInsetsBottom, sidebarVisible, userInput, loading, generatedResult, lastPrompt, loadingPhase, workshopHistory, currentConversationId, get loadingTimer() {
+      const __returned__ = { systemInfo, statusBarHeight, safeAreaInsetsBottom, headerBarHeight, headerShellHeight, sidebarVisible, userInput, loading, generatedResult, lastPrompt, loadingPhase, workshopHistory, currentConversationId, get loadingTimer() {
         return loadingTimer;
       }, set loadingTimer(v) {
         loadingTimer = v;
-      }, workshopSyncInFlight, workshopSyncLastAt, workshopSyncLastSignature, loadingPhases, chatHeight, hasPreview, loadingText, activeLoadingPhase, isAssistantReply, assistantActions, aiTitle, aiBodyText, introText, highlights, showHighlights, toggleSidebar, closeSidebar, handleNavigate, clearConversation, syncWorkshopHistory, loadConversation, mergeWorkshopHistory, historySignature, syncWorkshopHistoryRemote, startLoadingAnimation, stopLoadingAnimation, openPreview, runAssistantAction, buildAssistantReply, handleGenerate, get lastBackPressAt() {
+      }, workshopSyncInFlight, workshopSyncLastAt, workshopSyncLastSignature, routeWorkshopInput, getWorkshopHistoryRemote, saveWorkshopHistoryRemote, coerceText, getErrorMessage, loadingPhases, chatHeight, hasPreview, loadingText, activeLoadingPhase, isAssistantReply, assistantActions, aiTitle, aiBodyText, introText, highlights, showHighlights, toggleSidebar, closeSidebar, handleNavigate, clearConversation, syncWorkshopHistory, loadConversation, mergeWorkshopHistory, historySignature, syncWorkshopHistoryRemote, startLoadingAnimation, stopLoadingAnimation, openPreview, runAssistantAction, buildAssistantReply, normalizeWorkshopResult, handleGenerate, get lastBackPressAt() {
         return lastBackPressAt;
       }, set lastBackPressAt(v) {
         lastBackPressAt = v;
@@ -3113,12 +3429,6 @@ This will fail in production.`);
         return onShow;
       }, Sidebar, get generateCode() {
         return generateCode;
-      }, get getWorkshopHistoryRemote() {
-        return getWorkshopHistoryRemote;
-      }, get routeWorkshopInput() {
-        return routeWorkshopInput;
-      }, get saveWorkshopHistoryRemote() {
-        return saveWorkshopHistoryRemote;
       }, get navigateByPath() {
         return navigateByPath;
       }, get getLayoutMetrics() {
@@ -3127,10 +3437,16 @@ This will fail in production.`);
         return classifyWorkshopInput;
       }, get WorkshopIntent() {
         return WorkshopIntent;
+      }, get appendDebugLog() {
+        return appendDebugLog;
+      }, get DEBUG_LOG_FILE_HINT() {
+        return DEBUG_LOG_FILE_HINT;
       }, get getWorkshopConversation() {
         return getWorkshopConversation;
       }, get getWorkshopHistory() {
         return getWorkshopHistory;
+      }, get setWorkshopHistory() {
+        return setWorkshopHistory;
       }, get saveWorkshopConversation() {
         return saveWorkshopConversation;
       } };
@@ -3140,6 +3456,26 @@ This will fail in production.`);
   };
   function _sfc_render$6(_ctx, _cache, $props, $setup, $data, $options) {
     return vue.openBlock(), vue.createElementBlock("view", { class: "workshop-page" }, [
+      vue.createElementVNode("view", { class: "header-fixed-shell" }, [
+        vue.createElementVNode(
+          "view",
+          {
+            class: "header-fixed-safe",
+            style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
+          },
+          null,
+          4
+          /* STYLE */
+        ),
+        vue.createElementVNode("view", { class: "header-fixed-bar" }, [
+          vue.createElementVNode("text", {
+            class: "header-fixed-action",
+            onClick: $setup.toggleSidebar
+          }, "≡"),
+          vue.createElementVNode("text", { class: "header-fixed-title" }, "AI 工坊"),
+          vue.createElementVNode("view", { class: "header-fixed-placeholder" })
+        ])
+      ]),
       vue.createElementVNode(
         "view",
         {
@@ -3756,11 +4092,7 @@ This will fail in production.`);
         height: `calc(100vh - ${topBarOffset})`
       };
       const userStore = useUserStore();
-      const companyNewsBaseUrl = DEFAULT_NEWS_BASE_URL;
-      const apiBaseUrl = vue.ref(userStore.apiBaseUrl);
-      const unifiedApiKey = vue.ref(uni.getStorageSync("unifiedApiKey") || "");
       const localProfile = vue.ref(getLocalProfile());
-      const developerPanelVisible = vue.ref(!!(apiBaseUrl.value || unifiedApiKey.value));
       const genderSheetVisible = vue.ref(false);
       const genderOptions = ["未设置", "女", "男"];
       const toastState = vue.ref({
@@ -3776,16 +4108,10 @@ This will fail in production.`);
         return {
           id: "guest",
           username: "",
-          nickname: "灵境用户",
-          createdAt: ""
+          nickname: "灵境用户"
         };
       });
       const displayUsername = vue.computed(() => userInfo.value.username || userInfo.value.id || "后端未提供");
-      const displayCreatedAt = vue.computed(() => {
-        if (!isAuthenticated.value)
-          return "未登录";
-        return userInfo.value.createdAt || "后端未提供";
-      });
       const mergedProfile = vue.computed(() => ({
         ...localProfile.value,
         nickname: userInfo.value.nickname || localProfile.value.nickname
@@ -3797,13 +4123,6 @@ This will fail in production.`);
       const introDisplay = vue.computed(() => {
         const bio = String(mergedProfile.value.bio || "").trim();
         return bio ? `${bio}  ›` : "介绍一下自己  ›";
-      });
-      const developerSummary = vue.computed(() => {
-        if (apiBaseUrl.value)
-          return "已设置 AI工坊 自定义地址";
-        if (unifiedApiKey.value)
-          return "已写入统一 API 密钥";
-        return "展开后可配置 AI工坊 联调地址与密钥";
       });
       const showInlineToast = (message, type = "success", duration = 1800) => {
         if (!message)
@@ -3847,9 +4166,6 @@ This will fail in production.`);
       const handleAvatarTap = () => {
         uni.showToast({ title: "头像能力待接入", icon: "none" });
       };
-      const toggleDeveloperPanel = () => {
-        developerPanelVisible.value = !developerPanelVisible.value;
-      };
       const openGenderSheet = () => {
         if (!isAuthenticated.value)
           return;
@@ -3864,30 +4180,6 @@ This will fail in production.`);
         closeGenderSheet();
         syncProfile();
         showInlineToast("性别选项已保存");
-      };
-      const persistLocalSettings = () => {
-        const trimmed = apiBaseUrl.value.trim();
-        if (trimmed && !/^https?:\/\/.+/.test(trimmed)) {
-          throw new Error("地址格式不正确，需要以 http:// 或 https:// 开头");
-        }
-        const cleaned = trimmed.replace(/\/+$/, "");
-        userStore.setApiBaseUrl(cleaned);
-        apiBaseUrl.value = cleaned;
-        const nextKey = unifiedApiKey.value.trim();
-        if (nextKey) {
-          uni.setStorageSync("unifiedApiKey", nextKey);
-        } else {
-          uni.removeStorageSync("unifiedApiKey");
-        }
-      };
-      const handleSave = async () => {
-        try {
-          persistLocalSettings();
-          await loadPageData();
-          showInlineToast("本机设置已保存");
-        } catch (error) {
-          uni.showToast({ title: error.message || "保存失败", icon: "none" });
-        }
       };
       const handleLogout = () => {
         uni.showModal({
@@ -3932,18 +4224,16 @@ This will fail in production.`);
         goBack();
         return true;
       });
-      const __returned__ = { statusBarHeight, safeAreaInsetsBottom, topBarOffset, profileScrollStyle, userStore, companyNewsBaseUrl, apiBaseUrl, unifiedApiKey, localProfile, developerPanelVisible, genderSheetVisible, genderOptions, toastState, get toastTimer() {
+      const __returned__ = { statusBarHeight, safeAreaInsetsBottom, topBarOffset, profileScrollStyle, userStore, localProfile, genderSheetVisible, genderOptions, toastState, get toastTimer() {
         return toastTimer;
       }, set toastTimer(v) {
         toastTimer = v;
-      }, isAuthenticated, userInfo, displayUsername, displayCreatedAt, mergedProfile, avatarInitial, introDisplay, developerSummary, showInlineToast, syncProfile, loadPageData, goBack, openAuth, goToNickname, goToBio, handleAvatarTap, toggleDeveloperPanel, openGenderSheet, closeGenderSheet, selectGender, persistLocalSettings, handleSave, handleLogout, computed: vue.computed, onBeforeUnmount: vue.onBeforeUnmount, ref: vue.ref, get onBackPress() {
+      }, isAuthenticated, userInfo, displayUsername, mergedProfile, avatarInitial, introDisplay, showInlineToast, syncProfile, loadPageData, goBack, openAuth, goToNickname, goToBio, handleAvatarTap, openGenderSheet, closeGenderSheet, selectGender, handleLogout, computed: vue.computed, onBeforeUnmount: vue.onBeforeUnmount, ref: vue.ref, get onBackPress() {
         return onBackPress;
       }, get onShow() {
         return onShow;
       }, get useUserStore() {
         return useUserStore;
-      }, get DEFAULT_NEWS_BASE_URL() {
-        return DEFAULT_NEWS_BASE_URL;
       }, get getLayoutMetrics() {
         return getLayoutMetrics;
       }, get safeNavigateBack() {
@@ -4081,90 +4371,7 @@ This will fail in production.`);
                       1
                       /* TEXT */
                     )
-                  ]),
-                  vue.createElementVNode("view", { class: "divider" }),
-                  vue.createElementVNode("view", { class: "info-row" }, [
-                    vue.createElementVNode("text", { class: "row-label" }, "注册时间"),
-                    vue.createElementVNode(
-                      "text",
-                      { class: "row-value" },
-                      vue.toDisplayString($setup.displayCreatedAt),
-                      1
-                      /* TEXT */
-                    )
                   ])
-                ]),
-                vue.createElementVNode("view", { class: "dev-card" }, [
-                  vue.createElementVNode("view", {
-                    class: "dev-head",
-                    onClick: $setup.toggleDeveloperPanel
-                  }, [
-                    vue.createElementVNode("view", null, [
-                      vue.createElementVNode("text", { class: "dev-title" }, "本机联调设置"),
-                      vue.createElementVNode(
-                        "text",
-                        { class: "dev-summary" },
-                        vue.toDisplayString($setup.developerSummary),
-                        1
-                        /* TEXT */
-                      )
-                    ]),
-                    vue.createElementVNode(
-                      "text",
-                      { class: "dev-arrow" },
-                      vue.toDisplayString($setup.developerPanelVisible ? "▾" : "▸"),
-                      1
-                      /* TEXT */
-                    )
-                  ]),
-                  $setup.developerPanelVisible ? (vue.openBlock(), vue.createElementBlock("view", {
-                    key: 0,
-                    class: "dev-body"
-                  }, [
-                    vue.createElementVNode("text", { class: "dev-tip" }, "这里的地址和密钥只保存在当前设备，不会写回公司后端。"),
-                    vue.withDirectives(vue.createElementVNode(
-                      "input",
-                      {
-                        class: "dev-input",
-                        "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => $setup.apiBaseUrl = $event),
-                        placeholder: "可选：填写 AI工坊 后端地址",
-                        "placeholder-class": "dev-placeholder"
-                      },
-                      null,
-                      512
-                      /* NEED_PATCH */
-                    ), [
-                      [vue.vModelText, $setup.apiBaseUrl]
-                    ]),
-                    vue.withDirectives(vue.createElementVNode(
-                      "input",
-                      {
-                        class: "dev-input",
-                        "onUpdate:modelValue": _cache[1] || (_cache[1] = ($event) => $setup.unifiedApiKey = $event),
-                        placeholder: "可选：统一 API 密钥",
-                        "placeholder-class": "dev-placeholder"
-                      },
-                      null,
-                      512
-                      /* NEED_PATCH */
-                    ), [
-                      [vue.vModelText, $setup.unifiedApiKey]
-                    ]),
-                    vue.createElementVNode(
-                      "text",
-                      { class: "dev-tip" },
-                      "AI观察哨 当前走公司服务 " + vue.toDisplayString($setup.companyNewsBaseUrl),
-                      1
-                      /* TEXT */
-                    ),
-                    vue.createElementVNode("text", { class: "dev-tip" }, "AI学堂 当前通过 OpenMAIC Web 页面承载。"),
-                    vue.createElementVNode("view", {
-                      class: "dev-save",
-                      onClick: $setup.handleSave
-                    }, [
-                      vue.createElementVNode("text", { class: "dev-save-text" }, "保存本机设置")
-                    ])
-                  ])) : vue.createCommentVNode("v-if", true)
                 ]),
                 vue.createElementVNode("view", {
                   class: "logout-button",
@@ -4181,16 +4388,16 @@ This will fail in production.`);
               [
                 vue.createElementVNode("view", { class: "guest-card" }, [
                   vue.createElementVNode("text", { class: "guest-title" }, "尚未登录账号"),
-                  vue.createElementVNode("text", { class: "guest-copy" }, "登录后可同步个人身份，并使用公司后端提供的账号态能力。"),
+                  vue.createElementVNode("text", { class: "guest-copy" }, "登录后可同步个人身份，并使用公司后端提供的账号能力。"),
                   vue.createElementVNode("view", {
                     class: "guest-action primary",
-                    onClick: _cache[2] || (_cache[2] = ($event) => $setup.openAuth("login"))
+                    onClick: _cache[0] || (_cache[0] = ($event) => $setup.openAuth("login"))
                   }, [
                     vue.createElementVNode("text", { class: "guest-action-text dark" }, "登录账号")
                   ]),
                   vue.createElementVNode("view", {
                     class: "guest-action secondary",
-                    onClick: _cache[3] || (_cache[3] = ($event) => $setup.openAuth("register"))
+                    onClick: _cache[1] || (_cache[1] = ($event) => $setup.openAuth("register"))
                   }, [
                     vue.createElementVNode("text", { class: "guest-action-text light" }, "新用户注册")
                   ])
@@ -4222,7 +4429,7 @@ This will fail in production.`);
       }, [
         vue.createElementVNode("view", {
           class: "gender-sheet",
-          onClick: _cache[4] || (_cache[4] = vue.withModifiers(() => {
+          onClick: _cache[2] || (_cache[2] = vue.withModifiers(() => {
           }, ["stop"]))
         }, [
           vue.createElementVNode("text", { class: "sheet-title" }, "性别设置"),
@@ -4632,21 +4839,28 @@ This will fail in production.`);
   __definePage("pages/profile/nickname", PagesProfileNickname);
   __definePage("pages/profile/bio", PagesProfileBio);
   __definePage("pages/workshop/preview", PagesWorkshopPreview);
+  const resolveCurrentRoute = () => {
+    const pages = (getCurrentPages == null ? void 0 : getCurrentPages()) || [];
+    return pages.length ? `/${pages[pages.length - 1].route}` : "";
+  };
+  const ensureAuthState = () => {
+    const userStore = useUserStore();
+    if (userStore.restoreSession())
+      return true;
+    return hasStoredSessionToken();
+  };
   const _sfc_main = {
     onLaunch() {
       setUnauthorizedHandler(() => {
         useUserStore().logout();
-        const pages = (getCurrentPages == null ? void 0 : getCurrentPages()) || [];
-        const currentRoute = pages.length ? `/${pages[pages.length - 1].route}` : "";
+        const currentRoute = resolveCurrentRoute();
         if (normalizeRoute(currentRoute) !== AUTH_ROUTE) {
           redirectToAuth(currentRoute);
         }
       });
-      const userStore = useUserStore();
-      if (!userStore.isAuthenticated) {
+      if (!ensureAuthState()) {
         setTimeout(() => {
-          const pages = (getCurrentPages == null ? void 0 : getCurrentPages()) || [];
-          const currentRoute = pages.length ? `/${pages[pages.length - 1].route}` : "";
+          const currentRoute = resolveCurrentRoute();
           if (normalizeRoute(currentRoute) !== AUTH_ROUTE) {
             redirectToAuth(currentRoute || "/pages/home/index");
           }
@@ -4654,18 +4868,17 @@ This will fail in production.`);
       }
     },
     onShow() {
-      const userStore = useUserStore();
-      const pages = (getCurrentPages == null ? void 0 : getCurrentPages()) || [];
-      const currentRoute = pages.length ? `/${pages[pages.length - 1].route}` : "";
+      const currentRoute = resolveCurrentRoute();
+      const hasAuth = ensureAuthState();
       if (!currentRoute) {
-        if (!userStore.isAuthenticated) {
+        if (!hasAuth) {
           redirectToAuth("/pages/home/index");
         }
         return;
       }
       if (!routeRequiresAuth(currentRoute))
         return;
-      if (userStore.isAuthenticated)
+      if (hasAuth)
         return;
       redirectToAuth(currentRoute);
     }

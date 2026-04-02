@@ -3,10 +3,41 @@ export const COMPANY_SESSION_TOKEN_KEY = 'companySessionToken'
 export const COMPANY_USER_INFO_KEY = 'companyUserInfo'
 export const LEGACY_TOKEN_KEY = 'token'
 export const LEGACY_USER_INFO_KEY = 'userInfo'
+export const LAST_LOGIN_USERNAME_KEY = 'lastLoginUsername'
 
 const PUBLIC_ROUTES = new Set([AUTH_ROUTE])
 
 const isPlainObject = (value) => !!value && typeof value === 'object' && !Array.isArray(value)
+
+const getRememberedUsername = () => String(uni.getStorageSync(LAST_LOGIN_USERNAME_KEY) || '').trim()
+
+const buildFallbackUserInfo = (username) => {
+  const normalizedUsername = String(username || '').trim()
+  if (!normalizedUsername) return null
+
+  return {
+    id: normalizedUsername,
+    username: normalizedUsername,
+    displayName: normalizedUsername,
+    nickname: normalizedUsername,
+  }
+}
+
+const normalizeStoredUserInfo = (userInfo) => {
+  if (!isPlainObject(userInfo)) return null
+
+  const rememberedUsername = getRememberedUsername()
+  const username = String(userInfo.username || userInfo.id || rememberedUsername || '').trim()
+  if (!username) return userInfo
+
+  return {
+    ...userInfo,
+    id: String(userInfo.id || username).trim(),
+    username,
+    displayName: String(userInfo.displayName || userInfo.display_name || userInfo.nickname || username).trim(),
+    nickname: String(userInfo.nickname || userInfo.displayName || userInfo.display_name || username).trim(),
+  }
+}
 
 export const normalizeRoute = (route) => {
   const normalized = String(route || '').trim()
@@ -27,6 +58,8 @@ export const getStoredSessionToken = () => {
   return nextToken
 }
 
+export const hasStoredSessionToken = () => !!getStoredSessionToken()
+
 export const setStoredSessionToken = (token) => {
   const nextToken = String(token || '').trim()
   if (nextToken) {
@@ -40,19 +73,33 @@ export const setStoredSessionToken = (token) => {
 }
 
 export const getStoredUserInfo = () => {
-  const primary = uni.getStorageSync(COMPANY_USER_INFO_KEY)
-  if (isPlainObject(primary)) return primary
+  const primary = normalizeStoredUserInfo(uni.getStorageSync(COMPANY_USER_INFO_KEY))
+  if (primary) return primary
 
-  const legacy = uni.getStorageSync(LEGACY_USER_INFO_KEY)
-  if (isPlainObject(legacy)) return legacy
+  const legacy = normalizeStoredUserInfo(uni.getStorageSync(LEGACY_USER_INFO_KEY))
+  if (legacy) return legacy
+
+  if (getStoredSessionToken()) {
+    return buildFallbackUserInfo(getRememberedUsername())
+  }
 
   return null
 }
 
+export const getStoredAuthSnapshot = () => ({
+  token: getStoredSessionToken(),
+  userInfo: getStoredUserInfo(),
+})
+
 export const setStoredUserInfo = (userInfo) => {
-  if (isPlainObject(userInfo)) {
-    uni.setStorageSync(COMPANY_USER_INFO_KEY, userInfo)
-    uni.setStorageSync(LEGACY_USER_INFO_KEY, userInfo)
+  const normalized = normalizeStoredUserInfo(userInfo)
+
+  if (normalized) {
+    uni.setStorageSync(COMPANY_USER_INFO_KEY, normalized)
+    uni.setStorageSync(LEGACY_USER_INFO_KEY, normalized)
+    if (normalized.username) {
+      uni.setStorageSync(LAST_LOGIN_USERNAME_KEY, normalized.username)
+    }
     return
   }
 

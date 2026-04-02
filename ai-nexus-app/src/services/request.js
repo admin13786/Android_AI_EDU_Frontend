@@ -4,6 +4,7 @@ import {
   normalizeRoute,
   redirectToAuth,
 } from '@/utils/auth'
+import { appendDebugLog } from '@/utils/debug-log'
 
 let unauthorizedHandler = null
 let handling401 = false
@@ -36,10 +37,44 @@ const getNewsBaseUrl = () => getConfiguredBaseUrl('newsBaseUrl', DEFAULT_NEWS_BA
 
 const getOpenmaicBaseUrl = () => getConfiguredBaseUrl('openmaicBaseUrl', DEFAULT_OPENMAIC_BASE_URL)
 
+const stringifyErrorPayload = (value) => {
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'string') return value.trim()
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+
+  if (Array.isArray(value)) {
+    const message = value
+      .map((item) => stringifyErrorPayload(item))
+      .filter(Boolean)
+      .join('；')
+    if (message) return message
+  }
+
+  if (typeof value === 'object') {
+    const preferredKeys = ['detail', 'message', 'error', 'msg', 'title', 'reason', 'description']
+    for (const key of preferredKeys) {
+      const message = stringifyErrorPayload(value[key])
+      if (message) return message
+    }
+
+    for (const nestedValue of Object.values(value)) {
+      const message = stringifyErrorPayload(nestedValue)
+      if (message) return message
+    }
+
+    try {
+      return JSON.stringify(value)
+    } catch (error) {
+      return ''
+    }
+  }
+
+  return ''
+}
+
 const normalizeError = (statusCode, data) => {
-  if (typeof data === 'string') return data
-  if (data?.detail) return data.detail
-  if (data?.message) return data.message
+  const message = stringifyErrorPayload(data)
+  if (message) return message
   if (statusCode === 404) return 'Resource not found'
   if (statusCode >= 500) return 'Server error, please retry later'
   return 'Request failed'
@@ -50,6 +85,16 @@ const request = (options) => {
   const unifiedKey = uni.getStorageSync('unifiedApiKey')
   const baseUrl = options.baseUrl || getBaseUrl()
   const skipUnauthorizedRedirect = !!options.skipUnauthorizedRedirect
+  const shouldDebugLog = !!options.debugLog || /\/api\/workshop\//.test(String(options.url || ''))
+
+  if (shouldDebugLog) {
+    appendDebugLog('request', 'start', {
+      method: options.method || 'GET',
+      url: `${baseUrl}${options.url}`,
+      withAuth: !!options.withAuth,
+      payload: options.data || '',
+    })
+  }
 
   return new Promise((resolve, reject) => {
     uni.request({
@@ -65,6 +110,14 @@ const request = (options) => {
       },
       success: (res) => {
         if (res.statusCode === 401) {
+          if (shouldDebugLog) {
+            appendDebugLog('request', 'unauthorized', {
+              method: options.method || 'GET',
+              url: `${baseUrl}${options.url}`,
+              statusCode: res.statusCode,
+              response: res.data,
+            })
+          }
           if (!options.withAuth || skipUnauthorizedRedirect) {
             const error = new Error(normalizeError(res.statusCode, res.data))
             error.statusCode = res.statusCode
@@ -99,15 +152,38 @@ const request = (options) => {
         }
 
         if (res.statusCode < 200 || res.statusCode >= 300) {
+          if (shouldDebugLog) {
+            appendDebugLog('request', 'http_error', {
+              method: options.method || 'GET',
+              url: `${baseUrl}${options.url}`,
+              statusCode: res.statusCode,
+              response: res.data,
+            })
+          }
           const error = new Error(normalizeError(res.statusCode, res.data))
           error.statusCode = res.statusCode
           reject(error)
           return
         }
 
+        if (shouldDebugLog) {
+          appendDebugLog('request', 'success', {
+            method: options.method || 'GET',
+            url: `${baseUrl}${options.url}`,
+            statusCode: res.statusCode,
+            response: res.data,
+          })
+        }
         resolve(res.data)
       },
       fail: (error) => {
+        if (shouldDebugLog) {
+          appendDebugLog('request', 'network_fail', {
+            method: options.method || 'GET',
+            url: `${baseUrl}${options.url}`,
+            error: error?.errMsg || error,
+          })
+        }
         reject(new Error(error?.errMsg || 'Network request failed'))
       },
     })

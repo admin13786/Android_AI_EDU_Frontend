@@ -1,4 +1,4 @@
-import request, { getNewsBaseUrl } from './request'
+import request, { getBaseUrl, getNewsBaseUrl } from './request'
 
 const NEWS_BOARD_BY_TYPE = {
   business: 'main',
@@ -73,8 +73,12 @@ export const logoutCurrentSession = () =>
   })
 
 // WorkShop - generation
+const WORKSHOP_SYSTEM_PROMPT =
+  '你是一个移动端 H5 游戏生成助手。请根据用户需求生成适配安卓手机 WebView 的小游戏，必须优先支持触屏操作和竖屏布局，交互清晰，按钮和触控区域足够大，界面简洁，可直接运行。若用户描述的是游戏，则默认补全为支持触屏控制、移动端适配、包含基础开始/重开与结果反馈。'
+
 export const generateCode = (prompt) =>
   request({
+    baseUrl: getBaseUrl(),
     url: '/api/workshop/generate',
     method: 'POST',
     data: { prompt },

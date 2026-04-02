@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { loginSession, logoutCurrentSession, registerSession } from '@/services/api'
 import {
   clearAuthSessionStorage,
+  getStoredAuthSnapshot,
   getStoredSessionToken,
   getStoredUserInfo,
   setStoredSessionToken,
@@ -32,7 +33,7 @@ export const useUserStore = defineStore('user', () => {
   const token = ref(getStoredSessionToken())
   const userInfo = ref(normalizeUserInfo(getStoredUserInfo()) || null)
   const apiBaseUrl = ref(uni.getStorageSync('apiBaseUrl') || '')
-  const isAuthenticated = computed(() => !!token.value && !!userInfo.value?.username)
+  const isAuthenticated = computed(() => !!token.value && !!(userInfo.value?.username || userInfo.value?.id))
 
   const setToken = (t) => {
     const nextToken = String(t || '').trim()
@@ -80,6 +81,13 @@ export const useUserStore = defineStore('user', () => {
     return userInfo.value
   }
 
+  const restoreSession = () => {
+    const snapshot = getStoredAuthSnapshot()
+    token.value = String(snapshot.token || '').trim()
+    userInfo.value = normalizeUserInfo(snapshot.userInfo) || null
+    return !!token.value && !!(userInfo.value?.username || userInfo.value?.id)
+  }
+
   const logout = () => {
     token.value = ''
     userInfo.value = null
@@ -113,6 +121,7 @@ export const useUserStore = defineStore('user', () => {
     login,
     register,
     fetchUserInfo,
+    restoreSession,
     logout,
     logoutRemote,
   }

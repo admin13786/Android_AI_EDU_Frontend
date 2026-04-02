@@ -11,7 +11,10 @@
       "path": "pages/home/index",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "AI工坊"
+        "navigationBarTitleText": "AI工坊",
+        "app-plus": {
+          "softinputMode": "adjustResize"
+        }
       }
     },
     {

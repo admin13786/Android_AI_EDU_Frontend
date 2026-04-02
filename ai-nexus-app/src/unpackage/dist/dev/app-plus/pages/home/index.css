@@ -15,8 +15,8 @@
 .sidebar-panel[data-v-3801e5de] {
   position: absolute;
   inset: 0 auto 0 0;
-  width: 11.25rem;
-  max-width: 86vw;
+  width: 13.75rem;
+  max-width: 90vw;
   height: 100%;
   background: #0b0b0d;
   display: flex;
@@ -179,15 +179,29 @@ to {
   flex-direction: column;
   position: relative;
 }
+.header-fixed-shell[data-v-4978fed5] {
+  display: none;
+}
+.header-fixed-safe[data-v-4978fed5] {
+  display: none;
+}
+.header-fixed-bar[data-v-4978fed5] {
+  display: none;
+}
+.header-fixed-action[data-v-4978fed5], .header-fixed-placeholder[data-v-4978fed5] {
+  display: none;
+}
+.header-fixed-title[data-v-4978fed5] {
+  display: none;
+}
 .top-safe[data-v-4978fed5] {
   padding-left: 0.75rem;
   padding-right: 0.75rem;
+  flex-shrink: 0;
+  background: #0a0a0a;
 }
 .page-header[data-v-4978fed5] {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 0;
-  z-index: 20;
+  flex-shrink: 0;
   height: 2.125rem;
   padding: 0 0.75rem;
   display: flex;

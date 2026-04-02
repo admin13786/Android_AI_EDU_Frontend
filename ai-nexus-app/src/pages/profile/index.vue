@@ -58,42 +58,6 @@
               <text class="row-label">用户名</text>
               <text class="row-value">{{ displayUsername }}</text>
             </view>
-            <view class="divider"></view>
-            <view class="info-row">
-              <text class="row-label">注册时间</text>
-              <text class="row-value">{{ displayCreatedAt }}</text>
-            </view>
-          </view>
-
-          <view class="dev-card">
-            <view class="dev-head" @click="toggleDeveloperPanel">
-              <view>
-                <text class="dev-title">本机联调设置</text>
-                <text class="dev-summary">{{ developerSummary }}</text>
-              </view>
-              <text class="dev-arrow">{{ developerPanelVisible ? '▾' : '▸' }}</text>
-            </view>
-
-            <view v-if="developerPanelVisible" class="dev-body">
-              <text class="dev-tip">这里的地址和密钥只保存在当前设备，不会写回公司后端。</text>
-              <input
-                class="dev-input"
-                v-model="apiBaseUrl"
-                placeholder="可选：填写 AI工坊 后端地址"
-                placeholder-class="dev-placeholder"
-              />
-              <input
-                class="dev-input"
-                v-model="unifiedApiKey"
-                placeholder="可选：统一 API 密钥"
-                placeholder-class="dev-placeholder"
-              />
-              <text class="dev-tip">AI观察哨 当前走公司服务 {{ companyNewsBaseUrl }}</text>
-              <text class="dev-tip">AI学堂 当前通过 OpenMAIC Web 页面承载。</text>
-              <view class="dev-save" @click="handleSave">
-                <text class="dev-save-text">保存本机设置</text>
-              </view>
-            </view>
           </view>
 
           <view class="logout-button" @click="handleLogout">
@@ -104,7 +68,7 @@
         <template v-else>
           <view class="guest-card">
             <text class="guest-title">尚未登录账号</text>
-            <text class="guest-copy">登录后可同步个人身份，并使用公司后端提供的账号态能力。</text>
+            <text class="guest-copy">登录后可同步个人身份，并使用公司后端提供的账号能力。</text>
             <view class="guest-action primary" @click="openAuth('login')">
               <text class="guest-action-text dark">登录账号</text>
             </view>
@@ -150,7 +114,6 @@
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { onBackPress, onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '@/stores/user'
-import { DEFAULT_NEWS_BASE_URL } from '@/services/request'
 import { getLayoutMetrics } from '@/utils/layout'
 import { safeNavigateBack } from '@/utils/navigation'
 import {
@@ -168,11 +131,7 @@ const profileScrollStyle = {
 }
 
 const userStore = useUserStore()
-const companyNewsBaseUrl = DEFAULT_NEWS_BASE_URL
-const apiBaseUrl = ref(userStore.apiBaseUrl)
-const unifiedApiKey = ref(uni.getStorageSync('unifiedApiKey') || '')
 const localProfile = ref(getLocalProfile())
-const developerPanelVisible = ref(!!(apiBaseUrl.value || unifiedApiKey.value))
 const genderSheetVisible = ref(false)
 const genderOptions = ['未设置', '女', '男']
 const toastState = ref({
@@ -189,30 +148,24 @@ const userInfo = computed(() => {
     id: 'guest',
     username: '',
     nickname: '灵境用户',
-    createdAt: '',
   }
 })
+
 const displayUsername = computed(() => userInfo.value.username || userInfo.value.id || '后端未提供')
-const displayCreatedAt = computed(() => {
-  if (!isAuthenticated.value) return '未登录'
-  return userInfo.value.createdAt || '后端未提供'
-})
+
 const mergedProfile = computed(() => ({
   ...localProfile.value,
   nickname: userInfo.value.nickname || localProfile.value.nickname,
 }))
+
 const avatarInitial = computed(() => {
   const source = mergedProfile.value.nickname || displayUsername.value || '灵'
   return String(source).trim().slice(0, 1) || '灵'
 })
+
 const introDisplay = computed(() => {
   const bio = String(mergedProfile.value.bio || '').trim()
   return bio ? `${bio}  ›` : '介绍一下自己  ›'
-})
-const developerSummary = computed(() => {
-  if (apiBaseUrl.value) return '已设置 AI工坊 自定义地址'
-  if (unifiedApiKey.value) return '已写入统一 API 密钥'
-  return '展开后可配置 AI工坊 联调地址与密钥'
 })
 
 const showInlineToast = (message, type = 'success', duration = 1800) => {
@@ -267,10 +220,6 @@ const handleAvatarTap = () => {
   uni.showToast({ title: '头像能力待接入', icon: 'none' })
 }
 
-const toggleDeveloperPanel = () => {
-  developerPanelVisible.value = !developerPanelVisible.value
-}
-
 const openGenderSheet = () => {
   if (!isAuthenticated.value) return
   genderSheetVisible.value = true
@@ -286,34 +235,6 @@ const selectGender = (gender) => {
   closeGenderSheet()
   syncProfile()
   showInlineToast('性别选项已保存')
-}
-
-const persistLocalSettings = () => {
-  const trimmed = apiBaseUrl.value.trim()
-  if (trimmed && !/^https?:\/\/.+/.test(trimmed)) {
-    throw new Error('地址格式不正确，需要以 http:// 或 https:// 开头')
-  }
-
-  const cleaned = trimmed.replace(/\/+$/, '')
-  userStore.setApiBaseUrl(cleaned)
-  apiBaseUrl.value = cleaned
-
-  const nextKey = unifiedApiKey.value.trim()
-  if (nextKey) {
-    uni.setStorageSync('unifiedApiKey', nextKey)
-  } else {
-    uni.removeStorageSync('unifiedApiKey')
-  }
-}
-
-const handleSave = async () => {
-  try {
-    persistLocalSettings()
-    await loadPageData()
-    showInlineToast('本机设置已保存')
-  } catch (error) {
-    uni.showToast({ title: error.message || '保存失败', icon: 'none' })
-  }
 }
 
 const handleLogout = () => {
@@ -495,8 +416,7 @@ onBackPress((options = {}) => {
 .info-card,
 .intro-card,
 .meta-card,
-.guest-card,
-.dev-card {
+.guest-card {
   width: 100%;
   border-radius: 20rpx;
   background: #17171c;
@@ -506,8 +426,7 @@ onBackPress((options = {}) => {
 
 .info-card,
 .meta-card,
-.guest-card,
-.dev-card {
+.guest-card {
   padding: 20rpx 22rpx;
 }
 
@@ -517,7 +436,6 @@ onBackPress((options = {}) => {
 }
 
 .meta-card,
-.dev-card,
 .logout-button {
   margin-top: 20rpx;
 }
@@ -630,79 +548,6 @@ onBackPress((options = {}) => {
 
 .guest-action-text.light {
   color: #f5f5f7;
-}
-
-.dev-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16rpx;
-}
-
-.dev-title {
-  display: block;
-  color: #f5f5f7;
-  font-size: 28rpx;
-  font-weight: 700;
-}
-
-.dev-summary {
-  display: block;
-  margin-top: 8rpx;
-  color: #8d8d98;
-  font-size: 24rpx;
-  line-height: 1.5;
-}
-
-.dev-arrow {
-  color: #a7a7b3;
-  font-size: 28rpx;
-}
-
-.dev-body {
-  margin-top: 18rpx;
-  padding-top: 18rpx;
-  border-top: 2rpx solid #272730;
-}
-
-.dev-tip {
-  display: block;
-  color: #8d8d98;
-  font-size: 24rpx;
-  line-height: 1.7;
-}
-
-.dev-input {
-  width: 100%;
-  height: 78rpx;
-  margin-top: 14rpx;
-  padding: 0 24rpx;
-  border-radius: 18rpx;
-  background: #0b0b0d;
-  color: #f5f5f7;
-  font-size: 26rpx;
-  box-sizing: border-box;
-}
-
-.dev-placeholder {
-  color: #6f6f7b;
-  font-size: 24rpx;
-}
-
-.dev-save {
-  margin-top: 18rpx;
-  min-height: 76rpx;
-  border-radius: 18rpx;
-  background: #1d5fb9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dev-save-text {
-  color: #f5f5f7;
-  font-size: 26rpx;
-  font-weight: 700;
 }
 
 .logout-button {

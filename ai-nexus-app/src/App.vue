@@ -1,24 +1,38 @@
 <script>
 import { setUnauthorizedHandler } from '@/services/request'
 import { useUserStore } from '@/stores/user'
-import { AUTH_ROUTE, normalizeRoute, redirectToAuth, routeRequiresAuth } from '@/utils/auth'
+import {
+  AUTH_ROUTE,
+  hasStoredSessionToken,
+  normalizeRoute,
+  redirectToAuth,
+  routeRequiresAuth,
+} from '@/utils/auth'
+
+const resolveCurrentRoute = () => {
+  const pages = getCurrentPages?.() || []
+  return pages.length ? `/${pages[pages.length - 1].route}` : ''
+}
+
+const ensureAuthState = () => {
+  const userStore = useUserStore()
+  if (userStore.restoreSession()) return true
+  return hasStoredSessionToken()
+}
 
 export default {
   onLaunch() {
     setUnauthorizedHandler(() => {
       useUserStore().logout()
-      const pages = getCurrentPages?.() || []
-      const currentRoute = pages.length ? `/${pages[pages.length - 1].route}` : ''
+      const currentRoute = resolveCurrentRoute()
       if (normalizeRoute(currentRoute) !== AUTH_ROUTE) {
         redirectToAuth(currentRoute)
       }
     })
 
-    const userStore = useUserStore()
-    if (!userStore.isAuthenticated) {
+    if (!ensureAuthState()) {
       setTimeout(() => {
-        const pages = getCurrentPages?.() || []
-        const currentRoute = pages.length ? `/${pages[pages.length - 1].route}` : ''
+        const currentRoute = resolveCurrentRoute()
         if (normalizeRoute(currentRoute) !== AUTH_ROUTE) {
           redirectToAuth(currentRoute || '/pages/home/index')
         }
@@ -27,17 +41,16 @@ export default {
   },
 
   onShow() {
-    const userStore = useUserStore()
-    const pages = getCurrentPages?.() || []
-    const currentRoute = pages.length ? `/${pages[pages.length - 1].route}` : ''
+    const currentRoute = resolveCurrentRoute()
+    const hasAuth = ensureAuthState()
     if (!currentRoute) {
-      if (!userStore.isAuthenticated) {
+      if (!hasAuth) {
         redirectToAuth('/pages/home/index')
       }
       return
     }
     if (!routeRequiresAuth(currentRoute)) return
-    if (userStore.isAuthenticated) return
+    if (hasAuth) return
     redirectToAuth(currentRoute)
   },
 }

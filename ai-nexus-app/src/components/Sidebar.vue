@@ -245,8 +245,8 @@ onUnmounted(() => {
 .sidebar-panel {
   position: absolute;
   inset: 0 auto 0 0;
-  width: 360rpx;
-  max-width: 86vw;
+  width: 440rpx;
+  max-width: 90vw;
   height: 100%;
   background: #0b0b0d;
   display: flex;

@@ -126,6 +126,12 @@ const ensureAgreed = () => {
   return false
 }
 
+const shouldShowBackForRoute = (route) => {
+  const normalized = String(route || '').trim()
+  if (!normalized) return false
+  return normalized !== HOME_ROUTE
+}
+
 const redirectToTarget = () => {
   uni.reLaunch({ url: redirectUrl.value || HOME_ROUTE })
 }
@@ -254,7 +260,7 @@ onLoad((options = {}) => {
     } catch (error) {
       redirectUrl.value = PROFILE_ROUTE
     }
-    showBack.value = true
+    showBack.value = shouldShowBackForRoute(redirectUrl.value)
   } else {
     redirectUrl.value = HOME_ROUTE
     showBack.value = false
