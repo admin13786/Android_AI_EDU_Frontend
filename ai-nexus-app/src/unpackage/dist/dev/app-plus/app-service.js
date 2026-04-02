@@ -2397,6 +2397,10 @@ This will fail in production.`);
         return String(source).trim().slice(0, 1) || "灵";
       });
       const handleMenuClick = (item) => {
+        if (item.id === "workshop") {
+          startNewConversation();
+          return;
+        }
         if (item.id === props.activeSection) {
           emit("close");
           return;
@@ -2533,11 +2537,7 @@ This will fail in production.`);
             },
             [
               vue.createElementVNode("view", { class: "brand-row" }, [
-                vue.createElementVNode("text", { class: "brand-title" }, "灵境"),
-                vue.createElementVNode("text", {
-                  class: "brand-close",
-                  onClick: $setup.requestClose
-                }, "›")
+                vue.createElementVNode("text", { class: "brand-title" }, "灵境")
               ])
             ],
             4

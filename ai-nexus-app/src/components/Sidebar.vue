@@ -13,7 +13,6 @@
       <view class="sidebar-header" :style="{ paddingTop: `${statusBarHeight + 6}px` }">
         <view class="brand-row">
           <text class="brand-title">灵境</text>
-          <text class="brand-close" @click="requestClose">›</text>
         </view>
       </view>
 
@@ -145,6 +144,11 @@ const avatarInitial = computed(() => {
 })
 
 const handleMenuClick = (item) => {
+  if (item.id === 'workshop') {
+    startNewConversation()
+    return
+  }
+
   if (item.id === props.activeSection) {
     emit('close')
     return
@@ -266,19 +270,12 @@ onUnmounted(() => {
   height: 42rpx;
   display: flex;
   align-items: center;
-  justify-content: space-between;
 }
 
 .brand-title {
   color: #f5f5f7;
   font-size: 38rpx;
   font-weight: 700;
-}
-
-.brand-close {
-  color: #a7a7b3;
-  font-size: 30rpx;
-  line-height: 1;
 }
 
 .sidebar-scroll {
