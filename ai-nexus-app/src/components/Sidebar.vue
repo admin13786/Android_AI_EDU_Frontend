@@ -10,9 +10,15 @@
       @touchend="onTouchEnd"
       @touchcancel="onTouchEnd"
     >
-      <scroll-view class="sidebar-inner" scroll-y>
+      <view class="sidebar-header" :style="{ paddingTop: `${statusBarHeight + 6}px` }">
+        <view class="brand-row">
+          <text class="brand-title">灵境</text>
+          <text class="brand-close" @click="requestClose">›</text>
+        </view>
+      </view>
+
+      <scroll-view class="sidebar-scroll" scroll-y>
         <view class="quick-action" @click="startNewConversation">
-          <text class="quick-action-icon">+</text>
           <text class="quick-action-text">开启新对话</text>
         </view>
 
@@ -24,39 +30,37 @@
             :class="{ active: item.id === activeSection }"
             @click="handleMenuClick(item)"
           >
-            <view class="menu-item-left">
-              <text class="menu-icon">{{ item.icon }}</text>
-              <text class="menu-label">{{ item.name }}</text>
-            </view>
-            <text class="menu-arrow">{{ item.id === activeSection ? '•' : '›' }}</text>
+            <text class="menu-label">{{ item.name }}</text>
+            <text class="menu-arrow">›</text>
           </view>
+        </view>
 
-          <view v-if="showWorkshopHistory" class="history-block">
-            <view class="history-divider"></view>
+        <view class="history-block">
+          <view class="history-divider"></view>
+          <text class="history-window">30天内</text>
 
-            <view class="history-group">
-              <text class="history-title">AI工坊历史对话</text>
-
-              <view
-                v-for="item in workshopHistory"
-                :key="item.id"
-                class="history-item"
-                @click="openHistory(item.id)"
-              >
-                <text class="history-item-text">{{ item.prompt || '未命名对话' }}</text>
-              </view>
-
-              <text v-if="!workshopHistory.length" class="history-empty">还没有历史记录</text>
+          <template v-if="recentHistory.length">
+            <view
+              v-for="item in recentHistory"
+              :key="item.id"
+              class="history-item"
+              @click="openHistory(item.id)"
+            >
+              <text class="history-item-text">{{ item.prompt || '未命名对话' }}</text>
             </view>
-          </view>
+          </template>
+
+          <text v-else class="history-empty">没有更多内容啦</text>
         </view>
       </scroll-view>
 
-      <view class="profile-anchor" @click="goToProfile">
-        <image class="profile-avatar" src="/static/avatar.svg" mode="aspectFill"></image>
+      <view class="profile-anchor" :style="{ paddingBottom: `${safeAreaInsetsBottom + 16}px` }" @click="goToProfile">
+        <view class="profile-avatar">
+          <text class="profile-avatar-text">{{ avatarInitial }}</text>
+        </view>
         <view class="profile-meta">
-          <text class="profile-title">个人中心</text>
-          <text class="profile-subtitle">查看资料与设置</text>
+          <text class="profile-name">{{ profileName }}</text>
+          <text class="profile-subtitle">{{ profileSubtitle }}</text>
         </view>
       </view>
     </view>
@@ -64,7 +68,9 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onUnmounted } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
+import { useUserStore } from '@/stores/user'
+import { getLayoutMetrics } from '@/utils/layout'
 
 const props = defineProps({
   visible: Boolean,
@@ -79,6 +85,9 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'navigate'])
+
+const { statusBarHeight, safeAreaInsetsBottom } = getLayoutMetrics()
+const userStore = useUserStore()
 
 const ANIMATION_MS = 220
 const rendered = ref(props.visible)
@@ -110,18 +119,34 @@ watch(
 )
 
 const menuItems = [
-  { id: 'school', name: 'AI学堂', icon: '学', path: '/pages/school/input' },
-  { id: 'crawl', name: 'AI观察哨', icon: '讯', path: '/pages/crawl/index' },
-  { id: 'workshop', name: 'AI工坊', icon: '工', path: '/pages/home/index' },
+  { id: 'school', name: 'AI学堂', path: '/pages/school/input' },
+  { id: 'crawl', name: 'AI观察哨', path: '/pages/crawl/index' },
+  { id: 'workshop', name: 'AI工坊', path: '/pages/home/index' },
 ]
 
-const showWorkshopHistory = computed(
-  () => props.activeSection === 'workshop' || props.workshopHistory.length > 0
-)
+const recentHistory = computed(() => {
+  const source = Array.isArray(props.workshopHistory) ? props.workshopHistory : []
+  return source.slice(0, 8)
+})
+
+const profileName = computed(() => {
+  if (!userStore.isAuthenticated) return '个人信息'
+  return userStore.userInfo?.nickname || userStore.userInfo?.displayName || userStore.userInfo?.username || '个人信息'
+})
+
+const profileSubtitle = computed(() => {
+  if (!userStore.isAuthenticated) return '查看资料与设置'
+  return userStore.userInfo?.username || '查看资料与设置'
+})
+
+const avatarInitial = computed(() => {
+  const source = profileName.value || '灵'
+  return String(source).trim().slice(0, 1) || '灵'
+})
 
 const handleMenuClick = (item) => {
-  if (item.id === 'workshop') {
-    startNewConversation()
+  if (item.id === props.activeSection) {
+    emit('close')
     return
   }
 
@@ -196,8 +221,6 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
-@import '../theme.scss';
-
 .sidebar-wrapper {
   position: fixed;
   inset: 0;
@@ -207,7 +230,7 @@ onUnmounted(() => {
 .sidebar-mask {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(17, 17, 24, 0.72);
   transition: opacity 0.22s ease;
 }
 
@@ -217,15 +240,13 @@ onUnmounted(() => {
 
 .sidebar-panel {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 402rpx;
+  inset: 0 auto 0 0;
+  width: 308rpx;
   max-width: 82vw;
   height: 100%;
-  background: #0a0a0a;
+  background: #0b0b0d;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   animation: slide-in 0.22s ease;
   transition: transform 0.22s ease;
   will-change: transform;
@@ -236,133 +257,146 @@ onUnmounted(() => {
   transform: translateX(-100%);
 }
 
-.sidebar-inner {
-  flex: 1;
-  min-height: 0;
-  padding-top: 84rpx;
-  padding-bottom: 24rpx;
+.sidebar-header {
+  padding-left: 16rpx;
+  padding-right: 16rpx;
 }
 
-.quick-action {
-  margin: 0 24rpx 16rpx;
-  height: 84rpx;
-  border-radius: 18rpx;
-  background: #27272a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12rpx;
-}
-
-.quick-action-icon,
-.quick-action-text {
-  color: $text-white;
-}
-
-.quick-action-icon {
-  font-size: 28rpx;
-  font-weight: 700;
-}
-
-.quick-action-text {
-  font-size: 26rpx;
-  font-weight: 500;
-}
-
-.menu-group {
-  padding: 0 24rpx;
-}
-
-.menu-item {
-  min-height: 72rpx;
+.brand-row {
+  height: 42rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14rpx 0;
+}
+
+.brand-title {
+  color: #f5f5f7;
+  font-size: 38rpx;
+  font-weight: 700;
+}
+
+.brand-close {
+  color: #a7a7b3;
+  font-size: 30rpx;
+  line-height: 1;
+}
+
+.sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  padding: 22rpx 16rpx 20rpx;
+  box-sizing: border-box;
+}
+
+.quick-action {
+  width: 100%;
+  height: 56rpx;
+  border-radius: 20rpx;
+  background: #17171c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-action-text {
+  color: #f5f5f7;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.menu-group {
+  margin-top: 18rpx;
+}
+
+.menu-item {
+  min-height: 54rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.menu-item + .menu-item {
+  margin-top: 8rpx;
+}
+
+.menu-label {
+  color: #f5f5f7;
+  font-size: 30rpx;
+  font-weight: 600;
 }
 
 .menu-item.active .menu-label,
 .menu-item.active .menu-arrow {
-  color: #c4b5fd;
-}
-
-.menu-item-left {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
-
-.menu-icon {
-  width: 30rpx;
-  text-align: center;
-  color: $text-white;
-  font-size: 24rpx;
-}
-
-.menu-label {
-  color: $text-white;
-  font-size: 28rpx;
-  font-weight: 500;
+  color: #ffffff;
 }
 
 .menu-arrow {
-  color: #a1a1aa;
-  font-size: 24rpx;
+  color: #a7a7b3;
+  font-size: 30rpx;
 }
 
 .history-block {
-  margin-top: 6rpx;
+  margin-top: 18rpx;
 }
 
 .history-divider {
+  width: 100%;
   height: 2rpx;
-  margin: 8rpx 0 14rpx;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04));
+  background: #272730;
 }
 
-.history-group {
-  display: flex;
-  flex-direction: column;
-  gap: 14rpx;
-}
-
-.history-title {
-  color: $text-white;
-  font-size: 24rpx;
-  font-weight: 700;
+.history-window {
+  display: block;
+  margin-top: 18rpx;
+  color: #a7a7b3;
+  font-size: 22rpx;
+  font-weight: 500;
 }
 
 .history-item {
-  padding: 12rpx 0;
+  margin-top: 14rpx;
 }
 
 .history-item-text {
-  color: $text-white;
-  font-size: 24rpx;
-  line-height: 1.5;
+  color: #f5f5f7;
+  font-size: 28rpx;
+  line-height: 1.55;
 }
 
 .history-empty {
-  color: #71717a;
-  font-size: 22rpx;
+  display: block;
+  margin-top: 22rpx;
+  color: #a7a7b3;
+  font-size: 24rpx;
   text-align: center;
-  margin-top: 8rpx;
 }
 
 .profile-anchor {
   flex-shrink: 0;
-  padding: 18rpx 20rpx 28rpx;
+  padding-left: 16rpx;
+  padding-right: 16rpx;
+  padding-top: 16rpx;
+  background: #111115;
+  border-top: 2rpx solid #272730;
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  border-top: 2rpx solid rgba(255, 255, 255, 0.08);
-  background: #0a0a0a;
+  gap: 14rpx;
 }
 
 .profile-avatar {
-  width: 52rpx;
-  height: 52rpx;
+  width: 46rpx;
+  height: 46rpx;
   border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #6a39ff 0%, #11b7ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-avatar-text {
+  color: #f5f5f7;
+  font-size: 20rpx;
+  font-weight: 700;
 }
 
 .profile-meta {
@@ -371,14 +405,14 @@ onUnmounted(() => {
   gap: 4rpx;
 }
 
-.profile-title {
-  color: $text-white;
+.profile-name {
+  color: #f5f5f7;
   font-size: 26rpx;
   font-weight: 600;
 }
 
 .profile-subtitle {
-  color: #71717a;
+  color: #8d8d98;
   font-size: 22rpx;
 }
 

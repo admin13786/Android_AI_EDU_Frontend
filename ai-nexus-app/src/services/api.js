@@ -41,6 +41,37 @@ export const getNewsList = async (type = 'business') => {
   }
 }
 
+// Auth - company crawl service
+export const loginSession = (data) =>
+  request({
+    baseUrl: getNewsBaseUrl(),
+    url: '/api/auth/sessions',
+    method: 'POST',
+    data,
+    timeout: 180000,
+    skipUnauthorizedRedirect: true,
+  })
+
+export const registerSession = (data) =>
+  request({
+    baseUrl: getNewsBaseUrl(),
+    url: '/api/auth/register',
+    method: 'POST',
+    data,
+    timeout: 180000,
+    skipUnauthorizedRedirect: true,
+  })
+
+export const logoutCurrentSession = () =>
+  request({
+    baseUrl: getNewsBaseUrl(),
+    url: '/api/auth/sessions/current',
+    method: 'DELETE',
+    timeout: 180000,
+    withAuth: true,
+    skipUnauthorizedRedirect: true,
+  })
+
 // WorkShop - generation
 export const generateCode = (prompt) =>
   request({
@@ -63,13 +94,3 @@ export const getWorkshopHistoryRemote = () =>
 
 export const saveWorkshopHistoryRemote = (list) =>
   request({ url: '/api/workshop/history', method: 'PUT', data: { list }, timeout: 180000 })
-
-// User
-export const getUserInfo = () =>
-  request({ url: '/api/user/info' })
-
-export const updateUserInfo = (data) =>
-  request({ url: '/api/user/info', method: 'PUT', data })
-
-export const updateApiBaseUrl = (baseUrl) =>
-  request({ url: '/api/user/settings', method: 'PUT', data: { apiBaseUrl: baseUrl } })

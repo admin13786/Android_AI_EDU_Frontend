@@ -1,0 +1,1202 @@
+{
+  "version": "2.10",
+  "children": [
+    {
+      "type": "frame",
+      "id": "NwXiy",
+      "x": 860,
+      "y": 0,
+      "name": "侧边栏",
+      "width": 390,
+      "height": 844,
+      "fill": "$surface.primary",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "RcbJs",
+          "name": "drawerBody",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": "$surface.primary",
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "URa1u",
+              "x": 274,
+              "y": 340,
+              "name": "drawerGhostChip1",
+              "width": 98,
+              "height": 40,
+              "fill": "#1E3A5A55",
+              "cornerRadius": "$radius.full",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "xO9xM",
+                  "name": "drawerGhostChipText1",
+                  "fill": "#F5F5F788",
+                  "content": "你是谁",
+                  "fontFamily": "Geist",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "DVF8O",
+              "x": 274,
+              "y": 394,
+              "name": "drawerGhostChip2",
+              "width": 108,
+              "height": 40,
+              "fill": "#3B234A55",
+              "cornerRadius": "$radius.full",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "EoZI2",
+                  "name": "drawerGhostChipText2",
+                  "fill": "#F5F5F788",
+                  "content": "捏个头像",
+                  "fontFamily": "Geist",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "id": "942YV",
+              "x": 0,
+              "y": 0,
+              "name": "drawerOverlay",
+              "fill": "$surface.overlay",
+              "width": 390,
+              "height": 810
+            },
+            {
+              "type": "frame",
+              "id": "Nzr4y",
+              "x": 0,
+              "y": 0,
+              "name": "drawerPanel",
+              "width": 308,
+              "height": 810,
+              "fill": "$surface.primary",
+              "layout": "vertical",
+              "gap": 14,
+              "padding": [
+                22,
+                16,
+                20,
+                16
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "V6nIO",
+                  "name": "drawerBrandRow",
+                  "width": "fill_container",
+                  "height": 42,
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "uD1wj",
+                      "name": "drawerBrand",
+                      "fill": "$text.primary",
+                      "content": "灵境",
+                      "fontFamily": "Geist",
+                      "fontSize": 26,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "h11JI",
+                      "name": "drawerBrandArrow",
+                      "fill": "$text.secondary",
+                      "content": "›",
+                      "fontFamily": "Geist",
+                      "fontSize": 28,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "HfZHH",
+                  "name": "drawerNewChat",
+                  "width": "fill_container",
+                  "height": 56,
+                  "fill": "$surface.card",
+                  "cornerRadius": "$radius.card",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "8Ah0d",
+                      "name": "drawerNewChatText",
+                      "fill": "$text.primary",
+                      "content": "开启新对话",
+                      "fontFamily": "Geist",
+                      "fontSize": 19,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Xvk2R",
+                  "name": "drawerAppRow",
+                  "width": "fill_container",
+                  "height": 54,
+                  "padding": [
+                    0,
+                    8
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "WtN7j",
+                      "name": "drawerAppLabel",
+                      "fill": "$text.primary",
+                      "content": "闪应用",
+                      "fontFamily": "Geist",
+                      "fontSize": 19,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "XwtBe",
+                      "name": "drawerAppArrow",
+                      "fill": "$text.secondary",
+                      "content": "›",
+                      "fontFamily": "Geist",
+                      "fontSize": 24,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "80AgD",
+                  "name": "drawerFavRow",
+                  "width": "fill_container",
+                  "height": 54,
+                  "padding": [
+                    0,
+                    8
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "dd1U4",
+                      "name": "drawerFavLabel",
+                      "fill": "$text.primary",
+                      "content": "我的收藏",
+                      "fontFamily": "Geist",
+                      "fontSize": 19,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "doE9J",
+                      "name": "drawerFavArrow",
+                      "fill": "$text.secondary",
+                      "content": "›",
+                      "fontFamily": "Geist",
+                      "fontSize": 24,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "LgO5A",
+                  "name": "drawerCreateRow",
+                  "width": "fill_container",
+                  "height": 54,
+                  "padding": [
+                    0,
+                    8
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "MCyyU",
+                      "name": "drawerCreateLabel",
+                      "fill": "$text.primary",
+                      "content": "我的创作",
+                      "fontFamily": "Geist",
+                      "fontSize": 19,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "K9Ed0",
+                      "name": "drawerCreateArrow",
+                      "fill": "$text.secondary",
+                      "content": "›",
+                      "fontFamily": "Geist",
+                      "fontSize": 24,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "rectangle",
+                  "id": "DuEbf",
+                  "name": "drawerDivider",
+                  "fill": "$border.soft",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "text",
+                  "id": "VposX",
+                  "name": "drawerRecentLabel",
+                  "fill": "$text.secondary",
+                  "content": "30天内",
+                  "fontFamily": "Geist",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "text",
+                  "id": "FmwoY",
+                  "name": "drawerRecentTitle",
+                  "fill": "$text.primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "制作贪吃蛇小游戏",
+                  "fontFamily": "Geist",
+                  "fontSize": 19,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "lBaT8",
+                  "name": "drawerEmpty",
+                  "fill": "$text.secondary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "没有更多内容啦",
+                  "textAlign": "center",
+                  "fontFamily": "Geist",
+                  "fontSize": 16,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "1KPgv",
+                  "name": "drawerSpacer",
+                  "width": "fill_container",
+                  "height": "fill_container"
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "id": "JJaGQ",
+              "x": 0,
+              "y": 725,
+              "name": "drawerProfileDivider",
+              "fill": "$border.soft",
+              "width": 308,
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "XMiSA",
+              "x": 0,
+              "y": 726,
+              "name": "drawerProfileBar",
+              "width": 308,
+              "height": 84,
+              "fill": "#111115",
+              "gap": 14,
+              "padding": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "1Gpu3",
+                  "name": "drawerProfileAvatar",
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "radial",
+                    "enabled": true,
+                    "rotation": 0,
+                    "size": {
+                      "width": 1,
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#6A39FF",
+                        "position": 0
+                      },
+                      {
+                        "color": "#11B7FF",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "width": 46,
+                  "height": 46
+                },
+                {
+                  "type": "frame",
+                  "id": "fGafh",
+                  "name": "drawerProfileText",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "CBePx",
+                      "name": "drawerProfileTitle",
+                      "fill": "$text.primary",
+                      "content": "个人信息",
+                      "fontFamily": "Geist",
+                      "fontSize": 18,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "zvsPd",
+                      "name": "drawerProfileSub",
+                      "fill": "$text.secondary",
+                      "content": "查看资料与设置",
+                      "fontFamily": "Geist",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "AkFh9",
+      "x": 1290,
+      "y": 0,
+      "name": "个人信息-1",
+      "width": 390,
+      "height": 844,
+      "fill": "$surface.primary",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "5watm",
+          "name": "profileBody",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": "$surface.primary",
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "RKakO",
+              "x": 16,
+              "y": 28,
+              "name": "profileBack",
+              "width": 86,
+              "height": 46,
+              "fill": "$surface.card",
+              "cornerRadius": "$radius.full",
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border.soft"
+              },
+              "padding": [
+                0,
+                18
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "wGi8j",
+                  "name": "profileBackIcon",
+                  "fill": "$text.primary",
+                  "content": "←",
+                  "fontFamily": "Geist",
+                  "fontSize": 20,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "89lrD",
+              "x": 129,
+              "y": 36,
+              "name": "profileTitle",
+              "fill": "$text.primary",
+              "content": "个人信息",
+              "fontFamily": "Geist",
+              "fontSize": 24,
+              "fontWeight": "700"
+            },
+            {
+              "type": "ellipse",
+              "id": "5C78B",
+              "x": 139,
+              "y": 110,
+              "name": "profileAvatar",
+              "fill": {
+                "type": "gradient",
+                "gradientType": "radial",
+                "enabled": true,
+                "rotation": 0,
+                "size": {
+                  "width": 1,
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#4DB1FF",
+                    "position": 0
+                  },
+                  {
+                    "color": "#2E89EA",
+                    "position": 0.65
+                  },
+                  {
+                    "color": "#D8F2FF",
+                    "position": 1
+                  }
+                ],
+                "center": {
+                  "x": 0.45,
+                  "y": 0.35
+                }
+              },
+              "width": 112,
+              "height": 112
+            },
+            {
+              "type": "frame",
+              "id": "PIipK",
+              "x": 221,
+              "y": 186,
+              "name": "profileCameraBadge",
+              "width": 40,
+              "height": 40,
+              "fill": "$surface.card.alt",
+              "cornerRadius": "$radius.full",
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border.soft"
+              },
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "V1SiT",
+                  "name": "profileCameraIcon",
+                  "fill": "$text.primary",
+                  "content": "机",
+                  "fontFamily": "Geist",
+                  "fontSize": 14,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "lZ1sH",
+              "x": 16,
+              "y": 268,
+              "name": "profileInfoCard",
+              "width": 358,
+              "height": 156,
+              "fill": "$surface.card",
+              "cornerRadius": "$radius.card",
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border.soft"
+              },
+              "layout": "vertical",
+              "gap": 18,
+              "padding": [
+                20,
+                22
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "3y6sO",
+                  "name": "profileNickRow",
+                  "width": "fill_container",
+                  "height": 36,
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "cMGwY",
+                      "name": "profileNickLabel",
+                      "fill": "$text.primary",
+                      "content": "昵称",
+                      "fontFamily": "Geist",
+                      "fontSize": 21,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "uQveq",
+                      "name": "profileNickValue",
+                      "fill": "$text.secondary",
+                      "content": "海边的熊猫  ›",
+                      "fontFamily": "Geist",
+                      "fontSize": 18,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "rectangle",
+                  "id": "AVTqz",
+                  "name": "profileInfoDivider",
+                  "fill": "$border.soft",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "SqsEm",
+                  "name": "profileGenderRow",
+                  "width": "fill_container",
+                  "height": 36,
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "rrcaJ",
+                      "name": "profileGenderLabel",
+                      "fill": "$text.primary",
+                      "content": "性别",
+                      "fontFamily": "Geist",
+                      "fontSize": 21,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "qvCpH",
+                      "name": "profileGenderValue",
+                      "fill": "$text.secondary",
+                      "content": "不展示  ›",
+                      "fontFamily": "Geist",
+                      "fontSize": 18,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "AoVbJ",
+              "x": 16,
+              "y": 446,
+              "name": "profileIntroCard",
+              "width": 358,
+              "height": 146,
+              "fill": "$surface.card",
+              "cornerRadius": "$radius.card",
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border.soft"
+              },
+              "layout": "vertical",
+              "gap": 20,
+              "padding": [
+                20,
+                22
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "pllhC",
+                  "name": "profileIntroTitle",
+                  "fill": "$text.primary",
+                  "content": "自我介绍",
+                  "fontFamily": "Geist",
+                  "fontSize": 21,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "pAB5O",
+                  "name": "profileIntroPlaceholder",
+                  "fill": "$text.secondary",
+                  "content": "介绍一下自己  ›",
+                  "fontFamily": "Geist",
+                  "fontSize": 18,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "TgY2l",
+              "x": 16,
+              "y": 626,
+              "name": "logoutCopy",
+              "width": 358,
+              "height": 56,
+              "fill": "$surface.primary",
+              "cornerRadius": "$radius.full",
+              "stroke": {
+                "thickness": 1.5,
+                "fill": "$border.strong"
+              },
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "XB1n1",
+                  "name": "settingsLogoutText",
+                  "fill": "$text.primary",
+                  "content": "退出登录",
+                  "fontFamily": "Geist",
+                  "fontSize": 19,
+                  "fontWeight": "600"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "4xDc7",
+      "x": 1720,
+      "y": 0,
+      "name": "登录",
+      "width": 390,
+      "height": 844,
+      "fill": "$surface.primary",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "ddV6p",
+          "x": 0,
+          "y": 0,
+          "name": "loginBg",
+          "fill": "#08080B",
+          "width": 390,
+          "height": 844
+        },
+        {
+          "type": "ellipse",
+          "id": "HAZcB",
+          "x": 18,
+          "y": 58,
+          "name": "loginGlowA",
+          "fill": {
+            "type": "gradient",
+            "gradientType": "radial",
+            "enabled": true,
+            "opacity": 0.9,
+            "rotation": 0,
+            "size": {
+              "width": 1,
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#C13BFF55",
+                "position": 0
+              },
+              {
+                "color": "#6C2BFF33",
+                "position": 0.45
+              },
+              {
+                "color": "#00000000",
+                "position": 1
+              }
+            ]
+          },
+          "width": 360,
+          "height": 360
+        },
+        {
+          "type": "ellipse",
+          "id": "fjoPd",
+          "x": 138,
+          "y": 84,
+          "name": "loginGlowB",
+          "fill": {
+            "type": "gradient",
+            "gradientType": "radial",
+            "enabled": true,
+            "opacity": 0.9,
+            "rotation": 0,
+            "size": {
+              "width": 1,
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#4A1EFF44",
+                "position": 0
+              },
+              {
+                "color": "#0E133000",
+                "position": 1
+              }
+            ]
+          },
+          "width": 240,
+          "height": 360
+        },
+        {
+          "type": "text",
+          "id": "3jvjn",
+          "x": 16,
+          "y": 62,
+          "name": "loginBack",
+          "fill": "$text.primary",
+          "content": "‹",
+          "fontFamily": "Geist",
+          "fontSize": 34
+        },
+        {
+          "type": "text",
+          "id": "S5OgD",
+          "x": 151,
+          "y": 172,
+          "name": "loginLogo",
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 90,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#49D6FF",
+                "position": 0
+              },
+              {
+                "color": "#BB7CFF",
+                "position": 1
+              }
+            ]
+          },
+          "content": "灵境",
+          "fontFamily": "Geist",
+          "fontSize": 42,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "5Z6nl",
+          "x": 48,
+          "y": 314,
+          "name": "loginInput1",
+          "width": 294,
+          "height": 82,
+          "fill": "#26262BEE",
+          "cornerRadius": 24,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "L0TPp",
+              "name": "loginInput1Text",
+              "fill": "#76767E",
+              "content": "输入灵境号",
+              "fontFamily": "Geist",
+              "fontSize": 18,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Cd5BP",
+          "x": 48,
+          "y": 420,
+          "name": "loginInput2",
+          "width": 294,
+          "height": 82,
+          "fill": "#26262BEE",
+          "cornerRadius": 24,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "4F1zi",
+              "name": "loginInput2Text",
+              "fill": "#76767E",
+              "content": "输入灵境密码",
+              "fontFamily": "Geist",
+              "fontSize": 18,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "qjfjd",
+          "x": 48,
+          "y": 552,
+          "name": "loginButton",
+          "width": 294,
+          "height": 72,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 90,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#0B72C9",
+                "position": 0
+              },
+              {
+                "color": "#0958A3",
+                "position": 1
+              }
+            ]
+          },
+          "cornerRadius": 24,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "InYGe",
+              "name": "loginButtonText",
+              "fill": "#6E8BA6",
+              "content": "登录",
+              "fontFamily": "Geist",
+              "fontSize": 22,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "juxeY",
+          "x": 38,
+          "y": 650,
+          "name": "loginAgreeRow",
+          "width": 314,
+          "height": 22,
+          "gap": 8,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "ellipse",
+              "id": "YKX3w",
+              "name": "loginCheck",
+              "width": 16,
+              "height": 16,
+              "stroke": {
+                "thickness": 1.5,
+                "fill": "#4A4A55"
+              }
+            },
+            {
+              "type": "text",
+              "id": "lYYT5",
+              "name": "loginAgreeText",
+              "fill": "#CFCFE0",
+              "textGrowth": "fixed-width",
+              "width": 290,
+              "content": "已阅读并同意服务协议和灵境隐私保护指引",
+              "fontFamily": "Geist",
+              "fontSize": 12,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "mQKRt",
+          "x": 82,
+          "y": 722,
+          "name": "loginBottom",
+          "width": 226,
+          "height": 104,
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "1TP0F",
+              "name": "loginItemOther",
+              "layout": "vertical",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "IGhV5",
+                  "name": "loginOtherCircle",
+                  "width": 72,
+                  "height": 72,
+                  "cornerRadius": "$radius.full",
+                  "stroke": {
+                    "thickness": 1.5,
+                    "fill": "#2A2A33"
+                  },
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "nb8yD",
+                      "name": "loginOtherIcon",
+                      "fill": "#F2F2F5",
+                      "content": "+",
+                      "fontFamily": "Geist",
+                      "fontSize": 32
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "lpsaa",
+                  "name": "loginOtherLabel",
+                  "fill": "#F2F2F5",
+                  "textGrowth": "fixed-width",
+                  "width": 82,
+                  "content": "新用户注册",
+                  "textAlign": "center",
+                  "fontFamily": "Geist",
+                  "fontSize": 11,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "f7OX5",
+              "name": "loginItemMore",
+              "layout": "vertical",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "iWlZw",
+                  "name": "loginMoreCircle",
+                  "width": 72,
+                  "height": 72,
+                  "cornerRadius": "$radius.full",
+                  "stroke": {
+                    "thickness": 1.5,
+                    "fill": "#2A2A33"
+                  },
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "s2fvN",
+                      "name": "loginMoreIcon",
+                      "fill": "#F2F2F5",
+                      "content": "…",
+                      "fontFamily": "Geist",
+                      "fontSize": 32,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "IDOwD",
+                  "name": "loginMoreLabel",
+                  "fill": "#F2F2F5",
+                  "textGrowth": "fixed-width",
+                  "width": 40,
+                  "content": "更多",
+                  "textAlign": "center",
+                  "fontFamily": "Geist",
+                  "fontSize": 11,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "accent.primary": {
+      "type": "color",
+      "value": "#D4916E"
+    },
+    "accent.soft": {
+      "type": "color",
+      "value": "#EBC8B4"
+    },
+    "body.size": {
+      "type": "number",
+      "value": 16
+    },
+    "border.soft": {
+      "type": "color",
+      "value": "#272730"
+    },
+    "caption.size": {
+      "type": "number",
+      "value": 13
+    },
+    "radius.full": {
+      "type": "number",
+      "value": 9999
+    },
+    "radius.lg": {
+      "type": "number",
+      "value": 12
+    },
+    "radius.xl": {
+      "type": "number",
+      "value": 16
+    },
+    "section.size": {
+      "type": "number",
+      "value": 18
+    },
+    "space.1": {
+      "type": "number",
+      "value": 8
+    },
+    "space.2": {
+      "type": "number",
+      "value": 12
+    },
+    "space.3": {
+      "type": "number",
+      "value": 16
+    },
+    "space.4": {
+      "type": "number",
+      "value": 20
+    },
+    "space.5": {
+      "type": "number",
+      "value": 24
+    },
+    "surface.card": {
+      "type": "color",
+      "value": "#17171C"
+    },
+    "surface.inverse": {
+      "type": "color",
+      "value": "#1A1A1A"
+    },
+    "surface.primary": {
+      "type": "color",
+      "value": "#0B0B0D"
+    },
+    "text.inverse": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "text.muted": {
+      "type": "color",
+      "value": "#6D6D7B"
+    },
+    "text.primary": {
+      "type": "color",
+      "value": "#F5F5F7"
+    },
+    "text.secondary": {
+      "type": "color",
+      "value": "#A7A7B3"
+    },
+    "title.size": {
+      "type": "number",
+      "value": 24
+    },
+    "border.strong": {
+      "type": "color",
+      "value": "#3A3A45"
+    },
+    "radius.card": {
+      "type": "number",
+      "value": 20
+    },
+    "space.6": {
+      "type": "number",
+      "value": 32
+    },
+    "surface.avatar": {
+      "type": "color",
+      "value": "#2E89EA"
+    },
+    "surface.overlay": {
+      "type": "color",
+      "value": "#111118B8"
+    },
+    "accent.cyan": {
+      "type": "color",
+      "value": "#0E7484"
+    },
+    "accent.purple": {
+      "type": "color",
+      "value": "#8D39FF"
+    },
+    "accent.purple.strong": {
+      "type": "color",
+      "value": "#B554FF"
+    },
+    "radius.button": {
+      "type": "number",
+      "value": 22
+    },
+    "surface.badge": {
+      "type": "color",
+      "value": "#2C1548"
+    },
+    "surface.card.alt": {
+      "type": "color",
+      "value": "#1D1D23"
+    },
+    "surface.cyan": {
+      "type": "color",
+      "value": "#083E49"
+    }
+  }
+}

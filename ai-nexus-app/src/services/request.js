@@ -1,9 +1,16 @@
+import {
+  clearAuthSessionStorage,
+  getStoredSessionToken,
+  normalizeRoute,
+  redirectToAuth,
+} from '@/utils/auth'
+
 let unauthorizedHandler = null
 let handling401 = false
 let last401At = 0
 const DEFAULT_API_BASE_URL = 'http://121.89.87.255:10001'
-const DEFAULT_NEWS_BASE_URL = 'http://8.135.4.46:8000'
-const DEFAULT_OPENMAIC_BASE_URL = 'http://121.89.87.255:10200'
+const DEFAULT_NEWS_BASE_URL = 'http://8.135.4.46'
+const DEFAULT_OPENMAIC_BASE_URL = 'http://8.135.4.46:3000'
 
 export function setUnauthorizedHandler(fn) {
   unauthorizedHandler = typeof fn === 'function' ? fn : null
@@ -39,9 +46,10 @@ const normalizeError = (statusCode, data) => {
 }
 
 const request = (options) => {
-  const token = uni.getStorageSync('token')
+  const token = options.withAuth ? getStoredSessionToken() : ''
   const unifiedKey = uni.getStorageSync('unifiedApiKey')
   const baseUrl = options.baseUrl || getBaseUrl()
+  const skipUnauthorizedRedirect = !!options.skipUnauthorizedRedirect
 
   return new Promise((resolve, reject) => {
     uni.request({
@@ -57,8 +65,14 @@ const request = (options) => {
       },
       success: (res) => {
         if (res.statusCode === 401) {
-          uni.removeStorageSync('token')
-          uni.removeStorageSync('userInfo')
+          if (!options.withAuth || skipUnauthorizedRedirect) {
+            const error = new Error(normalizeError(res.statusCode, res.data))
+            error.statusCode = res.statusCode
+            reject(error)
+            return
+          }
+
+          clearAuthSessionStorage()
 
           try {
             if (unauthorizedHandler) unauthorizedHandler()
@@ -72,8 +86,8 @@ const request = (options) => {
             last401At = now
             const pages = getCurrentPages?.() || []
             const currentRoute = pages.length ? `/${pages[pages.length - 1].route}` : ''
-            if (currentRoute !== '/pages/home/index') {
-              uni.reLaunch({ url: '/pages/home/index' })
+            if (normalizeRoute(currentRoute) !== '/pages/profile/auth') {
+              redirectToAuth(currentRoute)
             }
             setTimeout(() => {
               handling401 = false
@@ -85,7 +99,9 @@ const request = (options) => {
         }
 
         if (res.statusCode < 200 || res.statusCode >= 300) {
-          reject(new Error(normalizeError(res.statusCode, res.data)))
+          const error = new Error(normalizeError(res.statusCode, res.data))
+          error.statusCode = res.statusCode
+          reject(error)
           return
         }
 

@@ -2,106 +2,133 @@
   <view class="profile-page">
     <view class="top-bar" :style="{ paddingTop: `${statusBarHeight}px` }">
       <view class="page-header">
-        <view class="header-side header-back" @click="goBack">
+        <view class="header-back" @click="goBack">
           <text class="header-back-icon">←</text>
         </view>
         <text class="header-title">个人信息</text>
-        <view class="header-side header-placeholder"></view>
+        <view class="header-placeholder"></view>
       </view>
     </view>
 
     <scroll-view class="profile-scroll" :style="profileScrollStyle" scroll-y>
-      <view class="avatar-section">
-        <image class="avatar-image" src="/static/avatar.svg" mode="aspectFill"></image>
-        <text class="profile-name">{{ mergedProfile.nickname }}</text>
-        <text class="profile-meta">ID {{ userInfo.id }}</text>
-      </view>
-
-      <view class="content-area" :style="{ paddingBottom: `${safeAreaInsetsBottom + 14}px` }">
-        <view class="info-card">
-          <view class="info-row clickable" @click="goToNickname">
-            <text class="row-label">昵称</text>
-            <text class="row-value">{{ mergedProfile.nickname }}</text>
+      <view class="profile-body" :style="{ paddingBottom: `${safeAreaInsetsBottom + 28}px` }">
+        <view class="avatar-section">
+          <view class="avatar-orb">
+            <view class="avatar-highlight"></view>
+            <text class="avatar-initial">{{ avatarInitial }}</text>
           </view>
-          <view class="divider"></view>
-
-          <view class="info-row clickable" @click="openGenderSheet">
-            <text class="row-label">性别</text>
-            <text class="row-value">{{ mergedProfile.gender }}</text>
-          </view>
-          <view class="divider"></view>
-
-          <view class="info-row clickable" @click="goToBio">
-            <text class="row-label">自我介绍</text>
-            <text class="row-value multiline">{{ mergedProfile.bio }}</text>
+          <view class="camera-badge" @click="handleAvatarTap">
+            <text class="camera-badge-text">机</text>
           </view>
         </view>
 
-        <view class="info-card">
-          <view class="info-row">
-            <text class="row-label">手机号</text>
-            <text class="row-value">{{ userInfo.phone }}</text>
-          </view>
-          <view class="divider"></view>
-          <view class="info-row">
-            <text class="row-label">注册时间</text>
-            <text class="row-value">{{ userInfo.createdAt }}</text>
-          </view>
-        </view>
+        <template v-if="isAuthenticated">
+          <view class="info-card">
+            <view class="info-row clickable" @click="goToNickname">
+              <text class="row-label">昵称</text>
+              <view class="row-right">
+                <text class="row-value">{{ mergedProfile.nickname }}</text>
+                <text class="row-arrow">›</text>
+              </view>
+            </view>
 
-        <view class="settings-card">
-          <view class="info-row">
-            <text class="row-label">AI工坊后端</text>
-            <text class="row-value compact">联调配置</text>
-          </view>
-          <text class="settings-tip">
-            这里会影响 AI工坊 和个人资料接口，当前默认仍是你自己的云后端，例如 http://121.89.87.255:10001。
-          </text>
-          <input
-            class="settings-input"
-            v-model="apiBaseUrl"
-            placeholder="可选：填写 AI工坊 后端地址"
-            placeholder-class="row-placeholder"
-          />
-          <text class="settings-tip">
-            AI观察哨 已固定走公司服务 http://8.135.4.46:8000，AI学堂 已切回你们自己的 OpenMAIC http://121.89.87.255:10200。
-          </text>
-          <text class="settings-tip">
-            如果 AI工坊 后端设置了 UNIFIED_API_KEY，可在此填写同一密钥，仅保存在本机并用于请求头 X-Api-Key。
-          </text>
-          <input
-            class="settings-input"
-            v-model="unifiedApiKey"
-            placeholder="可选：统一 API 密钥"
-            placeholder-class="row-placeholder"
-          />
-        </view>
+            <view class="divider"></view>
 
-        <view class="stats-grid">
-          <view class="stat-card">
-            <text class="stat-number">{{ stats.courses }}</text>
-            <text class="stat-label">课堂数</text>
+            <view class="info-row clickable" @click="openGenderSheet">
+              <text class="row-label">性别</text>
+              <view class="row-right">
+                <text class="row-value">{{ mergedProfile.gender }}</text>
+                <text class="row-arrow">›</text>
+              </view>
+            </view>
           </view>
-          <view class="stat-card">
-            <text class="stat-number">{{ stats.hours }}</text>
-            <text class="stat-label">学习时长</text>
-          </view>
-          <view class="stat-card">
-            <text class="stat-number">{{ stats.codes }}</text>
-            <text class="stat-label">生成次数</text>
-          </view>
-        </view>
 
-        <view class="action-button primary" @click="handleSave">
-          <text class="action-text">保存资料</text>
-        </view>
-        <view class="action-button danger" @click="handleLogout">
-          <text class="danger-text">退出登录</text>
-        </view>
+          <view class="intro-card" @click="goToBio">
+            <text class="intro-title">自我介绍</text>
+            <text class="intro-value">{{ introDisplay }}</text>
+          </view>
+
+          <view class="meta-card">
+            <view class="info-row">
+              <text class="row-label">账号状态</text>
+              <text class="row-value">已登录</text>
+            </view>
+            <view class="divider"></view>
+            <view class="info-row">
+              <text class="row-label">用户名</text>
+              <text class="row-value">{{ displayUsername }}</text>
+            </view>
+            <view class="divider"></view>
+            <view class="info-row">
+              <text class="row-label">注册时间</text>
+              <text class="row-value">{{ displayCreatedAt }}</text>
+            </view>
+          </view>
+
+          <view class="dev-card">
+            <view class="dev-head" @click="toggleDeveloperPanel">
+              <view>
+                <text class="dev-title">本机联调设置</text>
+                <text class="dev-summary">{{ developerSummary }}</text>
+              </view>
+              <text class="dev-arrow">{{ developerPanelVisible ? '▾' : '▸' }}</text>
+            </view>
+
+            <view v-if="developerPanelVisible" class="dev-body">
+              <text class="dev-tip">这里的地址和密钥只保存在当前设备，不会写回公司后端。</text>
+              <input
+                class="dev-input"
+                v-model="apiBaseUrl"
+                placeholder="可选：填写 AI工坊 后端地址"
+                placeholder-class="dev-placeholder"
+              />
+              <input
+                class="dev-input"
+                v-model="unifiedApiKey"
+                placeholder="可选：统一 API 密钥"
+                placeholder-class="dev-placeholder"
+              />
+              <text class="dev-tip">AI观察哨 当前走公司服务 {{ companyNewsBaseUrl }}</text>
+              <text class="dev-tip">AI学堂 当前通过 OpenMAIC Web 页面承载。</text>
+              <view class="dev-save" @click="handleSave">
+                <text class="dev-save-text">保存本机设置</text>
+              </view>
+            </view>
+          </view>
+
+          <view class="logout-button" @click="handleLogout">
+            <text class="logout-text">退出登录</text>
+          </view>
+        </template>
+
+        <template v-else>
+          <view class="guest-card">
+            <text class="guest-title">尚未登录账号</text>
+            <text class="guest-copy">登录后可同步个人身份，并使用公司后端提供的账号态能力。</text>
+            <view class="guest-action primary" @click="openAuth('login')">
+              <text class="guest-action-text dark">登录账号</text>
+            </view>
+            <view class="guest-action secondary" @click="openAuth('register')">
+              <text class="guest-action-text light">新用户注册</text>
+            </view>
+          </view>
+
+          <view class="meta-card">
+            <view class="info-row">
+              <text class="row-label">账号状态</text>
+              <text class="row-value">访客模式</text>
+            </view>
+            <view class="divider"></view>
+            <view class="info-row">
+              <text class="row-label">用户名</text>
+              <text class="row-value">未登录</text>
+            </view>
+          </view>
+        </template>
       </view>
     </scroll-view>
 
-    <view v-if="genderSheetVisible" class="sheet-mask" @click="closeGenderSheet">
+    <view v-if="genderSheetVisible && isAuthenticated" class="sheet-mask" @click="closeGenderSheet">
       <view class="gender-sheet" @click.stop>
         <text class="sheet-title">性别设置</text>
         <view v-for="item in genderOptions" :key="item" class="sheet-option" @click="selectGender(item)">
@@ -122,8 +149,8 @@
 <script setup>
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { onBackPress, onShow } from '@dcloudio/uni-app'
-import { updateApiBaseUrl, updateUserInfo } from '@/services/api'
 import { useUserStore } from '@/stores/user'
+import { DEFAULT_NEWS_BASE_URL } from '@/services/request'
 import { getLayoutMetrics } from '@/utils/layout'
 import { safeNavigateBack } from '@/utils/navigation'
 import {
@@ -141,10 +168,11 @@ const profileScrollStyle = {
 }
 
 const userStore = useUserStore()
+const companyNewsBaseUrl = DEFAULT_NEWS_BASE_URL
 const apiBaseUrl = ref(userStore.apiBaseUrl)
 const unifiedApiKey = ref(uni.getStorageSync('unifiedApiKey') || '')
-const stats = ref({ courses: 0, hours: 0, codes: 1 })
 const localProfile = ref(getLocalProfile())
+const developerPanelVisible = ref(!!(apiBaseUrl.value || unifiedApiKey.value))
 const genderSheetVisible = ref(false)
 const genderOptions = ['未设置', '女', '男']
 const toastState = ref({
@@ -154,16 +182,38 @@ const toastState = ref({
 })
 let toastTimer = null
 
-const userInfo = computed(() => userStore.userInfo || {
-  id: '10001',
-  nickname: '灵境用户',
-  phone: '138****8888',
-  createdAt: '2026-03-25',
+const isAuthenticated = computed(() => userStore.isAuthenticated)
+const userInfo = computed(() => {
+  if (userStore.userInfo) return userStore.userInfo
+  return {
+    id: 'guest',
+    username: '',
+    nickname: '灵境用户',
+    createdAt: '',
+  }
+})
+const displayUsername = computed(() => userInfo.value.username || userInfo.value.id || '后端未提供')
+const displayCreatedAt = computed(() => {
+  if (!isAuthenticated.value) return '未登录'
+  return userInfo.value.createdAt || '后端未提供'
 })
 const mergedProfile = computed(() => ({
   ...localProfile.value,
   nickname: userInfo.value.nickname || localProfile.value.nickname,
 }))
+const avatarInitial = computed(() => {
+  const source = mergedProfile.value.nickname || displayUsername.value || '灵'
+  return String(source).trim().slice(0, 1) || '灵'
+})
+const introDisplay = computed(() => {
+  const bio = String(mergedProfile.value.bio || '').trim()
+  return bio ? `${bio}  ›` : '介绍一下自己  ›'
+})
+const developerSummary = computed(() => {
+  if (apiBaseUrl.value) return '已设置 AI工坊 自定义地址'
+  if (unifiedApiKey.value) return '已写入统一 API 密钥'
+  return '展开后可配置 AI工坊 联调地址与密钥'
+})
 
 const showInlineToast = (message, type = 'success', duration = 1800) => {
   if (!message) return
@@ -185,13 +235,23 @@ const showInlineToast = (message, type = 'success', duration = 1800) => {
   }, duration)
 }
 
+const syncProfile = () => {
+  localProfile.value = saveLocalProfile({
+    nickname: userInfo.value.nickname || getLocalProfile().nickname,
+  })
+}
+
+const loadPageData = async () => {
+  syncProfile()
+}
+
 const goBack = () => {
   safeNavigateBack('/pages/home/index?openSidebar=1')
 }
 
-const syncProfile = () => {
-  localProfile.value = saveLocalProfile({
-    nickname: userInfo.value.nickname || getLocalProfile().nickname,
+const openAuth = (mode = 'login') => {
+  uni.navigateTo({
+    url: `/pages/profile/auth?mode=${mode}&redirect=${encodeURIComponent('/pages/profile/index')}`,
   })
 }
 
@@ -203,7 +263,16 @@ const goToBio = () => {
   uni.navigateTo({ url: '/pages/profile/bio' })
 }
 
+const handleAvatarTap = () => {
+  uni.showToast({ title: '头像能力待接入', icon: 'none' })
+}
+
+const toggleDeveloperPanel = () => {
+  developerPanelVisible.value = !developerPanelVisible.value
+}
+
 const openGenderSheet = () => {
+  if (!isAuthenticated.value) return
   genderSheetVisible.value = true
 }
 
@@ -219,83 +288,49 @@ const selectGender = (gender) => {
   showInlineToast('性别选项已保存')
 }
 
-const loadPageData = async () => {
-  try {
-    const user = await userStore.fetchUserInfo()
-    apiBaseUrl.value = user.apiBaseUrl || userStore.apiBaseUrl
-    saveLocalProfile({ nickname: user.nickname || getLocalProfile().nickname })
-    if (user && (Object.prototype.hasOwnProperty.call(user, 'bio') || Object.prototype.hasOwnProperty.call(user, 'gender'))) {
-      saveLocalProfile({
-        bio: user.bio != null ? user.bio : getLocalProfile().bio,
-        gender: user.gender != null ? user.gender : getLocalProfile().gender,
-      })
-    }
-  } catch (error) {
-    saveLocalProfile({ nickname: userInfo.value.nickname })
+const persistLocalSettings = () => {
+  const trimmed = apiBaseUrl.value.trim()
+  if (trimmed && !/^https?:\/\/.+/.test(trimmed)) {
+    throw new Error('地址格式不正确，需要以 http:// 或 https:// 开头')
   }
 
-  const workshopHistory = uni.getStorageSync('workshopHistory')
-  const workshopCount = Array.isArray(workshopHistory) ? workshopHistory.length : 0
-  stats.value.courses = 0
-  stats.value.hours = 0
-  stats.value.codes = Math.max(workshopCount, 1)
+  const cleaned = trimmed.replace(/\/+$/, '')
+  userStore.setApiBaseUrl(cleaned)
+  apiBaseUrl.value = cleaned
+
+  const nextKey = unifiedApiKey.value.trim()
+  if (nextKey) {
+    uni.setStorageSync('unifiedApiKey', nextKey)
+  } else {
+    uni.removeStorageSync('unifiedApiKey')
+  }
 }
 
 const handleSave = async () => {
   try {
-    const trimmed = apiBaseUrl.value.trim()
-    if (trimmed && !/^https?:\/\/.+/.test(trimmed)) {
-      uni.showToast({ title: '地址格式不正确，需要以 http:// 或 https:// 开头', icon: 'none' })
-      return
-    }
-    const cleaned = trimmed.replace(/\/+$/, '')
-
-    const tasks = []
-    if (cleaned !== userStore.apiBaseUrl) {
-      tasks.push(updateApiBaseUrl(cleaned))
-      userStore.setApiBaseUrl(cleaned)
-      apiBaseUrl.value = cleaned
-    }
-
-    const lp = getLocalProfile()
-    const nextGender = lp.gender || '未设置'
-    const nextBio = lp.bio != null ? String(lp.bio) : ''
-    const prev = userStore.userInfo || {}
-    const prevGender = prev.gender != null ? String(prev.gender) : '未设置'
-    const prevBio = prev.bio != null ? String(prev.bio) : ''
-    if (nextGender !== prevGender || nextBio !== prevBio) {
-      tasks.push(updateUserInfo({ bio: nextBio, gender: nextGender }))
-    }
-
-    if (tasks.length) {
-      await Promise.all(tasks)
-    }
-
-    const nextKey = unifiedApiKey.value.trim()
-    const prevKey = uni.getStorageSync('unifiedApiKey') || ''
-    if (nextKey !== prevKey) {
-      if (nextKey) {
-        uni.setStorageSync('unifiedApiKey', nextKey)
-      } else {
-        uni.removeStorageSync('unifiedApiKey')
-      }
-    }
-
+    persistLocalSettings()
     await loadPageData()
-    showInlineToast('保存成功')
+    showInlineToast('本机设置已保存')
   } catch (error) {
-    uni.showToast({ title: error.message, icon: 'none' })
+    uni.showToast({ title: error.message || '保存失败', icon: 'none' })
   }
 }
 
 const handleLogout = () => {
   uni.showModal({
     title: '提示',
-    content: '确定退出登录吗？',
-    success: (res) => {
-      if (res.confirm) {
-        userStore.logout()
-        uni.reLaunch({ url: '/pages/home/index' })
+    content: '确定退出当前账号吗？',
+    success: async (res) => {
+      if (!res.confirm) return
+
+      try {
+        await userStore.logoutRemote()
+        showInlineToast('已退出登录')
+        setTimeout(() => {
+          uni.reLaunch({ url: '/pages/profile/auth' })
+        }, 300)
+      } catch (error) {
+        uni.showToast({ title: error.message || '退出失败', icon: 'none' })
       }
     },
   })
@@ -303,7 +338,6 @@ const handleLogout = () => {
 
 onShow(async () => {
   await loadPageData()
-  syncProfile()
 
   const toastMessage = consumeProfilePendingToast()
   if (toastMessage) {
@@ -338,9 +372,7 @@ onBackPress((options = {}) => {
 
 .profile-page {
   min-height: 100vh;
-  background: #0a0a0a;
-  display: flex;
-  flex-direction: column;
+  background: #0b0b0d;
 }
 
 .top-bar {
@@ -348,111 +380,150 @@ onBackPress((options = {}) => {
   top: 0;
   left: 0;
   right: 0;
+  z-index: 30;
   padding-left: 24rpx;
   padding-right: 24rpx;
   padding-bottom: 18rpx;
-  background: rgba(10, 10, 10, 0.98);
-  border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 16rpx 32rpx rgba(0, 0, 0, 0.24);
-  z-index: 30;
+  background: rgba(11, 11, 13, 0.96);
 }
 
 .page-header {
   min-height: 96rpx;
-  padding-top: 10rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16rpx;
 }
 
-.header-side {
-  width: 72rpx;
-  min-width: 72rpx;
+.header-back,
+.header-placeholder {
+  width: 86rpx;
+  min-width: 86rpx;
+  height: 46rpx;
 }
 
 .header-back {
-  width: 72rpx;
-  min-width: 72rpx;
-  height: 72rpx;
-  padding: 0;
-  border-radius: 24rpx;
-  background: #17171a;
-  border: 2rpx solid rgba(255, 255, 255, 0.08);
+  border-radius: 999rpx;
+  background: #17171c;
+  border: 2rpx solid #272730;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0;
-}
-
-.header-placeholder {
-  height: 72rpx;
 }
 
 .header-back-icon,
 .header-title {
-  color: $text-white;
+  color: #f5f5f7;
 }
 
 .header-back-icon {
-  font-size: 36rpx;
-  font-weight: 700;
+  font-size: 30rpx;
   line-height: 1;
+  font-weight: 700;
 }
 
 .header-title {
   flex: 1;
   text-align: center;
-  font-size: 42rpx;
+  font-size: 38rpx;
   font-weight: 700;
-  letter-spacing: 1rpx;
 }
 
 .profile-scroll {
   flex: 1;
 }
 
+.profile-body {
+  padding: 0 16rpx;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
 .avatar-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 32rpx 0;
+  position: relative;
+  width: 112rpx;
+  height: 112rpx;
+  margin: 0 auto 40rpx;
 }
 
-.avatar-image {
-  width: 180rpx;
-  height: 180rpx;
+.avatar-orb {
+  width: 112rpx;
+  height: 112rpx;
   border-radius: 50%;
-  border: 4rpx solid rgba(167, 139, 250, 0.7);
-  margin-bottom: 20rpx;
+  background: radial-gradient(circle at 28% 30%, #d8f2ff 0%, #4db1ff 42%, #2e89ea 72%, #1f5eb4 100%);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
-.profile-name {
-  color: $text-white;
-  font-size: 38rpx;
+.avatar-highlight {
+  position: absolute;
+  inset: 6rpx;
+  border-radius: 50%;
+  background: radial-gradient(circle at 68% 32%, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0) 50%);
+}
+
+.avatar-initial {
+  position: relative;
+  z-index: 1;
+  color: rgba(245, 245, 247, 0.94);
+  font-size: 40rpx;
   font-weight: 700;
-  margin-bottom: 8rpx;
 }
 
-.profile-meta {
-  color: $text-muted;
-  font-size: 24rpx;
+.camera-badge {
+  position: absolute;
+  right: -10rpx;
+  bottom: 0;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: #1d1d23;
+  border: 2rpx solid #272730;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.content-area {
-  padding: 0 16rpx 28rpx;
+.camera-badge-text {
+  color: #f5f5f7;
+  font-size: 20rpx;
+  font-weight: 700;
 }
 
 .info-card,
-.settings-card {
-  background: #1a1a1a;
-  border-radius: 24rpx;
-  padding: 20rpx 16rpx;
-  margin-bottom: 16rpx;
+.intro-card,
+.meta-card,
+.guest-card,
+.dev-card {
+  width: 100%;
+  border-radius: 20rpx;
+  background: #17171c;
+  border: 2rpx solid #272730;
+  box-sizing: border-box;
+}
+
+.info-card,
+.meta-card,
+.guest-card,
+.dev-card {
+  padding: 20rpx 22rpx;
+}
+
+.intro-card {
+  padding: 20rpx 22rpx;
+  margin-top: 20rpx;
+}
+
+.meta-card,
+.dev-card,
+.logout-button {
+  margin-top: 20rpx;
 }
 
 .info-row {
-  min-height: 72rpx;
+  min-height: 36rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -460,138 +531,219 @@ onBackPress((options = {}) => {
 }
 
 .info-row.clickable {
-  min-height: 84rpx;
-}
-
-.row-label,
-.row-value {
-  font-size: 28rpx;
+  min-height: 52rpx;
 }
 
 .row-label {
-  color: #a1a1aa;
+  color: #f5f5f7;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.row-right {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  min-width: 0;
+  max-width: 58%;
 }
 
 .row-value {
-  color: $text-white;
+  color: #a7a7b3;
+  font-size: 28rpx;
   text-align: right;
+  min-width: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.row-value.multiline {
-  max-width: 420rpx;
-  font-size: 24rpx;
-  line-height: 1.6;
-}
-
-.row-value.compact {
-  font-size: 22rpx;
-  color: #8e8e93;
-}
-
-.row-placeholder {
-  color: #6b7280;
+.row-arrow {
+  color: #a7a7b3;
+  font-size: 30rpx;
+  line-height: 1;
 }
 
 .divider {
   height: 2rpx;
-  background: rgba(255, 255, 255, 0.08);
-  margin: 8rpx 0;
+  background: #272730;
+  margin: 18rpx 0;
 }
 
-.settings-tip {
+.intro-title {
   display: block;
-  color: #8e8e93;
-  font-size: 24rpx;
+  color: #f5f5f7;
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.intro-value {
+  display: block;
+  margin-top: 18rpx;
+  color: #a7a7b3;
+  font-size: 28rpx;
   line-height: 1.6;
-  margin: 8rpx 0 14rpx;
 }
 
-.settings-input {
-  min-height: 84rpx;
-  border-radius: 20rpx;
-  background: #111111;
-  color: $text-white;
-  font-size: 26rpx;
-  padding: 0 20rpx;
-}
-
-.stats-grid {
-  display: flex;
-  gap: 12rpx;
-  margin-bottom: 16rpx;
-}
-
-.stat-card {
-  flex: 1;
-  border-radius: 20rpx;
-  background: #1a1a1a;
-  padding: 26rpx 10rpx;
-  text-align: center;
-}
-
-.stat-number {
+.guest-title {
   display: block;
-  color: #a78bfa;
-  font-size: 40rpx;
+  color: #f5f5f7;
+  font-size: 34rpx;
   font-weight: 700;
-  margin-bottom: 8rpx;
 }
 
-.stat-label {
-  color: #8e8e93;
-  font-size: 22rpx;
+.guest-copy {
+  display: block;
+  margin-top: 14rpx;
+  color: #a7a7b3;
+  font-size: 26rpx;
+  line-height: 1.7;
 }
 
-.action-button {
-  height: 96rpx;
-  border-radius: 28rpx;
+.guest-action {
+  margin-top: 18rpx;
+  min-height: 84rpx;
+  border-radius: 999rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 14rpx;
 }
 
-.action-button.primary {
-  background: #ffffff;
+.guest-action.primary {
+  background: #f5f5f7;
 }
 
-.action-button.danger {
-  border: 2rpx solid #ef4444;
+.guest-action.secondary {
+  background: #0b0b0d;
+  border: 2rpx solid #3a3a45;
 }
 
-.action-text {
-  color: #111111;
-  font-size: 30rpx;
+.guest-action-text {
+  font-size: 28rpx;
   font-weight: 700;
 }
 
-.danger-text {
-  color: #ef4444;
-  font-size: 30rpx;
+.guest-action-text.dark {
+  color: #0b0b0d;
+}
+
+.guest-action-text.light {
+  color: #f5f5f7;
+}
+
+.dev-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.dev-title {
+  display: block;
+  color: #f5f5f7;
+  font-size: 28rpx;
   font-weight: 700;
+}
+
+.dev-summary {
+  display: block;
+  margin-top: 8rpx;
+  color: #8d8d98;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.dev-arrow {
+  color: #a7a7b3;
+  font-size: 28rpx;
+}
+
+.dev-body {
+  margin-top: 18rpx;
+  padding-top: 18rpx;
+  border-top: 2rpx solid #272730;
+}
+
+.dev-tip {
+  display: block;
+  color: #8d8d98;
+  font-size: 24rpx;
+  line-height: 1.7;
+}
+
+.dev-input {
+  width: 100%;
+  height: 78rpx;
+  margin-top: 14rpx;
+  padding: 0 24rpx;
+  border-radius: 18rpx;
+  background: #0b0b0d;
+  color: #f5f5f7;
+  font-size: 26rpx;
+  box-sizing: border-box;
+}
+
+.dev-placeholder {
+  color: #6f6f7b;
+  font-size: 24rpx;
+}
+
+.dev-save {
+  margin-top: 18rpx;
+  min-height: 76rpx;
+  border-radius: 18rpx;
+  background: #1d5fb9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dev-save-text {
+  color: #f5f5f7;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.logout-button {
+  width: 100%;
+  min-height: 56rpx;
+  border-radius: 999rpx;
+  background: #0b0b0d;
+  border: 3rpx solid #3a3a45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.logout-text {
+  color: #f5f5f7;
+  font-size: 30rpx;
+  font-weight: 600;
 }
 
 .sheet-mask {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.52);
+  z-index: 40;
+  background: rgba(17, 17, 24, 0.72);
   display: flex;
   align-items: flex-end;
   justify-content: center;
   padding: 24rpx;
-  z-index: 40;
 }
 
 .gender-sheet {
   width: 100%;
   border-radius: 28rpx 28rpx 0 0;
-  background: #1a1a1a;
+  background: #17171c;
   padding: 28rpx 24rpx 36rpx;
 }
 
 .sheet-title {
   display: block;
-  color: $text-white;
+  color: #f5f5f7;
   font-size: 30rpx;
   font-weight: 700;
   text-align: center;
@@ -601,15 +753,16 @@ onBackPress((options = {}) => {
 .sheet-option {
   min-height: 84rpx;
   border-radius: 20rpx;
-  background: #111111;
+  background: #0b0b0d;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 12rpx;
+  border: 2rpx solid #272730;
 }
 
 .sheet-option-text {
-  color: $text-white;
+  color: #f5f5f7;
   font-size: 28rpx;
 }
 

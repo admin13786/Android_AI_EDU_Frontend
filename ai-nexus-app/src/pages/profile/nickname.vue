@@ -27,7 +27,6 @@
 <script setup>
 import { onBackPress, onLoad } from '@dcloudio/uni-app'
 import { ref } from 'vue'
-import { updateUserInfo } from '@/services/api'
 import { useUserStore } from '@/stores/user'
 import { getLayoutMetrics } from '@/utils/layout'
 import { getLocalProfile, saveLocalProfile, setProfilePendingToast } from '@/utils/profile'
@@ -53,18 +52,13 @@ const handleSave = async () => {
     return
   }
 
-  try {
-    await updateUserInfo({ nickname: value })
-    userStore.setUserInfo({
-      ...(userStore.userInfo || {}),
-      nickname: value,
-    })
-    saveLocalProfile({ nickname: value })
-    setProfilePendingToast('昵称修改成功')
-    safeNavigateBack('/pages/profile/index')
-  } catch (error) {
-    uni.showToast({ title: error.message, icon: 'none' })
-  }
+  userStore.setUserInfo({
+    ...(userStore.userInfo || {}),
+    nickname: value,
+  })
+  saveLocalProfile({ nickname: value })
+  setProfilePendingToast('昵称修改成功')
+  safeNavigateBack('/pages/profile/index')
 }
 
 onLoad(() => {

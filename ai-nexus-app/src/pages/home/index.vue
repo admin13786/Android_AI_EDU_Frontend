@@ -310,7 +310,6 @@ const historySignature = (list = []) => {
 const syncWorkshopHistoryRemote = async ({ silent = true } = {}) => {
   const now = Date.now()
   if (workshopSyncInFlight.value) return
-  // Throttle: avoid request storms on frequent onShow.
   if (now - workshopSyncLastAt.value < 12000) return
 
   const local = getWorkshopHistory()
@@ -324,12 +323,11 @@ const syncWorkshopHistoryRemote = async ({ silent = true } = {}) => {
     uni.setStorageSync('workshopHistory', merged)
     const mergedSig = historySignature(merged)
     const remoteSig = historySignature(remote)
-    // Only push when merged differs from remote and we haven't pushed same payload.
     if (mergedSig && mergedSig !== remoteSig && mergedSig !== workshopSyncLastSignature.value) {
       try {
         await saveWorkshopHistoryRemote(merged)
         workshopSyncLastSignature.value = mergedSig
-      } catch (e) {
+      } catch (error) {
         // ignore
       }
     }
@@ -416,15 +414,14 @@ const handleGenerate = async () => {
       generatedResult.value = {
         kind: 'assistant',
         text: routed?.replyText || buildAssistantReply({ intent: routed?.intent || 'help' }).text,
-        quickActions: Array.isArray(routed?.quickActions) ? routed.quickActions : buildAssistantReply({ intent: routed?.intent || 'help' }).quickActions,
+        quickActions: Array.isArray(routed?.quickActions)
+          ? routed.quickActions
+          : buildAssistantReply({ intent: routed?.intent || 'help' }).quickActions,
       }
       return
     }
-    // Keep the original user wording in both the UI and generation request.
     lastPrompt.value = prompt
-  } catch (e) {
-    // If router fails, fall back to old behavior: require explicit keywords via local rules.
-    // (Keep UX safe: do not generate on greetings.)
+  } catch (error) {
     const fallback = classifyWorkshopInput(prompt)
     if (fallback.intent !== WorkshopIntent.GenerateWorkshop) {
       generatedResult.value = buildAssistantReply({ intent: 'help' })
@@ -447,7 +444,6 @@ const handleGenerate = async () => {
     })
     currentConversationId.value = savedConversation.id
     syncWorkshopHistory()
-    // Mark dirty and allow next scheduled sync to push.
     workshopSyncLastAt.value = 0
   } catch (error) {
     uni.showToast({ title: error.message, icon: 'none' })

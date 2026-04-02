@@ -1,6 +1,13 @@
 {
   "pages": [
     {
+      "path": "pages/profile/auth",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "账号登录"
+      }
+    },
+    {
       "path": "pages/home/index",
       "style": {
         "navigationStyle": "custom",

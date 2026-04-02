@@ -23,11 +23,10 @@ const resolveOpenmaicUrl = () => {
     const url = new URL(getOpenmaicBaseUrl())
     url.pathname = '/'
     url.search = ''
-    url.searchParams.set('host', 'uniapp')
     url.hash = ''
     return url.toString().replace(/\/$/, '')
   } catch (error) {
-    return 'http://121.89.87.255:10200?host=uniapp'
+    return 'http://8.135.4.46:3000'
   }
 }
 

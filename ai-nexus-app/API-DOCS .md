@@ -17,6 +17,10 @@
   - [1.7 微博样式排行榜](#17-微博样式排行榜)
   - [1.8 视频排行榜（占位）](#18-视频排行榜占位)
   - [1.9 爬取批次列表](#19-爬取批次列表)
+  - [1.10 用户注册](#110-用户注册)
+  - [1.11 列出 Workshop 对话](#111-列出-workshop-对话)
+  - [1.12 保存 Workshop 对话](#112-保存-workshop-对话)
+  - [1.13 删除 Workshop 对话](#113-删除-workshop-对话)
 - [二、Crawl Worker 爬虫工作进程（端口 6600）](#二crawl-worker-爬虫工作进程端口-6600)
   - [2.1 Worker 健康检查](#21-worker-健康检查)
 - [三、Crawl Monitor 爬虫监控服务](#三crawl-monitor-爬虫监控服务)
@@ -67,7 +71,8 @@
 **框架**：FastAPI  
 **默认端口**：8000  
 **CORS**：全局开启（`allow_origins=["*"]`）  
-**认证**：无统一 Token 校验机制
+**认证**：用户与会话存 SQLite；登录后发 Token。Workshop 对话历史相关接口需请求头 `Authorization: Bearer <token>`。  
+**交互式文档**：`GET /docs`（Swagger UI）
 
 > 注意：`news_router` 同时挂载于根路径 `/news/...` 和 `/api/news/...`，两者功能完全相同。
 
@@ -216,7 +221,7 @@
 }
 ```
 
-> ⚠️ 由于路由注册顺序，`/{news_id}` 在 `/health` 之前，请求 `/news/health` 可能被路径参数匹配导致 422 错误。建议使用 `/api/news/health`。
+> ⚠️ 由于路由注册顺序，`@news_router.get("/{news_id}")` 写在 `@news_router.get("/health")` **之前**，路径 `/news/health` 与 `/api/news/health` 都会先匹配 `/{news_id}`，将 `health` 当作整数解析失败，返回 **422**。修复方式：在 `news_api.py` 中将 `/health` 路由移到 `/{news_id}` 之前。
 
 **定义文件**：`Backend/Crawl/news_api.py`
 
@@ -248,9 +253,10 @@
 ```json
 {
   "success": true,
-  "token": "sha256_hash_string",
+  "token": "随机 hex 字符串（64 字符）",
   "user": {
-    "username": "admin"
+    "username": "admin",
+    "displayName": "管理员"
   }
 }
 ```
@@ -262,7 +268,7 @@
 }
 ```
 
-**说明**：当前为简化实现，使用内存用户表（`admin`/`admin123`）。
+**说明**：用户与会话持久化在 SQLite（`app_users` / `app_sessions`）。数据库初始化时会确保默认账号存在（密码在库内为 PBKDF2 哈希）：`admin` / `admin123`，`workshop_guest` / `123456`（显示名分别为「管理员」「默认用户」）。也可通过 [1.10 用户注册](#110-用户注册) 创建新用户。
 
 **定义文件**：`Backend/Crawl/rank_api.py`
 
@@ -274,7 +280,7 @@
 |------|------|
 | **方法** | `DELETE` |
 | **路径** | `/api/auth/sessions/current` |
-| **认证** | 无 |
+| **认证** | 可选；若携带 `Authorization: Bearer <token>`，服务端会从 `app_sessions` 删除该会话 |
 
 **响应**：
 ```json
@@ -283,7 +289,7 @@
 }
 ```
 
-**说明**：占位接口，服务端无会话状态管理。
+**说明**：无 Token 时仍返回成功（幂等）；有 Token 时清除对应会话记录。
 
 **定义文件**：`Backend/Crawl/rank_api.py`
 
@@ -379,6 +385,126 @@
   ]
 }
 ```
+
+**定义文件**：`Backend/Crawl/rank_api.py`
+
+---
+
+### 1.10 用户注册
+
+| 项目 | 内容 |
+|------|------|
+| **方法** | `POST` |
+| **路径** | `/api/auth/register` |
+| **认证** | 无 |
+
+**请求体（JSON）**：
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `username` | `string` | 是 | 用户名（非空） |
+| `password` | `string` | 是 | 密码（至少 6 个字符） |
+| `display_name` | `string` | 否 | 显示名，默认与用户名相同 |
+
+**成功响应**：
+```json
+{
+  "success": true,
+  "token": "...",
+  "user": {
+    "username": "newuser",
+    "displayName": "新用户"
+  }
+}
+```
+
+**失败响应**：400（用户名为空、密码过短）、409（用户名已存在）。
+
+**说明**：注册成功后自动创建会话并返回 Token，格式与登录一致。
+
+**定义文件**：`Backend/Crawl/rank_api.py`
+
+---
+
+### 1.11 列出 Workshop 对话
+
+| 项目 | 内容 |
+|------|------|
+| **方法** | `GET` |
+| **路径** | `/api/workshop-history/conversations` |
+| **认证** | 必填 `Authorization: Bearer <token>` |
+
+**成功响应**：
+```json
+{
+  "success": true,
+  "list": [
+    {
+      "id": "conv_uuid",
+      "title": "新对话",
+      "messages": [],
+      "preview": {},
+      "createdAt": "...",
+      "updatedAt": "..."
+    }
+  ]
+}
+```
+
+**失败响应**（401）：`{"detail": "未登录或登录已失效"}`
+
+**定义文件**：`Backend/Crawl/rank_api.py`
+
+---
+
+### 1.12 保存 Workshop 对话
+
+| 项目 | 内容 |
+|------|------|
+| **方法** | `PUT` |
+| **路径** | `/api/workshop-history/conversations/{conversation_id}` |
+| **认证** | 必填 `Authorization: Bearer <token>` |
+
+**路径参数**：`conversation_id` 须与请求体中的 `id` 字段一致。
+
+**请求体（JSON）**：
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `id` | `string` | 是 | 会话 ID（与 URL 一致） |
+| `title` | `string` | 否 | 标题，默认 `新对话` |
+| `createdAt` / `updatedAt` | `string` | 否 | ISO 时间 |
+| `messages` | `array` | 否 | 消息列表 |
+| `preview` | `object` | 否 | 预览信息 |
+
+**成功响应**：
+```json
+{
+  "success": true,
+  "data": { ... }
+}
+```
+
+**定义文件**：`Backend/Crawl/rank_api.py`
+
+---
+
+### 1.13 删除 Workshop 对话
+
+| 项目 | 内容 |
+|------|------|
+| **方法** | `DELETE` |
+| **路径** | `/api/workshop-history/conversations/{conversation_id}` |
+| **认证** | 必填 `Authorization: Bearer <token>` |
+
+**成功响应**：
+```json
+{
+  "success": true
+}
+```
+
+**说明**：仅删除当前用户名下、ID 匹配的会话。
 
 **定义文件**：`Backend/Crawl/rank_api.py`
 
@@ -1578,20 +1704,23 @@ data: <StatelessEvent JSON>
 
 ## 六、前端代理映射说明
 
-前端（Vue + Vite）开发服务器端口为 **5173**，通过 `vite.config.js` 配置代理将 API 请求转发到对应后端。
+前端（Vue + Vite）开发服务器端口为 **5173**，通过 `FrontEnd/vite.config.js` 配置代理将 API 请求转发到对应后端。生产环境见 `FrontEnd/nginx.conf` / `FrontEnd/nginx.compose.conf`，通常与下表一致且额外包含未在 Vite 中配置的项（见下）。
 
 | 前端请求路径 | 代理目标 | 说明 |
 |-------------|----------|------|
-| `/openmaic/*` | `http://localhost:3000/*` | OpenMAIC 服务（去除 `/openmaic` 前缀） |
-| `/api/workshop/*` | `http://localhost:5000/*` | WorkShop 服务（去除 `/api/workshop` 前缀） |
-| `/api/ranks/*` | `http://localhost:8000/api/ranks/*` | 排行榜接口（保留路径） |
-| `/api/articles/*` | `http://localhost:8000/api/articles/*` | 文章接口（保留路径）⚠️ |
-| `/api/page-screenshot` | `http://localhost:8000/api/page-screenshot` | 页面截图（保留路径）⚠️ |
-| `/api/og-image` | `http://localhost:8000/api/og-image` | OG 图片（保留路径）⚠️ |
-| `/api/auth/*` | `http://localhost:8000/api/auth/*` | 登录认证（保留路径） |
+| `/openmaic/*` | `http://localhost:3000/*` | OpenMAIC（去掉 `/openmaic` 前缀） |
+| `/api/workshop/*` | `http://localhost:5000/*` | WorkShop（去掉 `/api/workshop` 前缀） |
+| `/api/ranks/*` | `http://localhost:8000/api/ranks/*` | Crawl 排行榜（保留路径） |
+| `/api/auth/*` | `http://localhost:8000/api/auth/*` | 登录 / 注册 / 登出（保留路径） |
+| `/api/articles/*` | `http://localhost:8000/api/articles/*` | ⚠️ 见下文 |
+| `/api/news/*` | `http://localhost:8000/api/news/*` | 新闻详情与速览；**当前 `vite.config.js` 未配置**，开发时需自行加代理或直连 8000；**Nginx 生产配置已包含** |
+| `/api/workshop-history/*` | `http://localhost:8000/api/workshop-history/*` | Workshop 对话历史；**Vite 未配置**，**Nginx 已包含** |
+| `/api/page-screenshot` | `http://localhost:8000/api/page-screenshot` | ⚠️ 见下文 |
+| `/api/page-screenshot.png` | `http://localhost:8000/api/page-screenshot.png` | ⚠️ 见下文 |
+| `/api/og-image` | `http://localhost:8000/api/og-image` | ⚠️ 见下文 |
 
-> ⚠️ 标记的接口在当前 `run_local.py` 中**未注册对应路由**，可能属于历史遗留或计划中的功能，请求时会返回 404。
+> ⚠️ `/api/articles`、`/api/page-screenshot`、`/api/page-screenshot.png`、`/api/og-image` 在 `Backend/Crawl/run_local.py` 中**未注册路由**，请求 Crawl 8000 会得到 **404**（可能为预留或由其他部署方式提供）。其余已列路径在 Crawl 侧有对应实现或与 WorkShop/OpenMAIC 一致。
 
 ---
 
-*文档生成时间：2026-03-30*
+*文档生成时间：2026-04-02*
