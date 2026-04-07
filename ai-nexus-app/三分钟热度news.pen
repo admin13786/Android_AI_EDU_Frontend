@@ -1,0 +1,2823 @@
+{
+  "version": "2.10",
+  "children": [
+    {
+      "type": "frame",
+      "id": "bi8Au",
+      "x": -359,
+      "y": 17,
+      "name": "Frame",
+      "clip": true,
+      "width": 2959,
+      "height": 1830,
+      "fill": "#FFFFFF",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "M5pNv",
+          "x": 84,
+          "y": 53,
+          "name": "Step 1 三卡总览",
+          "clip": true,
+          "width": 390,
+          "height": 857,
+          "fill": "#f3f1ec",
+          "cornerRadius": 34,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#d3cec3"
+          },
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000080",
+            "offset": {
+              "x": 0,
+              "y": 12
+            },
+            "blur": 36
+          },
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "uTLgn",
+              "name": "s1status",
+              "width": "fill_container",
+              "height": 62,
+              "padding": [
+                0,
+                16
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center"
+            },
+            {
+              "type": "frame",
+              "id": "AMAMX",
+              "name": "s1body",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "padding": [
+                8,
+                16,
+                16,
+                16
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "srBqZ",
+                  "name": "s1title",
+                  "fill": "#1a1a1a",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "今日 AI 生存情报 / 三案速览",
+                  "fontFamily": "Nunito",
+                  "fontSize": 24,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "text",
+                  "id": "BNwUN",
+                  "name": "s1subtitle",
+                  "fill": "#5f5f5f",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "技术突破 + 实用工具 + 奇闻轶事",
+                  "fontFamily": "Nunito",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "ASZFW",
+                  "name": "s1cards",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "jwwHt",
+                      "name": "s1c1",
+                      "width": "fill_container",
+                      "height": 180,
+                      "fill": "#ece9e2",
+                      "cornerRadius": 22,
+                      "stroke": {
+                        "thickness": 1,
+                        "fill": "#d4d0c6"
+                      },
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Ic0pr",
+                          "name": "s1c1tag",
+                          "fill": "#5f5f5f",
+                          "content": "实用工具 · 它们来抢活了",
+                          "fontFamily": "Nunito",
+                          "fontSize": 10,
+                          "fontWeight": "800",
+                          "letterSpacing": 0.5
+                        },
+                        {
+                          "type": "text",
+                          "id": "GwgXL",
+                          "name": "s1c1fact",
+                          "fill": "#1a1a1a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "[事实] 新一代 AI Agent 公测，可自动操控电脑订票、写周报、报销。",
+                          "fontFamily": "Nunito",
+                          "fontSize": 15,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "2Tm69",
+                          "name": "s1c1prophet",
+                          "fill": "#6a6a6a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "[预言家说] 电脑不再需要人类插件，只会搬运数据的人正在变多余。",
+                          "fontFamily": "Nunito",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "fyHSn",
+                          "name": "s1c1btn",
+                          "fill": "#d7d2c8",
+                          "cornerRadius": 999,
+                          "padding": [
+                            8,
+                            14
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "bK5ie",
+                              "name": "s1c1btntext",
+                              "fill": "#111111",
+                              "content": "解密生存概率",
+                              "fontFamily": "Nunito",
+                              "fontSize": 12,
+                              "fontWeight": "800"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "G4Go3",
+                      "name": "s1c2",
+                      "width": "fill_container",
+                      "height": 180,
+                      "fill": "#ece9e2",
+                      "cornerRadius": 22,
+                      "stroke": {
+                        "thickness": 1,
+                        "fill": "#d4d0c6"
+                      },
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "NibCM",
+                          "name": "s1c2tag",
+                          "fill": "#5f5f5f",
+                          "content": "Operator 智能体 · CLOSED",
+                          "fontFamily": "Nunito",
+                          "fontSize": 10,
+                          "fontWeight": "800",
+                          "letterSpacing": 0.5
+                        },
+                        {
+                          "type": "text",
+                          "id": "Ecg2F",
+                          "name": "s1c2fact",
+                          "fill": "#1a1a1a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "[事实] OpenAI 正式公测 Operator 智能体。",
+                          "fontFamily": "Nunito",
+                          "fontSize": 15,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "kA7Xn",
+                          "name": "s1c2prophet",
+                          "fill": "#6a6a6a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "[预言家说] 电脑不再需要人类插件，只搬运数据的人会变多余。",
+                          "fontFamily": "Nunito",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "aNRWA",
+                          "name": "s1c2btn",
+                          "fill": "#d7d2c8",
+                          "cornerRadius": 999,
+                          "padding": [
+                            8,
+                            14
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "QBBVR",
+                              "name": "s1c2btntext",
+                              "fill": "#111111",
+                              "content": "解密生存概率",
+                              "fontFamily": "Nunito",
+                              "fontSize": 12,
+                              "fontWeight": "800"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "DwLiY",
+                      "name": "s1c3",
+                      "width": "fill_container",
+                      "height": 180,
+                      "fill": "#ece9e2",
+                      "cornerRadius": 22,
+                      "stroke": {
+                        "thickness": 1,
+                        "fill": "#d4d0c6"
+                      },
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "QP7Ez",
+                          "name": "s1c3tag",
+                          "fill": "#5f5f5f",
+                          "content": "奇闻轶事 · 它们在变真",
+                          "fontFamily": "Nunito",
+                          "fontSize": 10,
+                          "fontWeight": "800",
+                          "letterSpacing": 0.5
+                        },
+                        {
+                          "type": "text",
+                          "id": "sfJKK",
+                          "name": "s1c3fact",
+                          "fill": "#1a1a1a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "[事实] 某品牌签约 AI 虚拟人代言，互动率超过真人明星。",
+                          "fontFamily": "Nunito",
+                          "fontSize": 15,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "owUIh",
+                          "name": "s1c3prophet",
+                          "fill": "#6a6a6a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "[预言家说] 完美偶像不需要灵魂，只需要代码。",
+                          "fontFamily": "Nunito",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "KmnTZ",
+                          "name": "s1c3btn",
+                          "fill": "#d7d2c8",
+                          "cornerRadius": 999,
+                          "padding": [
+                            8,
+                            14
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "KHjx2",
+                              "name": "s1c3btntext",
+                              "fill": "#111111",
+                              "content": "解密生存概率",
+                              "fontFamily": "Nunito",
+                              "fontSize": 12,
+                              "fontWeight": "800"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "vxlrT",
+                  "name": "s1note",
+                  "fill": "#1a1a1a",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "不点也能带走观点：三种变化都在重写你的竞争方式。",
+                  "fontFamily": "Nunito",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "snMxg",
+                  "name": "s3archive",
+                  "width": 352,
+                  "height": 107,
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": [
+                    6,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "XGJLG",
+                      "name": "s3scan",
+                      "width": "fill_container",
+                      "height": 1,
+                      "fill": "#d8d3c9",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#5F7FD988",
+                        "blur": 6
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "4Oj74",
+                      "name": "s3headerRow",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "0POA5",
+                          "name": "s3header",
+                          "fill": "#666666",
+                          "content": "[档案] 历史序列 / 往期 7 日归档",
+                          "fontFamily": "Nunito",
+                          "fontSize": 11,
+                          "fontWeight": "700",
+                          "letterSpacing": 0.4
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ahiap",
+                          "name": "s3expandIcon",
+                          "width": 22,
+                          "height": 16,
+                          "fill": "#d9d5cc",
+                          "cornerRadius": 2,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Cl2X2",
+                              "fill": "#111111",
+                              "content": ">",
+                              "fontFamily": "Nunito",
+                              "fontSize": 11,
+                              "fontWeight": "800"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "cornerRadius": 99,
+              "id": "ecGb1",
+              "layoutPosition": "absolute",
+              "x": 384,
+              "y": 94,
+              "name": "scrollTrack",
+              "fill": "#cfc9bd",
+              "width": 2,
+              "height": 640
+            },
+            {
+              "type": "rectangle",
+              "cornerRadius": 99,
+              "id": "4dvwN",
+              "layoutPosition": "absolute",
+              "x": 383,
+              "y": 150,
+              "name": "scrollThumb",
+              "fill": "#8f8a80",
+              "width": 4,
+              "height": 116,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#FFFFFF55",
+                "blur": 4
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "OQU8t",
+          "x": 509,
+          "y": 53,
+          "name": "Step 2 点击展开",
+          "clip": true,
+          "width": 390,
+          "height": 857,
+          "fill": "#f3f1ec",
+          "cornerRadius": 34,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#d3cec3"
+          },
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000080",
+            "offset": {
+              "x": 0,
+              "y": 12
+            },
+            "blur": 36
+          },
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "wSTGo",
+              "name": "s1status",
+              "width": "fill_container",
+              "height": 62,
+              "padding": [
+                0,
+                16
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center"
+            },
+            {
+              "type": "frame",
+              "id": "rp2zR",
+              "name": "s1body",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "padding": [
+                8,
+                16,
+                16,
+                16
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "99V0E",
+                  "name": "s1title",
+                  "fill": "#1a1a1a",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "今日 AI 生存情报 / 三案速览",
+                  "fontFamily": "Nunito",
+                  "fontSize": 24,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "text",
+                  "id": "vURFn",
+                  "name": "s1subtitle",
+                  "fill": "#5f5f5f",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "技术突破 + 实用工具 + 奇闻轶事",
+                  "fontFamily": "Nunito",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "8bAK2",
+                  "name": "s1c1",
+                  "width": "fill_container",
+                  "height": 180,
+                  "fill": "#ece9e2",
+                  "cornerRadius": 22,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#d4d0c6"
+                  },
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "kk3YW",
+                      "name": "s1c1tag",
+                      "fill": "#5f5f5f",
+                      "content": "实用工具 · 它们来抢活了",
+                      "fontFamily": "Nunito",
+                      "fontSize": 10,
+                      "fontWeight": "800",
+                      "letterSpacing": 0.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "Wp3PD",
+                      "name": "s1c1fact",
+                      "fill": "#1a1a1a",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "[事实] 新一代 AI Agent 公测，可自动操控电脑订票、写周报、报销。",
+                      "fontFamily": "Nunito",
+                      "fontSize": 15,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "MoCGj",
+                      "name": "s1c1prophet",
+                      "fill": "#6a6a6a",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "[预言家说] 电脑不再需要人类插件，只会搬运数据的人正在变多余。",
+                      "fontFamily": "Nunito",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "iTF99",
+                      "name": "s1c1btn",
+                      "fill": "#d7d2c8",
+                      "cornerRadius": 999,
+                      "padding": [
+                        8,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "QRFiZ",
+                          "name": "s1c1btntext",
+                          "fill": "#111111",
+                          "content": "解密生存概率",
+                          "fontFamily": "Nunito",
+                          "fontSize": 12,
+                          "fontWeight": "800"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "kAxPp",
+                  "name": "s1cards",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "POpzI",
+                      "name": "s1c2",
+                      "clip": true,
+                      "width": "fill_container",
+                      "height": 281,
+                      "fill": "#ece9e2",
+                      "cornerRadius": 22,
+                      "stroke": {
+                        "thickness": 1,
+                        "fill": "#d4d0c6"
+                      },
+                      "layout": "vertical",
+                      "gap": 6,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "dt4Rz",
+                          "name": "s1c2tag",
+                          "fill": "#5f5f5f",
+                          "content": "Operator 智能体 · ZIP OPEN",
+                          "fontFamily": "Nunito",
+                          "fontSize": 10,
+                          "fontWeight": "800",
+                          "letterSpacing": 0.5
+                        },
+                        {
+                          "type": "text",
+                          "id": "eyZsd",
+                          "name": "s1c2fact",
+                          "fill": "#1a1a1a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "[事实] OpenAI 正式公测 Operator 智能体。",
+                          "fontFamily": "Nunito",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "vlVh9",
+                          "name": "s1c2prophet",
+                          "fill": "#6a6a6a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "[预言家说] 电脑不再需要人类插件，只搬运数据的人会变多余。",
+                          "fontFamily": "Nunito",
+                          "fontSize": 11,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Uc5Jb",
+                          "name": "s1c2btn",
+                          "fill": "#d7d2c8",
+                          "cornerRadius": 999,
+                          "padding": [
+                            8,
+                            14
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Usnii",
+                              "name": "s1c2btntext",
+                              "fill": "#111111",
+                              "content": "已展开",
+                              "fontFamily": "Nunito",
+                              "fontSize": 12,
+                              "fontWeight": "800"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "rEyvF",
+                          "name": "ziprow",
+                          "width": "fill_container",
+                          "fill": "#e6e2da",
+                          "cornerRadius": 10,
+                          "padding": [
+                            3,
+                            8
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "5B63g",
+                              "name": "ziptxt",
+                              "fill": "#5f5f5f",
+                              "content": "正文已解锁：人话简报 + 深度拆解",
+                              "fontFamily": "Nunito",
+                              "fontSize": 10,
+                              "fontWeight": "800"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "tfJei",
+                          "name": "deeptxt",
+                          "fill": "#1a1a1a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "【人话简报】简单说，这就是给电脑装了电子大脑。你只要说帮我订去上海的票，它会自己开网页、比价、填信息，直到支付页。它不是在帮你用电脑，而是在取代你用电脑。",
+                          "lineHeight": 1.2,
+                          "fontFamily": "Nunito",
+                          "fontSize": 10,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Q6mHA",
+                          "name": "deep2",
+                          "fill": "#1a1a1a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "【深度拆解】这标志着软件时代开始退场。以前人要学 Excel、ERP 等操作，未来软件只需向 AI 开放接口。大量流程化行政工作会被自动执行，工具一旦能自我执行，纯执行者价值会快速归零。",
+                          "lineHeight": 1.2,
+                          "fontFamily": "Nunito",
+                          "fontSize": 10,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "0adT2",
+                          "name": "guideTxt",
+                          "fill": "#6a6a6a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "【避坑指南】立刻停止沉迷软件操作技巧（如复杂 Excel ）。转去研究业务逻辑和任务定义。未来赢家是发号施令的人，不是点鼠标的人。",
+                          "lineHeight": 1.15,
+                          "fontFamily": "Nunito",
+                          "fontSize": 10,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "wQJpW",
+                  "name": "s1c3",
+                  "width": "fill_container",
+                  "height": 180,
+                  "fill": "#ece9e2",
+                  "cornerRadius": 22,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#d4d0c6"
+                  },
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ijw1O",
+                      "name": "s1c3tag",
+                      "fill": "#5f5f5f",
+                      "content": "奇闻轶事 · 它们在变真",
+                      "fontFamily": "Nunito",
+                      "fontSize": 10,
+                      "fontWeight": "800",
+                      "letterSpacing": 0.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "WQQvd",
+                      "name": "s1c3fact",
+                      "fill": "#1a1a1a",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "[事实] 某品牌签约 AI 虚拟人代言，互动率超过真人明星。",
+                      "fontFamily": "Nunito",
+                      "fontSize": 15,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "lYvQi",
+                      "name": "s1c3prophet",
+                      "fill": "#6a6a6a",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "[预言家说] 完美偶像不需要灵魂，只需要代码。",
+                      "fontFamily": "Nunito",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "W53bO",
+                      "name": "s1c3btn",
+                      "fill": "#d7d2c8",
+                      "cornerRadius": 999,
+                      "padding": [
+                        8,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "AGkQx",
+                          "name": "s1c3btntext",
+                          "fill": "#111111",
+                          "content": "解密生存概率",
+                          "fontFamily": "Nunito",
+                          "fontSize": 12,
+                          "fontWeight": "800"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "ry4cC",
+                  "name": "s3note",
+                  "fill": "#1a1a1a",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "不点也能带走观点：三种变化都在重写你的竞争方式。",
+                  "fontFamily": "Nunito",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "cornerRadius": 99,
+              "id": "Vf8vf",
+              "layoutPosition": "absolute",
+              "x": 384,
+              "y": 94,
+              "name": "scrollTrack",
+              "fill": "#cfc9bd",
+              "width": 2,
+              "height": 910
+            },
+            {
+              "type": "rectangle",
+              "cornerRadius": 99,
+              "id": "Vq9Os",
+              "layoutPosition": "absolute",
+              "x": 383,
+              "y": 236,
+              "name": "scrollThumb",
+              "fill": "#8f8a80",
+              "width": 4,
+              "height": 140,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#FFFFFF55",
+                "blur": 4
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "HoqNS",
+          "x": 946,
+          "y": 53,
+          "name": "Step 2 点击展开",
+          "clip": true,
+          "width": 390,
+          "height": 857,
+          "fill": "#f3f1ec",
+          "cornerRadius": 34,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#d3cec3"
+          },
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000080",
+            "offset": {
+              "x": 0,
+              "y": 12
+            },
+            "blur": 36
+          },
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "4pCLX",
+              "name": "s1status",
+              "width": "fill_container",
+              "height": 62,
+              "padding": [
+                0,
+                16
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center"
+            },
+            {
+              "type": "frame",
+              "id": "LnJQa",
+              "name": "s1body",
+              "width": "fill_container",
+              "height": 806,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": [
+                8,
+                16,
+                16,
+                16
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "efTn6",
+                  "name": "s1cards",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "aFXo0",
+                      "name": "s1c2",
+                      "clip": true,
+                      "width": "fill_container",
+                      "height": 281,
+                      "fill": "#ece9e2",
+                      "cornerRadius": 22,
+                      "stroke": {
+                        "thickness": 1,
+                        "fill": "#d4d0c6"
+                      },
+                      "layout": "vertical",
+                      "gap": 6,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "GdXMo",
+                          "name": "s1c2tag",
+                          "fill": "#5f5f5f",
+                          "content": "Operator 智能体 · ZIP OPEN",
+                          "fontFamily": "Nunito",
+                          "fontSize": 10,
+                          "fontWeight": "800",
+                          "letterSpacing": 0.5
+                        },
+                        {
+                          "type": "text",
+                          "id": "zbD5K",
+                          "name": "s1c2fact",
+                          "fill": "#1a1a1a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "[事实] OpenAI 正式公测 Operator 智能体。",
+                          "fontFamily": "Nunito",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "kSGCG",
+                          "name": "s1c2prophet",
+                          "fill": "#6a6a6a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "[预言家说] 电脑不再需要人类插件，只搬运数据的人会变多余。",
+                          "fontFamily": "Nunito",
+                          "fontSize": 11,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Gf64l",
+                          "name": "s1c2btn",
+                          "fill": "#d7d2c8",
+                          "cornerRadius": 999,
+                          "padding": [
+                            8,
+                            14
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "h3XyQ",
+                              "name": "s1c2btntext",
+                              "fill": "#111111",
+                              "content": "已展开",
+                              "fontFamily": "Nunito",
+                              "fontSize": 12,
+                              "fontWeight": "800"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "FS0M2",
+                          "name": "ziprow",
+                          "width": "fill_container",
+                          "fill": "#e6e2da",
+                          "cornerRadius": 10,
+                          "padding": [
+                            3,
+                            8
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "xmScs",
+                              "name": "ziptxt",
+                              "fill": "#5f5f5f",
+                              "content": "正文已解锁：人话简报 + 深度拆解",
+                              "fontFamily": "Nunito",
+                              "fontSize": 10,
+                              "fontWeight": "800"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "Xj69o",
+                          "name": "deeptxt",
+                          "fill": "#1a1a1a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "【人话简报】简单说，这就是给电脑装了电子大脑。你只要说帮我订去上海的票，它会自己开网页、比价、填信息，直到支付页。它不是在帮你用电脑，而是在取代你用电脑。",
+                          "lineHeight": 1.2,
+                          "fontFamily": "Nunito",
+                          "fontSize": 10,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Ivevs",
+                          "name": "deep2",
+                          "fill": "#1a1a1a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "【深度拆解】这标志着软件时代开始退场。以前人要学 Excel、ERP 等操作，未来软件只需向 AI 开放接口。大量流程化行政工作会被自动执行，工具一旦能自我执行，纯执行者价值会快速归零。",
+                          "lineHeight": 1.2,
+                          "fontFamily": "Nunito",
+                          "fontSize": 10,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "XcAgu",
+                          "name": "guideTxt",
+                          "fill": "#6a6a6a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "【避坑指南】立刻停止沉迷软件操作技巧（如复杂 Excel ）。转去研究业务逻辑和任务定义。未来赢家是发号施令的人，不是点鼠标的人。",
+                          "lineHeight": 1.15,
+                          "fontFamily": "Nunito",
+                          "fontSize": 10,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "R1u1L",
+                  "name": "s1c3",
+                  "width": "fill_container",
+                  "height": 180,
+                  "fill": "#ece9e2",
+                  "cornerRadius": 22,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#d4d0c6"
+                  },
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "uEsE9",
+                      "name": "s1c3tag",
+                      "fill": "#5f5f5f",
+                      "content": "奇闻轶事 · 它们在变真",
+                      "fontFamily": "Nunito",
+                      "fontSize": 10,
+                      "fontWeight": "800",
+                      "letterSpacing": 0.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "OjAM6",
+                      "name": "s1c3fact",
+                      "fill": "#1a1a1a",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "[事实] 某品牌签约 AI 虚拟人代言，互动率超过真人明星。",
+                      "fontFamily": "Nunito",
+                      "fontSize": 15,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "H7p87",
+                      "name": "s1c3prophet",
+                      "fill": "#6a6a6a",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "[预言家说] 完美偶像不需要灵魂，只需要代码。",
+                      "fontFamily": "Nunito",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "hJBDe",
+                      "name": "s1c3btn",
+                      "fill": "#d7d2c8",
+                      "cornerRadius": 999,
+                      "padding": [
+                        8,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "W4AKK",
+                          "name": "s1c3btntext",
+                          "fill": "#111111",
+                          "content": "解密生存概率",
+                          "fontFamily": "Nunito",
+                          "fontSize": 12,
+                          "fontWeight": "800"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "JyyPN",
+                  "name": "s3note",
+                  "fill": "#1a1a1a",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "不点也能带走观点：三种变化都在重写你的竞争方式。",
+                  "fontFamily": "Nunito",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "N7Z1n",
+                  "name": "s3archive",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": [
+                    6,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "CA5Fi",
+                      "name": "s3scan",
+                      "width": "fill_container",
+                      "height": 1,
+                      "fill": "#d8d3c9",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#5F7FD988",
+                        "blur": 6
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "bmzAJ",
+                      "name": "s3headerRow",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Goupg",
+                          "name": "s3header",
+                          "fill": "#666666",
+                          "content": "[档案] 历史序列 / 往期 7 日归档",
+                          "fontFamily": "Nunito",
+                          "fontSize": 11,
+                          "fontWeight": "700",
+                          "letterSpacing": 0.4
+                        },
+                        {
+                          "type": "frame",
+                          "id": "n0DDq",
+                          "name": "s3expandIcon",
+                          "width": 22,
+                          "height": 16,
+                          "fill": "#d9d5cc",
+                          "cornerRadius": 2,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "htF1e",
+                              "fill": "#111111",
+                              "textGrowth": "fixed-width-height",
+                              "width": 7,
+                              "height": 15,
+                              "content": "˅",
+                              "fontFamily": "Nunito",
+                              "fontSize": 20,
+                              "fontWeight": "800"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Dn9P5",
+                      "name": "s3list",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 4,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "S8NJJ",
+                          "name": "s3d1",
+                          "width": "fill_container",
+                          "height": 24,
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "thickness": 1,
+                            "fill": "#cfc9bd"
+                          },
+                          "gap": 8,
+                          "padding": [
+                            2,
+                            6
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "JYMuA",
+                              "name": "row1d",
+                              "fill": "#616161",
+                              "content": "04/06 SUN",
+                              "fontFamily": "Nunito",
+                              "fontSize": 10,
+                              "fontWeight": "700",
+                              "letterSpacing": 0.4
+                            },
+                            {
+                              "type": "text",
+                              "id": "crXY1",
+                              "name": "row1m",
+                              "fill": "#2a2a2a",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "[事实] OpenAI Operator 正式版推送企业协作能力...",
+                              "fontFamily": "Nunito",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "TJbie",
+                              "name": "row1r",
+                              "fill": "#666666",
+                              "content": "▪ ▪ ▪ >",
+                              "fontFamily": "Nunito",
+                              "fontSize": 10,
+                              "fontWeight": "700",
+                              "letterSpacing": 0.3
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "imug5",
+                          "name": "s3d2",
+                          "opacity": 0.9,
+                          "width": "fill_container",
+                          "height": 24,
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "thickness": 1,
+                            "fill": "#d6d0c4"
+                          },
+                          "gap": 8,
+                          "padding": [
+                            2,
+                            6
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "5JZPk",
+                              "name": "row2d",
+                              "fill": "#676767",
+                              "content": "04/05 SAT",
+                              "fontFamily": "Nunito",
+                              "fontSize": 10,
+                              "fontWeight": "700",
+                              "letterSpacing": 0.4
+                            },
+                            {
+                              "type": "text",
+                              "id": "eoIjQ",
+                              "name": "row2m",
+                              "fill": "#3f3f3f",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "[事实] 某品牌签约 AI 虚拟代言人，互动率持续攀升...",
+                              "fontFamily": "Nunito",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "V3MS6",
+                              "name": "row2r",
+                              "fill": "#676767",
+                              "content": "▪ ▪ ▪ >",
+                              "fontFamily": "Nunito",
+                              "fontSize": 10,
+                              "fontWeight": "700",
+                              "letterSpacing": 0.3
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "1BMtF",
+                          "name": "s3d3",
+                          "opacity": 0.8,
+                          "width": "fill_container",
+                          "height": 24,
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "thickness": 1,
+                            "fill": "#ddd7cc"
+                          },
+                          "gap": 8,
+                          "padding": [
+                            2,
+                            6
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "kn3kr",
+                              "name": "row3d",
+                              "fill": "#707070",
+                              "content": "04/04 FRI",
+                              "fontFamily": "Nunito",
+                              "fontSize": 10,
+                              "fontWeight": "700",
+                              "letterSpacing": 0.4
+                            },
+                            {
+                              "type": "text",
+                              "id": "bRQAD",
+                              "name": "row3m",
+                              "fill": "#4a4a4a",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "[事实] 视频生成模型 Sora 2.0 泄露，引发版权争议...",
+                              "fontFamily": "Nunito",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "r2L21",
+                              "name": "row3r",
+                              "fill": "#707070",
+                              "content": "▪ ▪ ▪ >",
+                              "fontFamily": "Nunito",
+                              "fontSize": 10,
+                              "fontWeight": "700",
+                              "letterSpacing": 0.3
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "40KkK",
+                          "name": "s3d4",
+                          "opacity": 0.7,
+                          "width": "fill_container",
+                          "height": 24,
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "thickness": 1,
+                            "fill": "#e5e0d6"
+                          },
+                          "gap": 8,
+                          "padding": [
+                            2,
+                            6
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "udBVW",
+                              "name": "row4d",
+                              "fill": "#767676",
+                              "content": "04/03 THU",
+                              "fontFamily": "Nunito",
+                              "fontSize": 10,
+                              "fontWeight": "700",
+                              "letterSpacing": 0.4
+                            },
+                            {
+                              "type": "text",
+                              "id": "7voJz",
+                              "name": "row4m",
+                              "fill": "#525252",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "[事实] 智能终端芯片效能突破 400%，本地模型提速...",
+                              "fontFamily": "Nunito",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "c4TiO",
+                              "name": "row4r",
+                              "fill": "#767676",
+                              "content": "▪ ▪ ▪ >",
+                              "fontFamily": "Nunito",
+                              "fontSize": 10,
+                              "fontWeight": "700",
+                              "letterSpacing": 0.3
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Rqi1b",
+                          "name": "s3d5",
+                          "opacity": 0.6,
+                          "width": "fill_container",
+                          "height": 24,
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "thickness": 1,
+                            "fill": "#e9e4dc"
+                          },
+                          "gap": 8,
+                          "padding": [
+                            2,
+                            6
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "apjji",
+                              "name": "row5d",
+                              "fill": "#7b7b7b",
+                              "content": "04/02 WED",
+                              "fontFamily": "Nunito",
+                              "fontSize": 10,
+                              "fontWeight": "700",
+                              "letterSpacing": 0.4
+                            },
+                            {
+                              "type": "text",
+                              "id": "O0KWZ",
+                              "name": "row5m",
+                              "fill": "#585858",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "[事实] 多模态协作机器人进入零售场景，人工流程被重排...",
+                              "fontFamily": "Nunito",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "FXbt1",
+                              "name": "row5r",
+                              "fill": "#7b7b7b",
+                              "content": "▪ ▪ ▪ >",
+                              "fontFamily": "Nunito",
+                              "fontSize": 10,
+                              "fontWeight": "700",
+                              "letterSpacing": 0.3
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "qMnxX",
+                          "name": "s3d6",
+                          "opacity": 0.5,
+                          "width": "fill_container",
+                          "height": 24,
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "thickness": 1,
+                            "fill": "#ede8e1"
+                          },
+                          "gap": 8,
+                          "padding": [
+                            2,
+                            6
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Pf2sI",
+                              "name": "row6d",
+                              "fill": "#7f7f7f",
+                              "content": "04/01 TUE",
+                              "fontFamily": "Nunito",
+                              "fontSize": 10,
+                              "fontWeight": "700",
+                              "letterSpacing": 0.4
+                            },
+                            {
+                              "type": "text",
+                              "id": "SNpm5",
+                              "name": "row6m",
+                              "fill": "#5d5d5d",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "[信号中断] 当日三案归档缺失，待补全回溯数据...",
+                              "fontFamily": "Nunito",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "JTD9A",
+                              "name": "row6r",
+                              "fill": "#7f7f7f",
+                              "content": "▪ ▪ ▪ >",
+                              "fontFamily": "Nunito",
+                              "fontSize": 10,
+                              "fontWeight": "700",
+                              "letterSpacing": 0.3
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "pcFnw",
+                          "name": "s3d7",
+                          "opacity": 0.4,
+                          "width": "fill_container",
+                          "height": 24,
+                          "gap": 8,
+                          "padding": [
+                            2,
+                            6
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "g80T7",
+                              "name": "row7d",
+                              "fill": "#848484",
+                              "content": "03/31 MON",
+                              "fontFamily": "Nunito",
+                              "fontSize": 10,
+                              "fontWeight": "700",
+                              "letterSpacing": 0.4
+                            },
+                            {
+                              "type": "text",
+                              "id": "rjXiR",
+                              "name": "row7m",
+                              "fill": "#636363",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "[事实] 开源代理链路安全漏洞曝光，企业紧急封禁接口...",
+                              "fontFamily": "Nunito",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Rlva5",
+                              "name": "row7r",
+                              "fill": "#848484",
+                              "content": "▪ ▪ ▪ >",
+                              "fontFamily": "Nunito",
+                              "fontSize": 10,
+                              "fontWeight": "700",
+                              "letterSpacing": 0.3
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "dPjVk",
+                      "name": "s3limit",
+                      "fill": "#7a7a7a",
+                      "content": "[权限限制] 仅展示最近 7 周期情报",
+                      "fontFamily": "Nunito",
+                      "fontSize": 10,
+                      "fontWeight": "700",
+                      "letterSpacing": 0.3
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "cornerRadius": 99,
+              "id": "fOZxs",
+              "layoutPosition": "absolute",
+              "x": 384,
+              "y": 94,
+              "name": "scrollTrack",
+              "fill": "#cfc9bd",
+              "width": 2,
+              "height": 640
+            },
+            {
+              "type": "rectangle",
+              "cornerRadius": 99,
+              "id": "oTw4K",
+              "layoutPosition": "absolute",
+              "x": 383,
+              "y": 188,
+              "name": "scrollThumb",
+              "fill": "#8f8a80",
+              "width": 4,
+              "height": 126,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#FFFFFF55",
+                "blur": 4
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "jMkNe",
+          "x": 1379,
+          "y": 53,
+          "name": "Step 1 三卡总览",
+          "clip": true,
+          "width": 390,
+          "height": 857,
+          "fill": "#f3f1ec",
+          "cornerRadius": 34,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#d3cec3"
+          },
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000080",
+            "offset": {
+              "x": 0,
+              "y": 12
+            },
+            "blur": 36
+          },
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "6NBuy",
+              "name": "s1status",
+              "width": "fill_container",
+              "height": 62,
+              "padding": [
+                0,
+                16
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center"
+            },
+            {
+              "type": "frame",
+              "id": "wB2MX",
+              "name": "s1body",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "padding": [
+                8,
+                16,
+                16,
+                16
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "WJXuv",
+                  "name": "s1title",
+                  "fill": "#1a1a1a",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "04/06 AI 生存情报 / 三案速览",
+                  "fontFamily": "Nunito",
+                  "fontSize": 24,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "text",
+                  "id": "LCado",
+                  "name": "s1subtitle",
+                  "fill": "#5f5f5f",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "技术突破 + 实用工具 + 奇闻轶事",
+                  "fontFamily": "Nunito",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "7YLpW",
+                  "name": "s1cards",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "lzlk1",
+                      "name": "s1c1",
+                      "width": "fill_container",
+                      "height": 180,
+                      "fill": "#ece9e2",
+                      "cornerRadius": 22,
+                      "stroke": {
+                        "thickness": 1,
+                        "fill": "#d4d0c6"
+                      },
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Vczt9",
+                          "name": "s1c1tag",
+                          "fill": "#5f5f5f",
+                          "content": "实用工具 · 它们来抢活了",
+                          "fontFamily": "Nunito",
+                          "fontSize": 10,
+                          "fontWeight": "800",
+                          "letterSpacing": 0.5
+                        },
+                        {
+                          "type": "text",
+                          "id": "i4gxr",
+                          "name": "s1c1fact",
+                          "fill": "#1a1a1a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "[事实] OpenAI Operator 正式版推送企业协作能力，团队任务可一键分派与回传。",
+                          "fontFamily": "Nunito",
+                          "fontSize": 15,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "GVMp5",
+                          "name": "s1c1prophet",
+                          "fill": "#6a6a6a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "[预言家说] 电脑不再需要人类插件，只会搬运数据的人正在变多余。",
+                          "fontFamily": "Nunito",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "bRNQT",
+                          "name": "s1c1btn",
+                          "fill": "#d7d2c8",
+                          "cornerRadius": 999,
+                          "padding": [
+                            8,
+                            14
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "qBFUZ",
+                              "name": "s1c1btntext",
+                              "fill": "#111111",
+                              "content": "解密生存概率",
+                              "fontFamily": "Nunito",
+                              "fontSize": 12,
+                              "fontWeight": "800"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "3GdqZ",
+                      "name": "s1c2",
+                      "width": "fill_container",
+                      "height": 180,
+                      "fill": "#ece9e2",
+                      "cornerRadius": 22,
+                      "stroke": {
+                        "thickness": 1,
+                        "fill": "#d4d0c6"
+                      },
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "q50vX",
+                          "name": "s1c2tag",
+                          "fill": "#5f5f5f",
+                          "content": "Operator 智能体 · CLOSED",
+                          "fontFamily": "Nunito",
+                          "fontSize": 10,
+                          "fontWeight": "800",
+                          "letterSpacing": 0.5
+                        },
+                        {
+                          "type": "text",
+                          "id": "xZBPn",
+                          "name": "s1c2fact",
+                          "fill": "#1a1a1a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "[事实] 多家办公套件上线 Agent 协同模式，周报、排期与会议纪要开始自动联动。",
+                          "fontFamily": "Nunito",
+                          "fontSize": 15,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "kZmct",
+                          "name": "s1c2prophet",
+                          "fill": "#6a6a6a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "[预言家说] 电脑不再需要人类插件，只搬运数据的人会变多余。",
+                          "fontFamily": "Nunito",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "R6yVy",
+                          "name": "s1c2btn",
+                          "fill": "#d7d2c8",
+                          "cornerRadius": 999,
+                          "padding": [
+                            8,
+                            14
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "0Pk3I",
+                              "name": "s1c2btntext",
+                              "fill": "#111111",
+                              "content": "解密生存概率",
+                              "fontFamily": "Nunito",
+                              "fontSize": 12,
+                              "fontWeight": "800"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "rM8WJ",
+                      "name": "s1c3",
+                      "width": "fill_container",
+                      "height": 180,
+                      "fill": "#ece9e2",
+                      "cornerRadius": 22,
+                      "stroke": {
+                        "thickness": 1,
+                        "fill": "#d4d0c6"
+                      },
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "4BRZJ",
+                          "name": "s1c3tag",
+                          "fill": "#5f5f5f",
+                          "content": "奇闻轶事 · 它们在变真",
+                          "fontFamily": "Nunito",
+                          "fontSize": 10,
+                          "fontWeight": "800",
+                          "letterSpacing": 0.5
+                        },
+                        {
+                          "type": "text",
+                          "id": "JANtJ",
+                          "name": "s1c3fact",
+                          "fill": "#1a1a1a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "[事实] 某头部电商启用 AI 导购分身，夜间咨询转化率连续三日提升。",
+                          "fontFamily": "Nunito",
+                          "fontSize": 15,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "rmkuy",
+                          "name": "s1c3prophet",
+                          "fill": "#6a6a6a",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "[预言家说] 完美偶像不需要灵魂，只需要代码。",
+                          "fontFamily": "Nunito",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "QMiG2",
+                          "name": "s1c3btn",
+                          "fill": "#d7d2c8",
+                          "cornerRadius": 999,
+                          "padding": [
+                            8,
+                            14
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "bs0kl",
+                              "name": "s1c3btntext",
+                              "fill": "#111111",
+                              "content": "解密生存概率",
+                              "fontFamily": "Nunito",
+                              "fontSize": 12,
+                              "fontWeight": "800"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "RA4bt",
+                  "name": "s1note",
+                  "fill": "#1a1a1a",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "不点也能带走观点：三种变化都在重写你的竞争方式。",
+                  "fontFamily": "Nunito",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "sZ2Z7",
+                  "name": "s3archive",
+                  "width": 352,
+                  "height": 107,
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": [
+                    6,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "dfSeA",
+                      "name": "s3scan",
+                      "width": "fill_container",
+                      "height": 1,
+                      "fill": "#d8d3c9",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#5F7FD988",
+                        "blur": 6
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "cornerRadius": 99,
+              "id": "jMtQe",
+              "layoutPosition": "absolute",
+              "x": 384,
+              "y": 94,
+              "name": "scrollTrack",
+              "fill": "#cfc9bd",
+              "width": 2,
+              "height": 640
+            },
+            {
+              "type": "rectangle",
+              "cornerRadius": 99,
+              "id": "keqFr",
+              "layoutPosition": "absolute",
+              "x": 383,
+              "y": 150,
+              "name": "scrollThumb",
+              "fill": "#8f8a80",
+              "width": 4,
+              "height": 116,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#FFFFFF55",
+                "blur": 4
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "BdJw2",
+          "x": 1832,
+          "y": 53,
+          "name": "AI观察哨复刻",
+          "clip": true,
+          "width": 390,
+          "height": 857,
+          "fill": "#f5f3ee",
+          "cornerRadius": 34,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#d3cec3"
+          },
+          "layout": "vertical",
+          "gap": 12,
+          "padding": 14,
+          "children": [
+            {
+              "type": "frame",
+              "id": "XYSWI",
+              "name": "head",
+              "width": "fill_container",
+              "height": 56,
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "HFOhN",
+                  "name": "back",
+                  "width": 44,
+                  "height": 44,
+                  "fill": "#e1ddd4",
+                  "cornerRadius": 14,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#cfcabd"
+                  },
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "IMvpi",
+                      "name": "backIcon",
+                      "fill": "#121212",
+                      "content": "←",
+                      "fontFamily": "Nunito",
+                      "fontSize": 30,
+                      "fontWeight": "800"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "6ru8U",
+                  "name": "title",
+                  "fill": "#151515",
+                  "content": "AI 观察哨",
+                  "fontFamily": "Nunito",
+                  "fontSize": 24,
+                  "fontWeight": "900"
+                },
+                {
+                  "type": "frame",
+                  "id": "wWGpk",
+                  "name": "spacer",
+                  "opacity": 0,
+                  "width": 44,
+                  "height": 44
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Z8kYe",
+              "name": "tabWrap",
+              "width": "fill_container",
+              "height": 62,
+              "fill": "#e7e3db",
+              "cornerRadius": 20,
+              "gap": 8,
+              "padding": 6,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ed6Lc",
+                  "name": "tab1",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#d7d2c8",
+                  "cornerRadius": 16,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "29bAT",
+                      "name": "tab1txt",
+                      "fill": "#1a1a1a",
+                      "content": "商业榜",
+                      "fontFamily": "Nunito",
+                      "fontSize": 16,
+                      "fontWeight": "800"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "0cTXe",
+                  "name": "tab2",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "cornerRadius": 16,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "e9qTr",
+                      "name": "tab2txt",
+                      "fill": "#747474",
+                      "content": "个人榜",
+                      "fontFamily": "Nunito",
+                      "fontSize": 16,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "yx0Ww",
+              "name": "list",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "padding": [
+                2,
+                0,
+                0,
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "nfTwT",
+                  "name": "card1",
+                  "width": "fill_container",
+                  "fill": "#ece9e2",
+                  "cornerRadius": 20,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#d8d2c7"
+                  },
+                  "layout": "vertical",
+                  "gap": 14,
+                  "padding": [
+                    18,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Iluid",
+                      "name": "row1",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "HMLkW",
+                          "name": "badge1",
+                          "width": 48,
+                          "height": 48,
+                          "fill": "#d9d4ca",
+                          "cornerRadius": 999,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "URcjk",
+                              "name": "badge1txt",
+                              "fill": "#444444",
+                              "content": "#1",
+                              "fontFamily": "Nunito",
+                              "fontSize": 16,
+                              "fontWeight": "800"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "06K8j",
+                          "name": "heat1",
+                          "fill": "#6e6e6e",
+                          "content": "热度 1019.5",
+                          "fontFamily": "Nunito",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "KzZEz",
+                      "name": "t1",
+                      "fill": "#1c1c1c",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "伊朗革命卫队威胁导弹打击Stargate数据中心，\nAI算力首次成为军事靶标",
+                      "lineHeight": 1.2,
+                      "fontFamily": "Nunito",
+                      "fontSize": 18,
+                      "fontWeight": "900"
+                    },
+                    {
+                      "type": "text",
+                      "id": "hXmP6",
+                      "name": "d1",
+                      "fill": "#707070",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "AI资讯速览 热榜内容，点击查看原文详情。",
+                      "fontFamily": "Nunito",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "M5Lmd",
+                      "name": "tagRow1",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "I1mK5",
+                          "name": "tagA1",
+                          "height": 44,
+                          "fill": "#d2d7d6",
+                          "cornerRadius": 22,
+                          "padding": [
+                            0,
+                            18
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "TAKfU",
+                              "name": "tagA1txt",
+                              "fill": "#666666",
+                              "content": "AI资讯速览",
+                              "fontFamily": "Nunito",
+                              "fontSize": 14,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "OMnc2",
+                          "name": "tagB1",
+                          "height": 44,
+                          "fill": "#ddd8cf",
+                          "cornerRadius": 22,
+                          "padding": [
+                            0,
+                            20
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "y4njr",
+                              "name": "tagB1txt",
+                              "fill": "#6c6c6c",
+                              "content": "商业",
+                              "fontFamily": "Nunito",
+                              "fontSize": 14,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "1HSSg",
+                  "name": "card2",
+                  "width": "fill_container",
+                  "fill": "#ece9e2",
+                  "cornerRadius": 20,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#d8d2c7"
+                  },
+                  "layout": "vertical",
+                  "gap": 14,
+                  "padding": [
+                    18,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ztIjy",
+                      "name": "row1",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "d5foE",
+                          "name": "badge1",
+                          "width": 48,
+                          "height": 48,
+                          "fill": "#d9d4ca",
+                          "cornerRadius": 999,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "6MOtt",
+                              "name": "badge1txt",
+                              "fill": "#444444",
+                              "content": "#2",
+                              "fontFamily": "Nunito",
+                              "fontSize": 16,
+                              "fontWeight": "800"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "UlBzi",
+                          "name": "heat1",
+                          "fill": "#6e6e6e",
+                          "content": "热度 1019.5",
+                          "fontFamily": "Nunito",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "YL6mV",
+                      "name": "t1",
+                      "fill": "#1c1c1c",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "OpenAI一周同时推进政策、人才、资本三条线",
+                      "lineHeight": 1.2,
+                      "fontFamily": "Nunito",
+                      "fontSize": 18,
+                      "fontWeight": "900"
+                    },
+                    {
+                      "type": "text",
+                      "id": "6FcE6",
+                      "name": "d1",
+                      "fill": "#707070",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "AI资讯速览 热榜内容，点击查看原文详情。",
+                      "fontFamily": "Nunito",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "6XcOf",
+                      "name": "tagRow1",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "3XqWq",
+                          "name": "tagA1",
+                          "height": 44,
+                          "fill": "#d2d7d6",
+                          "cornerRadius": 22,
+                          "padding": [
+                            0,
+                            18
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "EtSvu",
+                              "name": "tagA1txt",
+                              "fill": "#666666",
+                              "content": "AI资讯速览",
+                              "fontFamily": "Nunito",
+                              "fontSize": 14,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "XBOP7",
+                          "name": "tagB1",
+                          "height": 44,
+                          "fill": "#ddd8cf",
+                          "cornerRadius": 22,
+                          "padding": [
+                            0,
+                            20
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "TOtHp",
+                              "name": "tagB1txt",
+                              "fill": "#6c6c6c",
+                              "content": "商业",
+                              "fontFamily": "Nunito",
+                              "fontSize": 14,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "XQ2iy",
+                  "name": "card3",
+                  "width": "fill_container",
+                  "fill": "#ece9e2",
+                  "cornerRadius": 20,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#d8d2c7"
+                  },
+                  "layout": "vertical",
+                  "gap": 14,
+                  "padding": [
+                    18,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "LqzFC",
+                      "name": "row1",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "5qvF1",
+                          "name": "badge1",
+                          "width": 48,
+                          "height": 48,
+                          "fill": "#d9d4ca",
+                          "cornerRadius": 999,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "R8ZB5",
+                              "name": "badge1txt",
+                              "fill": "#444444",
+                              "content": "#3",
+                              "fontFamily": "Nunito",
+                              "fontSize": 16,
+                              "fontWeight": "800"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "xLn3a",
+                          "name": "heat1",
+                          "fill": "#6e6e6e",
+                          "content": "热度 1019.5",
+                          "fontFamily": "Nunito",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "8T6RA",
+                      "name": "t1",
+                      "fill": "#1c1c1c",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "西班牙Xoople完成1.3亿美元B轮，用卫星为AI构建地球测绘数据",
+                      "lineHeight": 1.2,
+                      "fontFamily": "Nunito",
+                      "fontSize": 18,
+                      "fontWeight": "900"
+                    },
+                    {
+                      "type": "text",
+                      "id": "79nf1",
+                      "name": "d1",
+                      "fill": "#707070",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "AI资讯速览 热榜内容，点击查看原文详情。",
+                      "fontFamily": "Nunito",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "bgghN",
+                      "name": "tagRow1",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "d6P28",
+                          "name": "tagA1",
+                          "height": 44,
+                          "fill": "#d2d7d6",
+                          "cornerRadius": 22,
+                          "padding": [
+                            0,
+                            18
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "a24Om",
+                              "name": "tagA1txt",
+                              "fill": "#666666",
+                              "content": "AI资讯速览",
+                              "fontFamily": "Nunito",
+                              "fontSize": 14,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "MYHAi",
+                          "name": "tagB1",
+                          "height": 44,
+                          "fill": "#ddd8cf",
+                          "cornerRadius": 22,
+                          "padding": [
+                            0,
+                            20
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "TY5RC",
+                              "name": "tagB1txt",
+                              "fill": "#6c6c6c",
+                              "content": "商业",
+                              "fontFamily": "Nunito",
+                              "fontSize": 14,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "FEbOk",
+                  "name": "card4",
+                  "width": "fill_container",
+                  "fill": "#ece9e2",
+                  "cornerRadius": 20,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#d8d2c7"
+                  },
+                  "layout": "vertical",
+                  "gap": 14,
+                  "padding": [
+                    18,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "MNfAx",
+                      "name": "row1",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Q6CyS",
+                          "name": "badge1",
+                          "width": 48,
+                          "height": 48,
+                          "fill": "#d9d4ca",
+                          "cornerRadius": 999,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ZnguC",
+                              "name": "badge1txt",
+                              "fill": "#444444",
+                              "content": "#4",
+                              "fontFamily": "Nunito",
+                              "fontSize": 16,
+                              "fontWeight": "800"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "EUWWe",
+                          "name": "heat1",
+                          "fill": "#6e6e6e",
+                          "content": "热度 1019.5",
+                          "fontFamily": "Nunito",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "kYJBJ",
+                      "name": "t1",
+                      "fill": "#1c1c1c",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "阿里巴巴Accio改变小型跨境卖家的选品方式",
+                      "lineHeight": 1.2,
+                      "fontFamily": "Nunito",
+                      "fontSize": 18,
+                      "fontWeight": "900"
+                    },
+                    {
+                      "type": "text",
+                      "id": "tGDaG",
+                      "name": "d1",
+                      "fill": "#707070",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "AI资讯速览 热榜内容，点击查看原文详情。",
+                      "fontFamily": "Nunito",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "9E2Jc",
+                      "name": "tagRow1",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "d1wID",
+                          "name": "tagA1",
+                          "height": 44,
+                          "fill": "#d2d7d6",
+                          "cornerRadius": 22,
+                          "padding": [
+                            0,
+                            18
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "2C3NG",
+                              "name": "tagA1txt",
+                              "fill": "#666666",
+                              "content": "AI资讯速览",
+                              "fontFamily": "Nunito",
+                              "fontSize": 14,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "wAuBR",
+                          "name": "tagB1",
+                          "height": 44,
+                          "fill": "#ddd8cf",
+                          "cornerRadius": 22,
+                          "padding": [
+                            0,
+                            20
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "QD9Qs",
+                              "name": "tagB1txt",
+                              "fill": "#6c6c6c",
+                              "content": "商业",
+                              "fontFamily": "Nunito",
+                              "fontSize": 14,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

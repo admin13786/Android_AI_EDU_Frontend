@@ -1,7 +1,8 @@
 const ROOT_PAGES = new Set([
   '/pages/home/index',
   '/pages/crawl/index',
-  '/pages/profile/index'
+  '/pages/profile/index',
+  '/pages/news-brief/index'
 ])
 
 export const navigateByPath = (path) => {

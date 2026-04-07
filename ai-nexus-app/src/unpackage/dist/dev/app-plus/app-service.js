@@ -2066,7 +2066,8 @@ This will fail in production.`);
   const ROOT_PAGES = /* @__PURE__ */ new Set([
     "/pages/home/index",
     "/pages/crawl/index",
-    "/pages/profile/index"
+    "/pages/profile/index",
+    "/pages/news-brief/index"
   ]);
   const navigateByPath = (path) => {
     if (!path)
@@ -2185,7 +2186,7 @@ This will fail in production.`);
   };
   const HOME_ROUTE = "/pages/home/index";
   const PROFILE_ROUTE = "/pages/profile/index";
-  const _sfc_main$9 = {
+  const _sfc_main$e = {
     __name: "auth",
     setup(__props, { expose: __expose }) {
       __expose();
@@ -2387,7 +2388,7 @@ This will fail in production.`);
       return __returned__;
     }
   };
-  function _sfc_render$8(_ctx, _cache, $props, $setup, $data, $options) {
+  function _sfc_render$d(_ctx, _cache, $props, $setup, $data, $options) {
     return vue.openBlock(), vue.createElementBlock("view", { class: "auth-page" }, [
       vue.createElementVNode("view", { class: "auth-bg" }, [
         vue.createElementVNode("view", { class: "glow glow-primary" }),
@@ -2561,9 +2562,9 @@ This will fail in production.`);
       )
     ]);
   }
-  const PagesProfileAuth = /* @__PURE__ */ _export_sfc(_sfc_main$9, [["render", _sfc_render$8], ["__scopeId", "data-v-c116c0e0"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/profile/auth.vue"]]);
+  const PagesProfileAuth = /* @__PURE__ */ _export_sfc(_sfc_main$e, [["render", _sfc_render$d], ["__scopeId", "data-v-c116c0e0"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/profile/auth.vue"]]);
   const ANIMATION_MS = 220;
-  const _sfc_main$8 = {
+  const _sfc_main$d = {
     __name: "Sidebar",
     props: {
       visible: Boolean,
@@ -2613,7 +2614,8 @@ This will fail in production.`);
       const menuItems = [
         { id: "school", name: "AI学堂", path: "/pages/school/input" },
         { id: "crawl", name: "AI观察哨", path: "/pages/crawl/index" },
-        { id: "workshop", name: "AI工坊", path: "/pages/home/index" }
+        { id: "workshop", name: "AI工坊", path: "/pages/home/index" },
+        { id: "newsBrief", name: "AI趣闻萃取", path: "/pages/news-brief/index" }
       ];
       const recentHistory = vue.computed(() => {
         const source = Array.isArray(props.workshopHistory) ? props.workshopHistory : [];
@@ -2743,7 +2745,7 @@ This will fail in production.`);
       return __returned__;
     }
   };
-  function _sfc_render$7(_ctx, _cache, $props, $setup, $data, $options) {
+  function _sfc_render$c(_ctx, _cache, $props, $setup, $data, $options) {
     return $setup.rendered ? (vue.openBlock(), vue.createElementBlock("view", {
       key: 0,
       class: "sidebar-wrapper"
@@ -2889,7 +2891,7 @@ This will fail in production.`);
       )
     ])) : vue.createCommentVNode("v-if", true);
   }
-  const Sidebar = /* @__PURE__ */ _export_sfc(_sfc_main$8, [["render", _sfc_render$7], ["__scopeId", "data-v-3801e5de"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/components/Sidebar.vue"]]);
+  const Sidebar = /* @__PURE__ */ _export_sfc(_sfc_main$d, [["render", _sfc_render$c], ["__scopeId", "data-v-3801e5de"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/components/Sidebar.vue"]]);
   const WorkshopIntent = {
     GenerateWorkshop: "generate_workshop",
     News: "news",
@@ -3005,7 +3007,7 @@ This will fail in production.`);
     return nextConversation;
   };
   const loadingText = "正在生成页面并准备在线预览，请稍等片刻。";
-  const _sfc_main$7 = {
+  const _sfc_main$c = {
     __name: "index",
     setup(__props, { expose: __expose }) {
       __expose();
@@ -3482,7 +3484,7 @@ This will fail in production.`);
       return __returned__;
     }
   };
-  function _sfc_render$6(_ctx, _cache, $props, $setup, $data, $options) {
+  function _sfc_render$b(_ctx, _cache, $props, $setup, $data, $options) {
     return vue.openBlock(), vue.createElementBlock("view", { class: "workshop-page" }, [
       vue.createElementVNode(
         "view",
@@ -3807,8 +3809,8 @@ This will fail in production.`);
       }, null, 8, ["visible", "workshop-history"])
     ]);
   }
-  const PagesHomeIndex = /* @__PURE__ */ _export_sfc(_sfc_main$7, [["render", _sfc_render$6], ["__scopeId", "data-v-4978fed5"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/home/index.vue"]]);
-  const _sfc_main$6 = {
+  const PagesHomeIndex = /* @__PURE__ */ _export_sfc(_sfc_main$c, [["render", _sfc_render$b], ["__scopeId", "data-v-4978fed5"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/home/index.vue"]]);
+  const _sfc_main$b = {
     __name: "index",
     setup(__props, { expose: __expose }) {
       __expose();
@@ -3873,7 +3875,7 @@ This will fail in production.`);
       return __returned__;
     }
   };
-  function _sfc_render$5(_ctx, _cache, $props, $setup, $data, $options) {
+  function _sfc_render$a(_ctx, _cache, $props, $setup, $data, $options) {
     return vue.openBlock(), vue.createElementBlock("view", { class: "news-page" }, [
       vue.createElementVNode(
         "view",
@@ -4018,8 +4020,8 @@ This will fail in production.`);
       ], 40, ["refresher-triggered"])
     ]);
   }
-  const PagesCrawlIndex = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["render", _sfc_render$5], ["__scopeId", "data-v-be3def88"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/crawl/index.vue"]]);
-  const _sfc_main$5 = {
+  const PagesCrawlIndex = /* @__PURE__ */ _export_sfc(_sfc_main$b, [["render", _sfc_render$a], ["__scopeId", "data-v-be3def88"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/crawl/index.vue"]]);
+  const _sfc_main$a = {
     __name: "input",
     setup(__props, { expose: __expose }) {
       __expose();
@@ -4064,7 +4066,7 @@ This will fail in production.`);
       return __returned__;
     }
   };
-  function _sfc_render$4(_ctx, _cache, $props, $setup, $data, $options) {
+  function _sfc_render$9(_ctx, _cache, $props, $setup, $data, $options) {
     return vue.openBlock(), vue.createElementBlock("view", { class: "school-page" }, [
       $setup.openmaicUrl ? (vue.openBlock(), vue.createElementBlock("web-view", {
         key: 0,
@@ -4079,8 +4081,8 @@ This will fail in production.`);
       ]))
     ]);
   }
-  const PagesSchoolInput = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["render", _sfc_render$4], ["__scopeId", "data-v-6684b8ff"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/school/input.vue"]]);
-  const _sfc_main$4 = {
+  const PagesSchoolInput = /* @__PURE__ */ _export_sfc(_sfc_main$a, [["render", _sfc_render$9], ["__scopeId", "data-v-6684b8ff"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/school/input.vue"]]);
+  const _sfc_main$9 = {
     __name: "index",
     setup(__props, { expose: __expose }) {
       __expose();
@@ -4250,7 +4252,7 @@ This will fail in production.`);
       return __returned__;
     }
   };
-  function _sfc_render$3(_ctx, _cache, $props, $setup, $data, $options) {
+  function _sfc_render$8(_ctx, _cache, $props, $setup, $data, $options) {
     return vue.openBlock(), vue.createElementBlock("view", { class: "profile-page" }, [
       vue.createElementVNode(
         "view",
@@ -4475,8 +4477,8 @@ This will fail in production.`);
       ])) : vue.createCommentVNode("v-if", true)
     ]);
   }
-  const PagesProfileIndex = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["render", _sfc_render$3], ["__scopeId", "data-v-201c0da5"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/profile/index.vue"]]);
-  const _sfc_main$3 = {
+  const PagesProfileIndex = /* @__PURE__ */ _export_sfc(_sfc_main$9, [["render", _sfc_render$8], ["__scopeId", "data-v-201c0da5"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/profile/index.vue"]]);
+  const _sfc_main$8 = {
     __name: "nickname",
     setup(__props, { expose: __expose }) {
       __expose();
@@ -4536,7 +4538,7 @@ This will fail in production.`);
       return __returned__;
     }
   };
-  function _sfc_render$2(_ctx, _cache, $props, $setup, $data, $options) {
+  function _sfc_render$7(_ctx, _cache, $props, $setup, $data, $options) {
     return vue.openBlock(), vue.createElementBlock("view", { class: "edit-page" }, [
       vue.createElementVNode(
         "view",
@@ -4586,8 +4588,8 @@ This will fail in production.`);
       ])
     ]);
   }
-  const PagesProfileNickname = /* @__PURE__ */ _export_sfc(_sfc_main$3, [["render", _sfc_render$2], ["__scopeId", "data-v-fe5128e0"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/profile/nickname.vue"]]);
-  const _sfc_main$2 = {
+  const PagesProfileNickname = /* @__PURE__ */ _export_sfc(_sfc_main$8, [["render", _sfc_render$7], ["__scopeId", "data-v-fe5128e0"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/profile/nickname.vue"]]);
+  const _sfc_main$7 = {
     __name: "bio",
     setup(__props, { expose: __expose }) {
       __expose();
@@ -4634,7 +4636,7 @@ This will fail in production.`);
       return __returned__;
     }
   };
-  function _sfc_render$1(_ctx, _cache, $props, $setup, $data, $options) {
+  function _sfc_render$6(_ctx, _cache, $props, $setup, $data, $options) {
     return vue.openBlock(), vue.createElementBlock("view", { class: "edit-page" }, [
       vue.createElementVNode(
         "view",
@@ -4691,8 +4693,8 @@ This will fail in production.`);
       ])
     ]);
   }
-  const PagesProfileBio = /* @__PURE__ */ _export_sfc(_sfc_main$2, [["render", _sfc_render$1], ["__scopeId", "data-v-7b992428"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/profile/bio.vue"]]);
-  const _sfc_main$1 = {
+  const PagesProfileBio = /* @__PURE__ */ _export_sfc(_sfc_main$7, [["render", _sfc_render$6], ["__scopeId", "data-v-7b992428"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/profile/bio.vue"]]);
+  const _sfc_main$6 = {
     __name: "preview",
     setup(__props, { expose: __expose }) {
       __expose();
@@ -4767,7 +4769,7 @@ This will fail in production.`);
       return __returned__;
     }
   };
-  function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
+  function _sfc_render$5(_ctx, _cache, $props, $setup, $data, $options) {
     return vue.openBlock(), vue.createElementBlock("view", { class: "preview-page" }, [
       vue.createElementVNode(
         "view",
@@ -4829,7 +4831,1061 @@ This will fail in production.`);
       )) : vue.createCommentVNode("v-if", true)
     ]);
   }
-  const PagesWorkshopPreview = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["render", _sfc_render], ["__scopeId", "data-v-2ca49518"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/workshop/preview.vue"]]);
+  const PagesWorkshopPreview = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["render", _sfc_render$5], ["__scopeId", "data-v-2ca49518"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/workshop/preview.vue"]]);
+  const ISSUE_FOOTER = "AI趣闻萃取：每天筛出值得看的 3 条 AI 资讯，支持简报阅读与原文回看。";
+  const MOCK_ISSUES = [
+    {
+      id: "2026-04-07",
+      date: "04/07",
+      selectionCount: 39,
+      title: "今日 AI 趣闻萃取 / 三条速览",
+      subtitle: "技术突破、实用工具、市场信号",
+      footer: ISSUE_FOOTER,
+      items: [
+        {
+          id: "operator-agent",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "新一代 AI Agent 公测，可自动操控电脑订票、写网报、报销。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会筛选数据的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "人还在盯着单流程，流程已经被 Agent 接管了大半。你真正要重新配置的不是会不会用工具，而是有没有能力拆任务、定边界、验结果。",
+            "这类能力一旦公测，最先被挤压的是重复型脑力劳动：收集、转写、查询、整理、提报、跟进。会不会写提示词已经不是门槛，能不能定义正确目标才是门槛。",
+            "如果你的岗位日常主要由固定动作构成，越早把自己切换成调度者和审稿人的位置，越不会在下一轮效率升级里掉队。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "operator-zip",
+          source: "Operator",
+          sourceStatus: "智能体 · ZIP OPEN",
+          headline: "OpenAI 正式公测 Operator 智能体。",
+          warning: "[预警案例] 电脑不再只执行人类操作，只能涨薪的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "Operator 的意义不是又多了一个模型，而是会操作界面的系统开始成型。它会让表单、订票、比价、报销、投递这些具体动作更像 API 一样被调用。",
+            "这意味着未来的竞争不只发生在知识层，还发生在执行层。谁能把工作拆成清楚、可交付、可校验的步骤，谁就更容易把 AI 变成自己的杠杆。",
+            "别再把智能体理解为聊天机器人。它更像一个随时待命的执行接口，而你要学会的，是给它目标、权限和验收标准。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "virtual-human",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "某品牌签约 AI 虚拟人代言，互动率超过真人明星。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "品牌开始不再把人当作唯一叙事载体。稳定、可控、能 24 小时输出内容的虚拟人，天然就适合高频触达和低风险传播。",
+            "这会反过来抬高真人创作者的要求。普通表达会被稀释，只有观点、风格、真实经历这些不可复制部分，才会继续变得更值钱。",
+            "所以内容工作者接下来要保住的，不是产能，而是不可替代的人味。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-04-06",
+      date: "04/06",
+      selectionCount: 36,
+      title: "04/06 AI 趣闻萃取 / 三条速览",
+      subtitle: "技术突破、实用工具、市场信号",
+      footer: ISSUE_FOOTER,
+      items: [
+        {
+          id: "factory-robot",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "OpenAI Operator 正式版开始企业协作能力，可以任务页一键分派与回传。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会筛选数据的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "企业协作能力让智能体从个人工具进入团队流程。以后不只是你一个人在用，而是整个项目组都可能围绕同一个 AI 执行节点工作。",
+            "这会快速抬高项目交接清晰度的要求。描述不清、文档不全、需求模糊的人，会比以前更容易被看见短板。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "scheduler",
+          source: "Operator",
+          sourceStatus: "智能体 · CLOSED",
+          headline: "多家办公插件上线 Agent 协同模式，周报、排期与会议纪要开始自动联动。",
+          warning: "[预警案例] 电脑不再需要人类操作，只能提效的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "协同模式真正改变的不是某个功能，而是从输入到同步的速度。以前一个人做完再通知别人，现在会变成系统自动推进。",
+            "你的工作如果依赖反复确认和手动搬运，接下来会明显感受到被压缩。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "voice-avatar",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "某头部电商品牌启用 AI 导购分身，夜间咨询转化率连续三日提升。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只要好代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "夜间转化提升说明一件事：不下班、低成本、高一致性的内容角色，正在变成新的商业基础设施。",
+            "人类服务者未来更值钱的部分，不是答常规问题，而是解决非标准问题。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-04-05",
+      date: "04/05",
+      selectionCount: 34,
+      title: "04/05 AI 趣闻萃取 / 三条速览",
+      subtitle: "技术突破、实用工具、市场信号",
+      footer: ISSUE_FOOTER,
+      items: [
+        {
+          id: "multimodal-video",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "新版视频生成模型支持长镜头一致性，广告团队开始缩小外包规模。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会拼素材的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "镜头一致性突破后，AI 不再只是出 demo，而是开始吞掉前期提案、中期产出和后期改稿的部分链条。",
+            "未来内容团队会更重前期审美和脚本判断，弱在执行的人会被替代得更快。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "crm-agent",
+          source: "Operator",
+          sourceStatus: "智能体 · CLOSED",
+          headline: "某 CRM 平台推出销售跟进 Agent，自动补全纪要并推荐下一步动作。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会发消息的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "销售流程标准化后，真正稀缺的是建立信任和做判断，而不是机械性跟进。",
+            "能讲明白客户真正需求的人，会比会重复标准话术的人更值钱。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "avatar-anchor",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "虚拟主播连续 48 小时直播测试完成，品牌开始重新计算人工成本。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "这不是 AI 更会说话，而是系统终于足够稳定。一旦稳定，很多岗位的比较项就变成了成本、时长和一致性。",
+            "真人创作者要保住位置，需要更强的个性表达和更高密度的观点产出。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-04-04",
+      date: "04/04",
+      selectionCount: 31,
+      title: "04/04 AI 趣闻萃取 / 三条速览",
+      subtitle: "技术突破、实用工具、市场信号",
+      footer: ISSUE_FOOTER,
+      items: [
+        {
+          id: "search-agent",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "搜索型 Agent 开始支持多源比对，研究助理岗位被重新定义。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会搬运信息的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "能在几十秒内完成检索、比对、摘录和引用，这会直接改变很多研究支持型岗位的工作方式。",
+            "以后你值钱的不是找资料，而是提出好问题与构造判断框架。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "soc-bot",
+          source: "Operator",
+          sourceStatus: "智能体 · ZIP OPEN",
+          headline: "安全厂商上线值班 Agent，夜间告警先由 AI 处置再升级人工。",
+          warning: "[预警案例] 电脑不再需要人类操作，只能盯盘的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "值班工作最先被重构，因为它本来就强调响应速度、流程清晰和误报过滤。",
+            "安全岗位以后更重要的是策略制定和异常研判，而不是看告警本身。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "idol-script",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "某平台开始测试 AI 偶像剧本联动，角色会依据评论自动二创。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "互动式叙事和角色连续运营会让内容消费更像游戏。平台想要的是持续停留，而不是一次性传播。",
+            "这会让单纯追热点的内容越来越难赢，世界观能力会重新变重要。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-04-03",
+      date: "2026/04/03",
+      selectionCount: 33,
+      title: "04/03 AI 趣闻萃取 / 三条速览",
+      subtitle: "技术突破、实用工具、市场信号",
+      footer: ISSUE_FOOTER,
+      items: [
+        {
+          id: "coding-bench",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "编码智能体基准再次刷新，多文件项目修复准确率继续上涨。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会写函数的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "当模型能改多文件、懂上下文、还能跑验证，初级编码工作会更快地商品化。",
+            "开发者接下来更值钱的是架构判断、边界定义和质量标准，而不是纯输出代码。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "meeting-agent",
+          source: "Operator",
+          sourceStatus: "智能体 · OPEN",
+          headline: "会议 Agent 支持自动行动项追踪，项目管理边界继续外扩。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会写纪要的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "会后追踪是典型低创造、高消耗工作，智能体一接手，团队会更直接暴露真正的执行差异。",
+            "你需要提升的是判断优先级和推动协同的能力。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "synthetic-caster",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "合成播报员开始承担夜间快讯栏目，人类主播转向策划型岗位。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "播报工作被自动化后，行业会把更多预算转向内容判断和节目结构设计。",
+            "内容行业正在加速分层，纯播报和纯剪辑会更先被压价。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-04-02",
+      date: "2026/04/02",
+      selectionCount: 28,
+      title: "04/02 AI 趣闻萃取 / 三条速览",
+      subtitle: "技术突破、实用工具、市场信号",
+      footer: ISSUE_FOOTER,
+      items: [
+        {
+          id: "agent-billing",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "AI 报销与采购流开始接入企业后台，审批动作自动化。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会录入的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "一旦进入后台系统，智能体就不只是助手，而是公司流程的一部分。",
+            "流程岗位未来的核心不是执行，而是设规则、控风险、做抽检。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "resume-bot",
+          source: "Operator",
+          sourceStatus: "智能体 · CLOSED",
+          headline: "招聘筛选 Agent 开始在中型公司试点，初筛速度提升数倍。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会初筛的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "简历筛选和基础匹配天然适合自动化，HR 更重要的部分会转向判断潜力和识别风险。",
+            "这也会反向改变求职者的表达方式，简历将更像结构化数据，而不是文案。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "campus-avatar",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "高校开始试用虚拟讲师形象做公开课导览，互动时长明显上涨。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "教育场景开始引入角色化表达，这会让课程不只是内容，还带有陪伴感和连续性。",
+            "人类教师的优势会更集中在理解学生、调整节奏和给出真正个性化反馈。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-04-01",
+      date: "2026/04/01",
+      selectionCount: 26,
+      title: "2026/04/01 AI 趣闻萃取",
+      subtitle: "收官速览 / 反脆弱备忘",
+      footer: "理解机制，比只看标题更重要。",
+      items: [
+        {
+          id: "summary-agent",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "长文总结 Agent 开始接管内部周报，管理层只看关键分歧。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会写概述的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "总结能力被自动化后，真正重要的是提炼冲突和决策点。",
+            "写报告的人要把自己升级成制造判断价值的人。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "assistant-team",
+          source: "Operator",
+          sourceStatus: "智能体 · TEAM",
+          headline: "团队型智能体进入灰度测试，多 Agent 分工开始稳定。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会单点执行的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "一旦多个智能体协作，人的角色会更像导演，而不是具体执行者。",
+            "组织里的中间层工作方式也会被重塑。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "character-economy",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "虚拟角色经济继续升温，品牌开始长期运营单一人格 IP。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "角色资产一旦建立完成，传播就不再依赖单次热点，而会依赖持续世界观经营。",
+            "未来拼的是谁能稳定生产叙事，不是谁偶尔爆一次。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-03-31",
+      date: "2026/03/31",
+      selectionCount: 24,
+      title: "2026/03/31 AI 趣闻萃取",
+      subtitle: "试运行样刊 / 七日热度补档",
+      footer: "把一天看懂，才能把一周看清。",
+      items: [
+        {
+          id: "ops-agent",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "运维巡检 Agent 开始覆盖跨系统日报汇总，值守时间被重新压缩。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会巡表的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "自动巡检一旦稳定，团队最稀缺的不是看报表，而是发现异常背后的因果关系。",
+            "这类岗位未来更需要系统视角，而不是单点执行熟练度。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "team-bot",
+          source: "Operator",
+          sourceStatus: "智能体 · LAB",
+          headline: "多 Agent 项目协同进入实验阶段，任务分工开始自动化。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会跟单的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "协同自动化意味着项目管理要重新定义节点。以后不是谁盯得紧，而是谁定义得更准确。",
+            "会写清楚目标和验收的人，会比只会催进度的人更有价值。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "ip-economy",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "角色型 AI IP 开始承接连续栏目合作，品牌复用率提升。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "品牌一旦拥有稳定角色，就能持续输出同一人格线索，传播效率远高于一次性热点。",
+            "这会让长期叙事能力重新变成稀缺资源。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    }
+  ];
+  const normalizeIssue = (issue) => ({
+    ...issue,
+    items: Array.isArray(issue.items) ? issue.items : []
+  });
+  const getLatestNewsBriefIssue = () => normalizeIssue(MOCK_ISSUES[0]);
+  const getRecentNewsBriefIssues = (limit = 7) => MOCK_ISSUES.slice(0, limit).map((issue) => normalizeIssue(issue));
+  const getNewsBriefIssueById = (id) => normalizeIssue(MOCK_ISSUES.find((issue) => issue.id === id) || MOCK_ISSUES[0]);
+  const getNewsBriefItemByIds = (issueId, itemId) => {
+    const issue = getNewsBriefIssueById(issueId);
+    return issue.items.find((item) => item.id === itemId) || issue.items[0] || null;
+  };
+  const _sfc_main$5 = {
+    __name: "index",
+    setup(__props, { expose: __expose }) {
+      __expose();
+      const { statusBarHeight } = getLayoutMetrics();
+      const latestIssue = vue.computed(() => getLatestNewsBriefIssue());
+      const issues = vue.computed(() => getRecentNewsBriefIssues(7));
+      const goBackHome = () => {
+        safeNavigateBack("/pages/home/index?openSidebar=1");
+      };
+      const openIssue = (issueId) => {
+        uni.navigateTo({
+          url: `/pages/news-brief/issue?id=${encodeURIComponent(issueId)}`
+        });
+      };
+      const formatIssueDate = (issue) => {
+        const value = String((issue == null ? void 0 : issue.id) || (issue == null ? void 0 : issue.date) || "").trim();
+        const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (match) {
+          return `${match[1]}年 ${match[2]}月 ${match[3]}日`;
+        }
+        return value;
+      };
+      const getIssueMeta = (issue) => {
+        if (issue == null ? void 0 : issue.selectionCount) {
+          return `从 ${issue.selectionCount} 条资讯中筛出`;
+        }
+        return `当天 ${Array.isArray(issue == null ? void 0 : issue.items) ? issue.items.length : 0} 条重点`;
+      };
+      onBackPress((options = {}) => {
+        if (options.from === "navigateBack")
+          return false;
+        goBackHome();
+        return true;
+      });
+      const __returned__ = { statusBarHeight, latestIssue, issues, goBackHome, openIssue, formatIssueDate, getIssueMeta, computed: vue.computed, get onBackPress() {
+        return onBackPress;
+      }, get getLatestNewsBriefIssue() {
+        return getLatestNewsBriefIssue;
+      }, get getRecentNewsBriefIssues() {
+        return getRecentNewsBriefIssues;
+      }, get getLayoutMetrics() {
+        return getLayoutMetrics;
+      }, get safeNavigateBack() {
+        return safeNavigateBack;
+      } };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render$4(_ctx, _cache, $props, $setup, $data, $options) {
+    return vue.openBlock(), vue.createElementBlock("view", { class: "brief-page" }, [
+      vue.createElementVNode(
+        "view",
+        {
+          class: "safe-top",
+          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight + 12}px` })
+        },
+        [
+          vue.createElementVNode("view", { class: "hero-block" }, [
+            vue.createElementVNode("view", {
+              class: "back-chip",
+              onClick: $setup.goBackHome
+            }, [
+              vue.createElementVNode("text", { class: "back-chip-icon" }, "<"),
+              vue.createElementVNode("text", { class: "back-chip-text" }, "返回")
+            ]),
+            vue.createElementVNode("view", { class: "hero-copy" }, [
+              vue.createElementVNode("text", { class: "hero-kicker" }, "HOT / WEIRD / REAL"),
+              vue.createElementVNode("text", { class: "hero-title" }, "AI趣闻萃取"),
+              vue.createElementVNode("text", { class: "hero-subtitle" }, "把今天最离谱、最有梗、最值得点开的 AI 热闹，一次筛给你")
+            ])
+          ])
+        ],
+        4
+        /* STYLE */
+      ),
+      vue.createElementVNode("scroll-view", {
+        class: "brief-scroll",
+        "scroll-y": "",
+        "show-scrollbar": false
+      }, [
+        vue.createElementVNode("view", { class: "content-shell" }, [
+          (vue.openBlock(true), vue.createElementBlock(
+            vue.Fragment,
+            null,
+            vue.renderList($setup.issues, (issueItem) => {
+              return vue.openBlock(), vue.createElementBlock("view", {
+                key: issueItem.id,
+                class: "issue-card",
+                onClick: ($event) => $setup.openIssue(issueItem.id)
+              }, [
+                vue.createElementVNode("view", { class: "issue-card-head" }, [
+                  vue.createElementVNode(
+                    "text",
+                    { class: "issue-date" },
+                    vue.toDisplayString($setup.formatIssueDate(issueItem)),
+                    1
+                    /* TEXT */
+                  ),
+                  vue.createElementVNode(
+                    "text",
+                    { class: "issue-count" },
+                    vue.toDisplayString($setup.getIssueMeta(issueItem)),
+                    1
+                    /* TEXT */
+                  )
+                ]),
+                vue.createElementVNode("view", { class: "issue-lines" }, [
+                  (vue.openBlock(true), vue.createElementBlock(
+                    vue.Fragment,
+                    null,
+                    vue.renderList(issueItem.items.slice(0, 3), (newsItem, index) => {
+                      return vue.openBlock(), vue.createElementBlock("view", {
+                        key: newsItem.id,
+                        class: "issue-line"
+                      }, [
+                        vue.createElementVNode(
+                          "text",
+                          {
+                            class: vue.normalizeClass(["issue-line-index", { active: index === 0 }])
+                          },
+                          vue.toDisplayString(String(index + 1).padStart(2, "0")),
+                          3
+                          /* TEXT, CLASS */
+                        ),
+                        vue.createElementVNode("view", { class: "issue-line-copy" }, [
+                          vue.createElementVNode(
+                            "text",
+                            {
+                              class: vue.normalizeClass(["issue-line-title", { active: index === 0 }])
+                            },
+                            vue.toDisplayString(newsItem.headline),
+                            3
+                            /* TEXT, CLASS */
+                          ),
+                          newsItem.warning ? (vue.openBlock(), vue.createElementBlock(
+                            "text",
+                            {
+                              key: 0,
+                              class: "issue-line-summary"
+                            },
+                            vue.toDisplayString(newsItem.warning),
+                            1
+                            /* TEXT */
+                          )) : vue.createCommentVNode("v-if", true)
+                        ])
+                      ]);
+                    }),
+                    128
+                    /* KEYED_FRAGMENT */
+                  ))
+                ]),
+                vue.createElementVNode("view", { class: "issue-card-foot" }, [
+                  vue.createElementVNode(
+                    "text",
+                    { class: "issue-foot-copy" },
+                    vue.toDisplayString(issueItem.subtitle),
+                    1
+                    /* TEXT */
+                  ),
+                  vue.createElementVNode("text", { class: "issue-foot-link" }, "点进当天三条")
+                ])
+              ], 8, ["onClick"]);
+            }),
+            128
+            /* KEYED_FRAGMENT */
+          )),
+          vue.createElementVNode("view", { class: "footer-copy" }, [
+            vue.createElementVNode(
+              "text",
+              { class: "footer-copy-text" },
+              vue.toDisplayString($setup.latestIssue.footer),
+              1
+              /* TEXT */
+            )
+          ])
+        ])
+      ])
+    ]);
+  }
+  const PagesNewsBriefIndex = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["render", _sfc_render$4], ["__scopeId", "data-v-1d561bff"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/news-brief/index.vue"]]);
+  const _sfc_main$4 = {
+    __name: "NewsBriefSummaryCard",
+    props: {
+      item: {
+        type: Object,
+        required: true
+      },
+      cardNumber: {
+        type: Number,
+        default: 1
+      },
+      toneIndex: {
+        type: Number,
+        default: 1
+      }
+    },
+    emits: ["open-brief", "open-link"],
+    setup(__props, { expose: __expose }) {
+      __expose();
+      const formatIndex = (value) => String(value || 1).padStart(2, "0");
+      const __returned__ = { formatIndex };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render$3(_ctx, _cache, $props, $setup, $data, $options) {
+    return vue.openBlock(), vue.createElementBlock(
+      "view",
+      {
+        class: vue.normalizeClass(["summary-card", [`tone-${$props.toneIndex}`]]),
+        onClick: _cache[2] || (_cache[2] = ($event) => _ctx.$emit("open-brief"))
+      },
+      [
+        vue.createElementVNode("view", { class: "summary-topline" }, [
+          vue.createElementVNode(
+            "text",
+            { class: "summary-index" },
+            vue.toDisplayString($setup.formatIndex($props.cardNumber)),
+            1
+            /* TEXT */
+          ),
+          vue.createElementVNode(
+            "text",
+            { class: "summary-tag" },
+            vue.toDisplayString($props.item.source || "AI 热讯"),
+            1
+            /* TEXT */
+          )
+        ]),
+        vue.createElementVNode("view", { class: "summary-copy" }, [
+          vue.createElementVNode(
+            "text",
+            { class: "summary-headline" },
+            vue.toDisplayString($props.item.headline),
+            1
+            /* TEXT */
+          ),
+          $props.item.warning ? (vue.openBlock(), vue.createElementBlock(
+            "text",
+            {
+              key: 0,
+              class: "summary-warning"
+            },
+            vue.toDisplayString($props.item.warning),
+            1
+            /* TEXT */
+          )) : vue.createCommentVNode("v-if", true)
+        ]),
+        vue.createElementVNode("view", { class: "summary-footer" }, [
+          vue.createElementVNode("view", {
+            class: "brief-pill",
+            onClick: _cache[0] || (_cache[0] = vue.withModifiers(($event) => _ctx.$emit("open-brief"), ["stop"]))
+          }, [
+            vue.createElementVNode("text", { class: "brief-pill-text" }, "AI简报")
+          ]),
+          $props.item.articleUrl ? (vue.openBlock(), vue.createElementBlock("view", {
+            key: 0,
+            class: "origin-link",
+            onClick: _cache[1] || (_cache[1] = vue.withModifiers(($event) => _ctx.$emit("open-link"), ["stop"]))
+          }, [
+            vue.createElementVNode("text", { class: "origin-link-text" }, "原文")
+          ])) : vue.createCommentVNode("v-if", true)
+        ])
+      ],
+      2
+      /* CLASS */
+    );
+  }
+  const NewsBriefSummaryCard = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["render", _sfc_render$3], ["__scopeId", "data-v-18104601"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/components/NewsBriefSummaryCard.vue"]]);
+  const _sfc_main$3 = {
+    __name: "issue",
+    setup(__props, { expose: __expose }) {
+      __expose();
+      const { statusBarHeight } = getLayoutMetrics();
+      const issue = vue.ref(getLatestNewsBriefIssue());
+      const openBrief = (item) => {
+        if (!(item == null ? void 0 : item.id))
+          return;
+        uni.navigateTo({
+          url: `/pages/news-brief/brief?issueId=${encodeURIComponent(issue.value.id)}&itemId=${encodeURIComponent(item.id)}`
+        });
+      };
+      const openArticle = (item) => {
+        if (!(item == null ? void 0 : item.articleUrl))
+          return;
+        uni.navigateTo({
+          url: `/pages/workshop/preview?url=${encodeURIComponent(item.articleUrl)}&title=${encodeURIComponent(item.headline || "新闻详情")}`
+        });
+      };
+      const goBackToBrief = () => {
+        safeNavigateBack("/pages/news-brief/index");
+      };
+      onLoad((query) => {
+        issue.value = getNewsBriefIssueById(query.id);
+      });
+      onBackPress((options = {}) => {
+        if (options.from === "navigateBack")
+          return false;
+        goBackToBrief();
+        return true;
+      });
+      const __returned__ = { statusBarHeight, issue, openBrief, openArticle, goBackToBrief, ref: vue.ref, get onBackPress() {
+        return onBackPress;
+      }, get onLoad() {
+        return onLoad;
+      }, NewsBriefSummaryCard, get getLatestNewsBriefIssue() {
+        return getLatestNewsBriefIssue;
+      }, get getNewsBriefIssueById() {
+        return getNewsBriefIssueById;
+      }, get getLayoutMetrics() {
+        return getLayoutMetrics;
+      }, get safeNavigateBack() {
+        return safeNavigateBack;
+      } };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render$2(_ctx, _cache, $props, $setup, $data, $options) {
+    return vue.openBlock(), vue.createElementBlock("view", { class: "brief-page" }, [
+      vue.createElementVNode(
+        "view",
+        {
+          class: "safe-top",
+          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight + 12}px` })
+        },
+        [
+          vue.createElementVNode("view", { class: "hero-block" }, [
+            vue.createElementVNode("view", {
+              class: "back-chip",
+              onClick: $setup.goBackToBrief
+            }, [
+              vue.createElementVNode("text", { class: "back-chip-icon" }, "<"),
+              vue.createElementVNode("text", { class: "back-chip-text" }, "返回")
+            ]),
+            vue.createElementVNode("view", { class: "hero-copy" }, [
+              vue.createElementVNode("text", { class: "hero-kicker" }, "3 STORIES / 1 DAY"),
+              vue.createElementVNode(
+                "text",
+                { class: "hero-title" },
+                vue.toDisplayString($setup.issue.title),
+                1
+                /* TEXT */
+              ),
+              vue.createElementVNode("text", { class: "hero-subtitle" }, "这里有为你精心挑选的 AI 智慧与生活点滴，每天7点准时更新，希望能伴你度过轻松且有收获的每一天。")
+            ])
+          ])
+        ],
+        4
+        /* STYLE */
+      ),
+      vue.createElementVNode("scroll-view", {
+        class: "brief-scroll",
+        "scroll-y": "",
+        "show-scrollbar": false
+      }, [
+        vue.createElementVNode("view", { class: "content-shell" }, [
+          (vue.openBlock(true), vue.createElementBlock(
+            vue.Fragment,
+            null,
+            vue.renderList($setup.issue.items, (item, index) => {
+              return vue.openBlock(), vue.createBlock($setup["NewsBriefSummaryCard"], {
+                key: item.id,
+                item,
+                "card-number": index + 1,
+                "tone-index": index % 3 + 1,
+                onOpenBrief: ($event) => $setup.openBrief(item),
+                onOpenLink: ($event) => $setup.openArticle(item)
+              }, null, 8, ["item", "card-number", "tone-index", "onOpenBrief", "onOpenLink"]);
+            }),
+            128
+            /* KEYED_FRAGMENT */
+          )),
+          vue.createElementVNode("view", { class: "footer-copy" }, [
+            vue.createElementVNode(
+              "text",
+              { class: "footer-copy-text" },
+              vue.toDisplayString($setup.issue.footer),
+              1
+              /* TEXT */
+            )
+          ])
+        ])
+      ])
+    ]);
+  }
+  const PagesNewsBriefIssue = /* @__PURE__ */ _export_sfc(_sfc_main$3, [["render", _sfc_render$2], ["__scopeId", "data-v-24be200d"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/news-brief/issue.vue"]]);
+  const _sfc_main$2 = {
+    __name: "NewsBriefCard",
+    props: {
+      item: {
+        type: Object,
+        required: true
+      },
+      cardNumber: {
+        type: Number,
+        default: 1
+      }
+    },
+    emits: ["open-link"],
+    setup(__props, { expose: __expose }) {
+      __expose();
+      const formatIndex = (value) => String(value || 1).padStart(2, "0");
+      const __returned__ = { formatIndex };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render$1(_ctx, _cache, $props, $setup, $data, $options) {
+    return vue.openBlock(), vue.createElementBlock("view", { class: "brief-card" }, [
+      vue.createElementVNode("view", { class: "card-head-row" }, [
+        vue.createElementVNode(
+          "text",
+          { class: "card-index" },
+          vue.toDisplayString($setup.formatIndex($props.cardNumber)),
+          1
+          /* TEXT */
+        ),
+        vue.createElementVNode(
+          "text",
+          { class: "card-headline" },
+          vue.toDisplayString($props.item.headline),
+          1
+          /* TEXT */
+        )
+      ]),
+      vue.createElementVNode(
+        "text",
+        { class: "card-warning" },
+        vue.toDisplayString($props.item.warning),
+        1
+        /* TEXT */
+      ),
+      vue.createElementVNode("view", { class: "card-content" }, [
+        vue.createElementVNode("view", { class: "content-divider" }),
+        (vue.openBlock(true), vue.createElementBlock(
+          vue.Fragment,
+          null,
+          vue.renderList($props.item.expandedBody, (paragraph, index) => {
+            return vue.openBlock(), vue.createElementBlock(
+              "text",
+              {
+                key: `${$props.item.id}-${index}`,
+                class: "content-paragraph"
+              },
+              vue.toDisplayString(paragraph),
+              1
+              /* TEXT */
+            );
+          }),
+          128
+          /* KEYED_FRAGMENT */
+        ))
+      ]),
+      vue.createElementVNode("view", { class: "card-footer" }, [
+        $props.item.articleUrl ? (vue.openBlock(), vue.createElementBlock("view", {
+          key: 0,
+          class: "origin-link",
+          onClick: _cache[0] || (_cache[0] = vue.withModifiers(($event) => _ctx.$emit("open-link"), ["stop"]))
+        }, [
+          vue.createElementVNode("text", { class: "origin-link-text" }, "原文")
+        ])) : vue.createCommentVNode("v-if", true)
+      ])
+    ]);
+  }
+  const NewsBriefCard = /* @__PURE__ */ _export_sfc(_sfc_main$2, [["render", _sfc_render$1], ["__scopeId", "data-v-d73bc55a"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/components/NewsBriefCard.vue"]]);
+  const _sfc_main$1 = {
+    __name: "brief",
+    setup(__props, { expose: __expose }) {
+      __expose();
+      const { statusBarHeight } = getLayoutMetrics();
+      const issueId = vue.ref("");
+      const itemId = vue.ref("");
+      const issue = vue.ref(getLatestNewsBriefIssue());
+      const item = vue.ref(issue.value.items[0] || {});
+      const cardNumber = vue.computed(() => {
+        var _a;
+        const currentItems = Array.isArray((_a = issue.value) == null ? void 0 : _a.items) ? issue.value.items : [];
+        const index = currentItems.findIndex((entry) => {
+          var _a2;
+          return entry.id === ((_a2 = item.value) == null ? void 0 : _a2.id);
+        });
+        return index >= 0 ? index + 1 : 1;
+      });
+      const openArticle = (newsItem) => {
+        if (!(newsItem == null ? void 0 : newsItem.articleUrl))
+          return;
+        uni.navigateTo({
+          url: `/pages/workshop/preview?url=${encodeURIComponent(newsItem.articleUrl)}&title=${encodeURIComponent(newsItem.headline || "新闻详情")}`
+        });
+      };
+      const goBackToIssue = () => {
+        safeNavigateBack(`/pages/news-brief/issue?id=${encodeURIComponent(issueId.value || issue.value.id)}`);
+      };
+      onLoad((query) => {
+        issueId.value = query.issueId || query.id || getLatestNewsBriefIssue().id;
+        itemId.value = query.itemId || "";
+        issue.value = getNewsBriefIssueById(issueId.value);
+        item.value = getNewsBriefItemByIds(issueId.value, itemId.value) || issue.value.items[0] || {};
+      });
+      onBackPress((options = {}) => {
+        if (options.from === "navigateBack")
+          return false;
+        goBackToIssue();
+        return true;
+      });
+      const __returned__ = { statusBarHeight, issueId, itemId, issue, item, cardNumber, openArticle, goBackToIssue, computed: vue.computed, ref: vue.ref, get onBackPress() {
+        return onBackPress;
+      }, get onLoad() {
+        return onLoad;
+      }, NewsBriefCard, get getLatestNewsBriefIssue() {
+        return getLatestNewsBriefIssue;
+      }, get getNewsBriefIssueById() {
+        return getNewsBriefIssueById;
+      }, get getNewsBriefItemByIds() {
+        return getNewsBriefItemByIds;
+      }, get getLayoutMetrics() {
+        return getLayoutMetrics;
+      }, get safeNavigateBack() {
+        return safeNavigateBack;
+      } };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
+    return vue.openBlock(), vue.createElementBlock("view", { class: "brief-page" }, [
+      vue.createElementVNode(
+        "view",
+        {
+          class: "safe-top",
+          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight + 12}px` })
+        },
+        [
+          vue.createElementVNode("view", { class: "hero-block" }, [
+            vue.createElementVNode("view", {
+              class: "back-chip",
+              onClick: $setup.goBackToIssue
+            }, [
+              vue.createElementVNode("text", { class: "back-chip-icon" }, "<"),
+              vue.createElementVNode("text", { class: "back-chip-text" }, "返回")
+            ]),
+            vue.createElementVNode("view", { class: "hero-copy" }, [
+              vue.createElementVNode(
+                "text",
+                { class: "hero-kicker" },
+                vue.toDisplayString($setup.item.source || "AI 简报"),
+                1
+                /* TEXT */
+              ),
+              vue.createElementVNode(
+                "text",
+                { class: "hero-title" },
+                vue.toDisplayString($setup.item.headline),
+                1
+                /* TEXT */
+              ),
+              vue.createElementVNode(
+                "text",
+                { class: "hero-subtitle" },
+                vue.toDisplayString($setup.issue.title),
+                1
+                /* TEXT */
+              )
+            ])
+          ])
+        ],
+        4
+        /* STYLE */
+      ),
+      vue.createElementVNode("scroll-view", {
+        class: "brief-scroll",
+        "scroll-y": "",
+        "show-scrollbar": false
+      }, [
+        vue.createElementVNode("view", { class: "content-shell" }, [
+          vue.createVNode($setup["NewsBriefCard"], {
+            item: $setup.item,
+            "card-number": $setup.cardNumber,
+            onOpenLink: _cache[0] || (_cache[0] = ($event) => $setup.openArticle($setup.item))
+          }, null, 8, ["item", "card-number"]),
+          vue.createElementVNode("view", { class: "footer-copy" }, [
+            vue.createElementVNode(
+              "text",
+              { class: "footer-copy-text" },
+              vue.toDisplayString($setup.issue.footer),
+              1
+              /* TEXT */
+            )
+          ])
+        ])
+      ])
+    ]);
+  }
+  const PagesNewsBriefBrief = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["render", _sfc_render], ["__scopeId", "data-v-18a6e664"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/news-brief/brief.vue"]]);
   __definePage("pages/profile/auth", PagesProfileAuth);
   __definePage("pages/home/index", PagesHomeIndex);
   __definePage("pages/crawl/index", PagesCrawlIndex);
@@ -4838,6 +5894,9 @@ This will fail in production.`);
   __definePage("pages/profile/nickname", PagesProfileNickname);
   __definePage("pages/profile/bio", PagesProfileBio);
   __definePage("pages/workshop/preview", PagesWorkshopPreview);
+  __definePage("pages/news-brief/index", PagesNewsBriefIndex);
+  __definePage("pages/news-brief/issue", PagesNewsBriefIssue);
+  __definePage("pages/news-brief/brief", PagesNewsBriefBrief);
   const resolveCurrentRoute = () => {
     const pages = (getCurrentPages == null ? void 0 : getCurrentPages()) || [];
     return pages.length ? `/${pages[pages.length - 1].route}` : "";

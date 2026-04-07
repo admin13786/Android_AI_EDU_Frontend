@@ -72,6 +72,27 @@
         "navigationStyle": "custom",
         "navigationBarTitleText": "Workshop Preview"
       }
+    },
+    {
+      "path": "pages/news-brief/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "AI趣闻萃取"
+      }
+    },
+    {
+      "path": "pages/news-brief/issue",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "AI趣闻萃取"
+      }
+    },
+    {
+      "path": "pages/news-brief/brief",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "AI简报"
+      }
     }
   ],
   "globalStyle": {

@@ -121,6 +121,7 @@ const menuItems = [
   { id: 'school', name: 'AI学堂', path: '/pages/school/input' },
   { id: 'crawl', name: 'AI观察哨', path: '/pages/crawl/index' },
   { id: 'workshop', name: 'AI工坊', path: '/pages/home/index' },
+  { id: 'newsBrief', name: 'AI趣闻萃取', path: '/pages/news-brief/index' },
 ]
 
 const recentHistory = computed(() => {
