@@ -27,11 +27,18 @@ defineProps({
 @import '../theme.scss';
 
 .empty-state {
-  padding: 96rpx 32rpx;
+  margin: 0 auto;
+  padding: 72rpx 36rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+  border-radius: 28rpx;
+  border: 2rpx solid rgba(255, 255, 255, 0.72);
+  background:
+    radial-gradient(circle at top right, rgba(255, 244, 223, 0.82), transparent 36%),
+    linear-gradient(160deg, rgba(255, 252, 247, 0.98), rgba(244, 232, 215, 0.98));
+  box-shadow: 0 16rpx 38rpx rgba(37, 28, 12, 0.08);
 }
 
 .empty-icon {
@@ -40,15 +47,16 @@ defineProps({
 }
 
 .empty-title {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: $text-white;
+  font-size: 34rpx;
+  font-weight: 900;
+  color: #1a120d;
   margin-bottom: 12rpx;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .empty-desc {
   font-size: 24rpx;
-  color: $text-muted;
-  line-height: 1.6;
+  color: #7b6656;
+  line-height: 1.72;
 }
 </style>

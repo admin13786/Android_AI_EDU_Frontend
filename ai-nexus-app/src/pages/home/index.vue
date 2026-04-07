@@ -689,7 +689,9 @@ onBackPress(() => {
   position: relative;
   height: 100vh;
   overflow: hidden;
-  background: #0a0a0a;
+  background:
+    radial-gradient(circle at top right, rgba(255, 228, 184, 0.42), transparent 35%),
+    linear-gradient(180deg, #fff9f1 0%, #f6eee2 46%, #efe6da 100%);
 }
 
 .header-shell {
@@ -698,8 +700,9 @@ onBackPress(() => {
   left: 0;
   right: 0;
   z-index: 40;
-  background: rgba(10, 10, 10, 0.96);
-  backdrop-filter: blur(14rpx);
+  background: rgba(255, 248, 240, 0.84);
+  backdrop-filter: blur(18rpx);
+  box-shadow: 0 16rpx 40rpx rgba(73, 49, 24, 0.08);
 }
 
 .page-header {
@@ -712,22 +715,31 @@ onBackPress(() => {
 
 .header-action,
 .header-placeholder {
-  width: 52rpx;
+  width: 72rpx;
   text-align: center;
   flex-shrink: 0;
 }
 
 .header-action {
-  color: $text-white;
-  font-size: 38rpx;
+  color: #6a492f;
+  font-size: 34rpx;
   line-height: 1;
+  min-height: 52rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.74);
+  border: 2rpx solid rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10rpx 22rpx rgba(37, 28, 12, 0.08);
 }
 
 .header-title {
-  color: $text-white;
-  font-size: 34rpx;
-  font-weight: 700;
+  color: #1b120d;
+  font-size: 38rpx;
+  font-weight: 900;
   letter-spacing: 1rpx;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .chat-scroll {
@@ -737,11 +749,11 @@ onBackPress(() => {
 }
 
 .chat-content {
-  padding: 16rpx 16rpx 24rpx;
+  padding: 20rpx 20rpx 28rpx;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 18rpx;
+  gap: 20rpx;
 }
 
 .user-row {
@@ -755,17 +767,18 @@ onBackPress(() => {
   max-width: 78%;
   padding: 18rpx 24rpx;
   border-radius: 24rpx;
-  background: #1a1a1a;
+  background: linear-gradient(135deg, #c97832, #915020);
+  box-shadow: 0 14rpx 28rpx rgba(145, 80, 32, 0.18);
 }
 
 .user-text {
-  color: $text-white;
+  color: #fffaf5;
   font-size: 28rpx;
-  line-height: 1.55;
+  line-height: 1.58;
 }
 
 .message-time {
-  color: #5f6368;
+  color: #8c7764;
   font-size: 20rpx;
 }
 
@@ -779,18 +792,19 @@ onBackPress(() => {
   width: 52rpx;
   height: 52rpx;
   border-radius: 50%;
-  background: #eab308;
+  background: radial-gradient(circle at 32% 28%, #fff4de 0%, #d89553 38%, #9a5a29 72%, #6b391a 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-top: 10rpx;
   flex-shrink: 0;
+  box-shadow: 0 12rpx 24rpx rgba(104, 59, 25, 0.16);
 }
 
 .ai-avatar-text {
-  color: #101010;
+  color: #fffaf5;
   font-size: 20rpx;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .ai-column {
@@ -803,32 +817,38 @@ onBackPress(() => {
 
 .ai-bubble {
   border-radius: 28rpx;
-  background: #fff9f0;
-  border: 2rpx solid rgba(217, 119, 6, 0.5);
+  border: 2rpx solid rgba(255, 255, 255, 0.72);
+  background:
+    radial-gradient(circle at top right, rgba(255, 244, 223, 0.82), transparent 36%),
+    linear-gradient(160deg, rgba(255, 252, 247, 0.98), rgba(244, 232, 215, 0.98));
   padding: 22rpx 22rpx 24rpx;
   display: flex;
   flex-direction: column;
   gap: 18rpx;
+  box-shadow: 0 16rpx 38rpx rgba(37, 28, 12, 0.08);
 }
 
 .ai-title {
-  color: #101010;
-  font-size: 30rpx;
-  font-weight: 700;
+  color: #1a120d;
+  font-size: 34rpx;
+  font-weight: 900;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .ai-text {
-  color: #2d2d2d;
+  color: #705949;
   font-size: 28rpx;
-  line-height: 1.75;
+  line-height: 1.76;
   white-space: pre-wrap;
 }
 
 .loading-panel {
   position: relative;
   overflow: hidden;
-  border-radius: 22rpx;
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.92));
+  border-radius: 24rpx;
+  background:
+    radial-gradient(circle at top right, rgba(255, 241, 215, 0.28), transparent 34%),
+    linear-gradient(145deg, #5a341e, #7c4b26 55%, #b97236 100%);
   padding: 24rpx;
   display: flex;
   flex-direction: column;
@@ -846,7 +866,7 @@ onBackPress(() => {
 .orbit-ring {
   position: absolute;
   border-radius: 50%;
-  border: 2rpx solid rgba(125, 211, 252, 0.22);
+  border: 2rpx solid rgba(255, 236, 214, 0.26);
 }
 
 .ring-one {
@@ -858,7 +878,7 @@ onBackPress(() => {
 .ring-two {
   width: 112rpx;
   height: 112rpx;
-  border-color: rgba(196, 181, 253, 0.38);
+  border-color: rgba(255, 221, 179, 0.42);
   animation: spin-reverse 4.2s linear infinite;
 }
 
@@ -866,16 +886,16 @@ onBackPress(() => {
   width: 74rpx;
   height: 74rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #38bdf8, #8b5cf6);
+  background: linear-gradient(135deg, #f0c48b, #c97832);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 32rpx rgba(56, 189, 248, 0.4);
+  box-shadow: 0 0 32rpx rgba(240, 196, 139, 0.3);
   animation: pulse-core 1.8s ease-in-out infinite;
 }
 
 .orbit-core-text {
-  color: #fff;
+  color: #fffaf5;
   font-size: 24rpx;
   font-weight: 700;
 }
@@ -885,8 +905,8 @@ onBackPress(() => {
   width: 16rpx;
   height: 16rpx;
   border-radius: 50%;
-  background: #f8fafc;
-  box-shadow: 0 0 16rpx rgba(255, 255, 255, 0.55);
+  background: #fff6ea;
+  box-shadow: 0 0 16rpx rgba(255, 255, 255, 0.35);
 }
 
 .dot-one {
@@ -915,13 +935,13 @@ onBackPress(() => {
 }
 
 .loading-phase {
-  color: #f8fafc;
+  color: #fff8ef;
   font-size: 28rpx;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .loading-subtitle {
-  color: #94a3b8;
+  color: rgba(255, 240, 221, 0.82);
   font-size: 22rpx;
   line-height: 1.6;
 }
@@ -949,23 +969,23 @@ onBackPress(() => {
   width: 14rpx;
   height: 14rpx;
   border-radius: 50%;
-  background: rgba(148, 163, 184, 0.4);
+  background: rgba(255, 240, 221, 0.32);
 }
 
 .loading-step.active .loading-step-dot {
-  background: #38bdf8;
-  box-shadow: 0 0 16rpx rgba(56, 189, 248, 0.5);
+  background: #f5d6ab;
+  box-shadow: 0 0 16rpx rgba(245, 214, 171, 0.45);
 }
 
 .loading-step-text {
-  color: #e2e8f0;
+  color: #fff2e2;
   font-size: 22rpx;
 }
 
 .loading-progress-track {
   height: 10rpx;
   border-radius: 999rpx;
-  background: rgba(148, 163, 184, 0.18);
+  background: rgba(255, 240, 221, 0.18);
   overflow: hidden;
 }
 
@@ -973,13 +993,13 @@ onBackPress(() => {
   width: 42%;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #38bdf8, #8b5cf6);
+  background: linear-gradient(90deg, #f0c48b, #f6e4c4);
   animation: progress-flow 1.9s ease-in-out infinite;
 }
 
 .idea-card {
   border-radius: 20rpx;
-  background: rgba(255, 255, 255, 0.66);
+  background: rgba(255, 255, 255, 0.54);
   padding: 18rpx 18rpx 14rpx;
   display: flex;
   flex-direction: column;
@@ -987,9 +1007,9 @@ onBackPress(() => {
 }
 
 .idea-title {
-  color: #6b7280;
+  color: #8c725f;
   font-size: 22rpx;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .idea-item {
@@ -999,36 +1019,37 @@ onBackPress(() => {
 }
 
 .idea-dot {
-  color: #84cc16;
+  color: #c16224;
   font-size: 24rpx;
   line-height: 1.5;
 }
 
 .idea-text {
   flex: 1;
-  color: #475569;
+  color: #705949;
   font-size: 24rpx;
   line-height: 1.6;
 }
 
 .result-card {
   border-radius: 24rpx;
-  background: #f4efe8;
+  background: rgba(255, 255, 255, 0.42);
   overflow: hidden;
 }
 
 .preview-shell {
   margin: 0 14rpx 14rpx;
-  border-radius: 20rpx;
-  background: #111827;
+  border-radius: 22rpx;
+  background: linear-gradient(155deg, #5d361f, #8b552a 58%, #c47a38 100%);
   padding: 18rpx;
   display: flex;
   flex-direction: column;
   gap: 16rpx;
+  box-shadow: 0 18rpx 34rpx rgba(117, 73, 35, 0.18);
 }
 
 .preview-clickable {
-  border: 2rpx solid rgba(34, 211, 238, 0.35);
+  border: 2rpx solid rgba(255, 239, 218, 0.26);
 }
 
 .preview-header {
@@ -1041,9 +1062,9 @@ onBackPress(() => {
 .preview-title {
   flex: 1;
   min-width: 0;
-  color: $text-white;
+  color: #fffaf5;
   font-size: 28rpx;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .preview-badge {
@@ -1051,7 +1072,7 @@ onBackPress(() => {
   height: 40rpx;
   padding: 0 14rpx;
   border-radius: 999rpx;
-  background: rgba(34, 211, 238, 0.16);
+  background: rgba(255, 248, 236, 0.16);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1059,7 +1080,7 @@ onBackPress(() => {
 }
 
 .preview-badge-text {
-  color: #22d3ee;
+  color: #ffe6c3;
   font-size: 20rpx;
   text-transform: uppercase;
 }
@@ -1067,7 +1088,7 @@ onBackPress(() => {
 .preview-hero {
   min-height: 280rpx;
   border-radius: 18rpx;
-  background: linear-gradient(135deg, #0f172a, #111827 55%, #0ea5e9);
+  background: linear-gradient(135deg, rgba(255, 250, 243, 0.14), rgba(255, 245, 232, 0.06));
   padding: 24rpx;
   display: flex;
   flex-direction: column;
@@ -1076,13 +1097,14 @@ onBackPress(() => {
 }
 
 .preview-hero-title {
-  color: $text-white;
+  color: #fffaf5;
   font-size: 32rpx;
-  font-weight: 700;
+  font-weight: 800;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .preview-hero-copy {
-  color: #cbd5e1;
+  color: rgba(255, 240, 221, 0.84);
   font-size: 24rpx;
   line-height: 1.7;
 }
@@ -1091,11 +1113,11 @@ onBackPress(() => {
   width: fit-content;
   padding: 12rpx 22rpx;
   border-radius: 999rpx;
-  background: #7c3aed;
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .preview-cta-text {
-  color: $text-white;
+  color: #fffaf5;
   font-size: 22rpx;
   font-weight: 700;
 }
@@ -1105,7 +1127,7 @@ onBackPress(() => {
 }
 
 .preview-code {
-  color: #cbd5e1;
+  color: #fff1de;
   font-size: 22rpx;
   line-height: 1.7;
   white-space: pre-wrap;
@@ -1121,12 +1143,12 @@ onBackPress(() => {
 .assist-action {
   padding: 12rpx 18rpx;
   border-radius: 999rpx;
-  background: rgba(124, 58, 237, 0.12);
-  border: 2rpx solid rgba(124, 58, 237, 0.22);
+  background: rgba(193, 98, 36, 0.12);
+  border: 2rpx solid rgba(193, 98, 36, 0.16);
 }
 
 .assist-action-text {
-  color: #7c3aed;
+  color: #8c5527;
   font-size: 24rpx;
   font-weight: 700;
 }
@@ -1134,21 +1156,25 @@ onBackPress(() => {
 .empty-state {
   margin-top: 56rpx;
   border-radius: 28rpx;
-  background: #121212;
-  border: 2rpx dashed rgba(255, 255, 255, 0.08);
+  border: 2rpx solid rgba(255, 255, 255, 0.72);
+  background:
+    radial-gradient(circle at top right, rgba(255, 244, 223, 0.82), transparent 36%),
+    linear-gradient(160deg, rgba(255, 252, 247, 0.98), rgba(244, 232, 215, 0.98));
   padding: 36rpx 28rpx;
+  box-shadow: 0 16rpx 38rpx rgba(37, 28, 12, 0.08);
 }
 
 .empty-title {
   display: block;
   margin-bottom: 14rpx;
-  color: $text-white;
-  font-size: 32rpx;
-  font-weight: 700;
+  color: #1a120d;
+  font-size: 34rpx;
+  font-weight: 900;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .empty-copy {
-  color: $text-muted;
+  color: #7b6656;
   font-size: 26rpx;
   line-height: 1.7;
 }
@@ -1158,7 +1184,7 @@ onBackPress(() => {
   left: 0;
   right: 0;
   z-index: 45;
-  background: linear-gradient(180deg, rgba(10, 10, 10, 0), rgba(10, 10, 10, 0.92) 24%, rgba(10, 10, 10, 1) 100%);
+  background: linear-gradient(180deg, rgba(239, 230, 218, 0), rgba(239, 230, 218, 0.88) 30%, rgba(239, 230, 218, 0.98) 100%);
 }
 
 .input-area {
@@ -1172,22 +1198,23 @@ onBackPress(() => {
   flex: 1;
   height: 88rpx;
   border-radius: 999rpx;
-  background: #1c1c1e;
-  border: 2rpx solid #06b6d4;
+  background: rgba(255, 255, 255, 0.72);
+  border: 2rpx solid rgba(255, 255, 255, 0.7);
   padding: 0 24rpx;
   display: flex;
   align-items: center;
+  box-shadow: 0 12rpx 26rpx rgba(101, 69, 42, 0.08);
 }
 
 .prompt-input {
   flex: 1;
   min-width: 0;
-  color: $text-white;
+  color: #3a2a1d;
   font-size: 28rpx;
 }
 
 .prompt-placeholder {
-  color: #999;
+  color: #a48e7a;
   font-size: 28rpx;
 }
 
@@ -1195,11 +1222,11 @@ onBackPress(() => {
   width: 88rpx;
   height: 88rpx;
   border-radius: 50%;
-  background: #8a2be2;
+  background: linear-gradient(135deg, #c97832, #915020);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 16rpx 28rpx rgba(138, 43, 226, 0.22);
+  box-shadow: 0 16rpx 28rpx rgba(145, 80, 32, 0.22);
   flex-shrink: 0;
 }
 
@@ -1208,7 +1235,7 @@ onBackPress(() => {
 }
 
 .send-button-text {
-  color: $text-white;
+  color: #fffaf5;
   font-size: 24rpx;
   font-weight: 700;
 }
@@ -1237,12 +1264,12 @@ onBackPress(() => {
   0%,
   100% {
     transform: scale(1);
-    box-shadow: 0 0 32rpx rgba(56, 189, 248, 0.4);
+    box-shadow: 0 0 32rpx rgba(240, 196, 139, 0.3);
   }
 
   50% {
     transform: scale(1.08);
-    box-shadow: 0 0 44rpx rgba(139, 92, 246, 0.48);
+    box-shadow: 0 0 44rpx rgba(201, 120, 50, 0.4);
   }
 }
 

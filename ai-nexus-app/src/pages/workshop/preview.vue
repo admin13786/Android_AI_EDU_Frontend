@@ -108,7 +108,9 @@ onBackPress((options = {}) => {
 
 .preview-page {
   min-height: 100vh;
-  background: #0a0a0a;
+  background:
+    radial-gradient(circle at top right, rgba(255, 228, 184, 0.42), transparent 35%),
+    linear-gradient(180deg, #fff9f1 0%, #f6eee2 46%, #efe6da 100%);
   display: flex;
   flex-direction: column;
 }
@@ -123,60 +125,87 @@ onBackPress((options = {}) => {
 
 .header-title,
 .header-action {
-  color: $text-white;
+  color: #5a3f2d;
 }
 
 .page-header {
   height: 72rpx;
+  background: rgba(255, 248, 240, 0.82);
+  backdrop-filter: blur(18rpx);
+  box-shadow: 0 12rpx 28rpx rgba(73, 49, 24, 0.06);
 }
 
 .header-title {
-  font-size: 30rpx;
-  font-weight: 700;
+  font-size: 32rpx;
+  font-weight: 900;
+  color: #1a120d;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .header-action {
-  width: 44rpx;
+  width: 52rpx;
+  height: 52rpx;
   text-align: center;
-  font-size: 30rpx;
+  font-size: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.74);
+  border: 2rpx solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 10rpx 22rpx rgba(37, 28, 12, 0.08);
 }
 
 .webview-wrap {
   flex: 1;
+  margin: 12rpx 20rpx 0;
+  border-radius: 28rpx 28rpx 0 0;
+  overflow: hidden;
+  box-shadow: 0 18rpx 38rpx rgba(73, 49, 24, 0.08);
+  background: rgba(255, 255, 255, 0.58);
 }
 
 .empty-state {
   flex: 1;
+  margin: 24rpx 20rpx 0;
   padding: 48rpx;
+  border-radius: 28rpx;
+  border: 2rpx solid rgba(255, 255, 255, 0.72);
+  background:
+    radial-gradient(circle at top right, rgba(255, 244, 223, 0.82), transparent 36%),
+    linear-gradient(160deg, rgba(255, 252, 247, 0.98), rgba(244, 232, 215, 0.98));
+  box-shadow: 0 16rpx 38rpx rgba(37, 28, 12, 0.08);
 }
 
 .empty-title {
   display: block;
-  color: $text-white;
-  font-size: 32rpx;
-  font-weight: 700;
+  color: #1a120d;
+  font-size: 34rpx;
+  font-weight: 900;
   margin-bottom: 12rpx;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .empty-copy {
-  color: $text-muted;
+  color: #7b6656;
   font-size: 26rpx;
   line-height: 1.7;
 }
 
 .fallback-bar {
   padding: 18rpx 24rpx;
-  background: rgba(10, 10, 10, 0.92);
-  border-top: 1rpx solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 248, 240, 0.92);
+  border-top: 1rpx solid rgba(138, 108, 78, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16rpx;
+  box-shadow: 0 -8rpx 24rpx rgba(73, 49, 24, 0.04);
 }
 
 .fallback-copy {
   flex: 1;
-  color: $text-muted;
+  color: #8d7767;
   font-size: 22rpx;
   line-height: 1.5;
 }
@@ -186,15 +215,16 @@ onBackPress((options = {}) => {
   height: 68rpx;
   padding: 0 20rpx;
   border-radius: 999rpx;
-  background: linear-gradient(135deg, #38bdf8, #2563eb);
+  background: linear-gradient(135deg, #c97832, #915020);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 12rpx 24rpx rgba(145, 80, 32, 0.18);
 }
 
 .fallback-button-text {
-  color: #fff;
+  color: #fffaf5;
   font-size: 24rpx;
-  font-weight: 600;
+  font-weight: 700;
 }
 </style>
