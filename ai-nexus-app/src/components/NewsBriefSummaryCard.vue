@@ -1,5 +1,7 @@
 <template>
   <view class="summary-card" :class="[`tone-${toneIndex}`]" @click="$emit('open-brief')">
+    <image class="summary-cover" :src="coverImage" mode="aspectFill" />
+
     <view class="summary-topline">
       <text class="summary-index">{{ formatIndex(cardNumber) }}</text>
       <text class="summary-tag">{{ item.source || 'AI 热讯' }}</text>
@@ -23,9 +25,11 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+
 const formatIndex = (value) => String(value || 1).padStart(2, '0')
 
-defineProps({
+const props = defineProps({
   item: {
     type: Object,
     required: true,
@@ -40,6 +44,14 @@ defineProps({
   },
 })
 
+const DEFAULT_COVERS = {
+  1: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
+  2: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
+  3: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+}
+
+const coverImage = computed(() => props.item?.coverImage || DEFAULT_COVERS[props.toneIndex] || DEFAULT_COVERS[1])
+
 defineEmits(['open-brief', 'open-link'])
 </script>
 
@@ -48,7 +60,7 @@ defineEmits(['open-brief', 'open-link'])
   position: relative;
   overflow: hidden;
   border-radius: 34rpx;
-  padding: 28rpx 24rpx 24rpx;
+  padding: 20rpx 24rpx 24rpx;
   border: 2rpx solid rgba(255, 255, 255, 0.74);
   background:
     radial-gradient(circle at top right, rgba(255, 244, 224, 0.86), transparent 36%),
@@ -65,6 +77,15 @@ defineEmits(['open-brief', 'open-link'])
   height: 180rpx;
   border-radius: 50%;
   background: rgba(255, 247, 233, 0.46);
+}
+
+.summary-cover {
+  width: 100%;
+  height: 220rpx;
+  border-radius: 24rpx;
+  display: block;
+  margin-bottom: 18rpx;
+  background: rgba(217, 201, 181, 0.24);
 }
 
 .summary-card.tone-1 {
@@ -118,7 +139,7 @@ defineEmits(['open-brief', 'open-link'])
 .summary-copy {
   position: relative;
   z-index: 1;
-  margin-top: 22rpx;
+  margin-top: 18rpx;
   display: flex;
   flex-direction: column;
   gap: 14rpx;

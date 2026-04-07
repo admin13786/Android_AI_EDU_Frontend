@@ -16,9 +16,7 @@
         <view class="hero-copy">
           <text class="hero-kicker">3 STORIES / 1 DAY</text>
           <text class="hero-title">{{ issue.title }}</text>
-          <text class="hero-subtitle">
-            这里有为你精心挑选的 AI 智慧与生活点滴，每天7点准时更新，希望能伴你度过轻松且有收获的每一天。
-          </text>
+          <text class="hero-subtitle">{{ issue.subtitle }}</text>
         </view>
       </view>
     </view>
@@ -35,6 +33,10 @@
           @open-link="openArticle(item)"
         />
 
+        <view v-if="loading && !issue.items.length" class="loading-copy">
+          <text class="loading-copy-text">正在同步今天的 AI 热榜前三条...</text>
+        </view>
+
         <view class="footer-copy">
           <text class="footer-copy-text">{{ issue.footer }}</text>
         </view>
@@ -47,12 +49,19 @@
 import { ref } from 'vue'
 import { onBackPress, onLoad } from '@dcloudio/uni-app'
 import NewsBriefSummaryCard from '@/components/NewsBriefSummaryCard.vue'
-import { getLatestNewsBriefIssue, getNewsBriefIssueById } from '@/data/news-brief'
+import { getLatestNewsBriefIssue } from '@/data/news-brief'
+import {
+  fetchLatestNewsBriefIssue,
+  getLatestNewsBriefIssueId,
+  getRenderableNewsBriefIssueById,
+} from '@/data/news-brief-runtime'
 import { getLayoutMetrics } from '@/utils/layout'
 import { safeNavigateBack } from '@/utils/navigation'
 
 const { statusBarHeight } = getLayoutMetrics()
-const issue = ref(getLatestNewsBriefIssue())
+const latestIssueId = getLatestNewsBriefIssueId()
+const issue = ref(getRenderableNewsBriefIssueById(latestIssueId) || getLatestNewsBriefIssue())
+const loading = ref(false)
 
 const openBrief = (item) => {
   if (!item?.id) return
@@ -78,8 +87,30 @@ const goBackHome = () => {
   safeNavigateBack('/pages/home/index?openSidebar=1')
 }
 
-onLoad((query) => {
-  issue.value = getNewsBriefIssueById(query.id)
+const loadIssue = async (rawIssueId = '') => {
+  const targetIssueId = rawIssueId || latestIssueId
+  issue.value = getRenderableNewsBriefIssueById(targetIssueId)
+
+  if (targetIssueId !== latestIssueId) return
+
+  loading.value = true
+  try {
+    const latestIssue = await fetchLatestNewsBriefIssue()
+    if (Array.isArray(latestIssue?.items) && latestIssue.items.length > 0) {
+      issue.value = latestIssue
+    }
+  } catch (error) {
+    uni.showToast({
+      title: error?.message || '获取今日趣闻失败',
+      icon: 'none',
+    })
+  } finally {
+    loading.value = false
+  }
+}
+
+onLoad((query = {}) => {
+  loadIssue(query.id)
 })
 
 onBackPress((options = {}) => {
@@ -196,6 +227,16 @@ onBackPress((options = {}) => {
   display: flex;
   flex-direction: column;
   gap: 20rpx;
+}
+
+.loading-copy {
+  padding: 18rpx 12rpx 8rpx;
+}
+
+.loading-copy-text {
+  color: #7d6956;
+  font-size: 20rpx;
+  line-height: 1.6;
 }
 
 .footer-copy {

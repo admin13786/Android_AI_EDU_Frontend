@@ -41,6 +41,15 @@ export const getNewsList = async (type = 'business') => {
   }
 }
 
+export const getNewsBrief = (newsId) =>
+  request({
+    baseUrl: getNewsBaseUrl(),
+    url: '/api/news/brief',
+    method: 'POST',
+    data: { news_id: Number(newsId) },
+    timeout: 180000,
+  })
+
 // Auth - company crawl service
 export const loginSession = (data) =>
   request({

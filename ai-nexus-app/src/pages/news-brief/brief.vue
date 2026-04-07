@@ -31,15 +31,23 @@
 import { computed, ref } from 'vue'
 import { onBackPress, onLoad } from '@dcloudio/uni-app'
 import NewsBriefCard from '@/components/NewsBriefCard.vue'
-import { getLatestNewsBriefIssue, getNewsBriefIssueById, getNewsBriefItemByIds } from '@/data/news-brief'
+import { getLatestNewsBriefIssue } from '@/data/news-brief'
+import { getNewsBrief } from '@/services/api'
+import {
+  fetchLatestNewsBriefIssue,
+  getLatestNewsBriefIssueId,
+  getRenderableNewsBriefIssueById,
+  getRenderableNewsBriefItemByIds,
+} from '@/data/news-brief-runtime'
 import { getLayoutMetrics } from '@/utils/layout'
 import { safeNavigateBack } from '@/utils/navigation'
 
 const { statusBarHeight } = getLayoutMetrics()
 
-const issueId = ref('')
+const latestIssueId = getLatestNewsBriefIssueId()
+const issueId = ref(latestIssueId)
 const itemId = ref('')
-const issue = ref(getLatestNewsBriefIssue())
+const issue = ref(getRenderableNewsBriefIssueById(latestIssueId) || getLatestNewsBriefIssue())
 const item = ref(issue.value.items[0] || {})
 
 const cardNumber = computed(() => {
@@ -59,11 +67,56 @@ const goBackToIssue = () => {
   safeNavigateBack(`/pages/news-brief/issue?id=${encodeURIComponent(issueId.value || issue.value.id)}`)
 }
 
-onLoad((query) => {
-  issueId.value = query.issueId || query.id || getLatestNewsBriefIssue().id
+const applyRemoteBrief = async () => {
+  const newsId = Number(item.value?.newsId || item.value?.id || 0)
+  if (!newsId) return
+
+  try {
+    const response = await getNewsBrief(newsId)
+    const brief = response?.data
+    if (!brief || typeof brief !== 'object') return
+
+    const paragraphs = Array.isArray(brief.paragraphs)
+      ? brief.paragraphs.map((paragraph) => String(paragraph || '').trim()).filter(Boolean)
+      : []
+
+    item.value = {
+      ...item.value,
+      headline: String(brief.headline || item.value.headline || '').trim(),
+      warning: String(brief.lead || item.value.warning || '').trim(),
+      expandedBody: paragraphs.length > 0 ? paragraphs : item.value.expandedBody,
+    }
+  } catch (error) {
+    // Keep the cached card content when the remote brief API is unavailable.
+  }
+}
+
+const syncDetail = async () => {
+  issue.value = getRenderableNewsBriefIssueById(issueId.value)
+  item.value = getRenderableNewsBriefItemByIds(issueId.value, itemId.value) || issue.value.items[0] || {}
+
+  if (issueId.value !== latestIssueId) return
+
+  try {
+    const latestIssue = await fetchLatestNewsBriefIssue()
+    issue.value = latestIssue
+    item.value = getRenderableNewsBriefItemByIds(issueId.value, itemId.value) || latestIssue.items[0] || {}
+  } catch (error) {
+    if (!item.value?.id) {
+      uni.showToast({
+        title: error?.message || '获取新闻详情失败',
+        icon: 'none',
+      })
+    }
+  }
+
+  await applyRemoteBrief()
+}
+
+onLoad((query = {}) => {
+  issueId.value = query.issueId || query.id || latestIssueId
   itemId.value = query.itemId || ''
-  issue.value = getNewsBriefIssueById(issueId.value)
-  item.value = getNewsBriefItemByIds(issueId.value, itemId.value) || issue.value.items[0] || {}
+  syncDetail()
 })
 
 onBackPress((options = {}) => {

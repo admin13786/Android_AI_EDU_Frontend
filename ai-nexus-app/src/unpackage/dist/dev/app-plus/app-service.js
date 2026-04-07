@@ -1919,6 +1919,13 @@ This will fail in production.`);
       list: Array.isArray(response == null ? void 0 : response.list) ? response.list.map((item, index) => normalizeNewsItem(item, index)) : []
     };
   };
+  const getNewsBrief = (newsId) => request({
+    baseUrl: getNewsBaseUrl(),
+    url: "/api/news/brief",
+    method: "POST",
+    data: { news_id: Number(newsId) },
+    timeout: 18e4
+  });
   const loginSession = (data) => request({
     baseUrl: getNewsBaseUrl(),
     url: "/api/auth/sessions",
@@ -3016,10 +3023,6 @@ This will fail in production.`);
   const getLatestNewsBriefIssue = () => normalizeIssue(MOCK_ISSUES[0]);
   const getRecentNewsBriefIssues = (limit = 7) => MOCK_ISSUES.slice(0, limit).map((issue) => normalizeIssue(issue));
   const getNewsBriefIssueById = (id) => normalizeIssue(MOCK_ISSUES.find((issue) => issue.id === id) || MOCK_ISSUES[0]);
-  const getNewsBriefItemByIds = (issueId, itemId) => {
-    const issue = getNewsBriefIssueById(issueId);
-    return issue.items.find((item) => item.id === itemId) || issue.items[0] || null;
-  };
   const ANIMATION_MS = 220;
   const _sfc_main$d = {
     __name: "Sidebar",
@@ -5494,7 +5497,17 @@ This will fail in production.`);
     setup(__props, { expose: __expose }) {
       __expose();
       const formatIndex = (value) => String(value || 1).padStart(2, "0");
-      const __returned__ = { formatIndex };
+      const props = __props;
+      const DEFAULT_COVERS = {
+        1: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+        2: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80",
+        3: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80"
+      };
+      const coverImage = vue.computed(() => {
+        var _a;
+        return ((_a = props.item) == null ? void 0 : _a.coverImage) || DEFAULT_COVERS[props.toneIndex] || DEFAULT_COVERS[1];
+      });
+      const __returned__ = { formatIndex, props, DEFAULT_COVERS, coverImage, computed: vue.computed };
       Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
       return __returned__;
     }
@@ -5507,6 +5520,11 @@ This will fail in production.`);
         onClick: _cache[2] || (_cache[2] = ($event) => _ctx.$emit("open-brief"))
       },
       [
+        vue.createElementVNode("image", {
+          class: "summary-cover",
+          src: $setup.coverImage,
+          mode: "aspectFill"
+        }, null, 8, ["src"]),
         vue.createElementVNode("view", { class: "summary-topline" }, [
           vue.createElementVNode(
             "text",
@@ -5563,12 +5581,82 @@ This will fail in production.`);
     );
   }
   const NewsBriefSummaryCard = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["render", _sfc_render$3], ["__scopeId", "data-v-18104601"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/components/NewsBriefSummaryCard.vue"]]);
+  const LATEST_ISSUE_STORAGE_KEY = "newsBriefLatestIssueRuntime";
+  const ISSUE_SUBTITLE = "这里有为你精心挑选的 AI 智慧与生活点滴，每天7点准时更新，希望能伴你度过轻松且有收获的每一天。";
+  const normalizeParagraphs = (text = "") => {
+    const value = String(text || "").trim();
+    if (!value)
+      return [];
+    const parts = value.split(new RegExp("(?<=[。！？!?])")).map((item) => item.trim()).filter(Boolean);
+    return parts.length > 0 ? parts : [value];
+  };
+  const createLatestIssueShell = () => {
+    const latestIssue = getLatestNewsBriefIssue();
+    return {
+      ...latestIssue,
+      subtitle: ISSUE_SUBTITLE,
+      items: []
+    };
+  };
+  const normalizeRuntimeItem = (item = {}, index = 0) => {
+    var _a, _b, _c, _d, _e, _f;
+    const summary = String(((_b = (_a = item.raw) == null ? void 0 : _a.brief) == null ? void 0 : _b.lead) || item.summary || "").trim();
+    const briefParagraphs = Array.isArray((_d = (_c = item.raw) == null ? void 0 : _c.brief) == null ? void 0 : _d.paragraphs) ? item.raw.brief.paragraphs.map((paragraph) => String(paragraph || "").trim()).filter(Boolean) : [];
+    return {
+      id: String(item.id || `personal-top-${index + 1}`),
+      newsId: Number(item.id || 0),
+      source: String(item.source || "AI 热讯"),
+      headline: String(((_f = (_e = item.raw) == null ? void 0 : _e.brief) == null ? void 0 : _f.headline) || item.title || "今日 AI 热点"),
+      warning: summary,
+      articleUrl: String(item.url || ""),
+      coverImage: String(item.coverUrl || ""),
+      expandedBody: briefParagraphs.length > 0 ? briefParagraphs : normalizeParagraphs(summary)
+    };
+  };
+  const normalizeRuntimeIssue = (newsList = []) => {
+    const latestIssue = createLatestIssueShell();
+    return {
+      ...latestIssue,
+      items: newsList.slice(0, 3).map((item, index) => normalizeRuntimeItem(item, index))
+    };
+  };
+  const getLatestNewsBriefIssueId = () => getLatestNewsBriefIssue().id;
+  const getCachedLatestNewsBriefIssue = () => {
+    const cachedIssue = uni.getStorageSync(LATEST_ISSUE_STORAGE_KEY);
+    if (!cachedIssue || typeof cachedIssue !== "object" || Array.isArray(cachedIssue)) {
+      return null;
+    }
+    return {
+      ...createLatestIssueShell(),
+      ...cachedIssue,
+      items: Array.isArray(cachedIssue.items) ? cachedIssue.items : []
+    };
+  };
+  const fetchLatestNewsBriefIssue = async () => {
+    const response = await getNewsList("personal");
+    const issue = normalizeRuntimeIssue(Array.isArray(response == null ? void 0 : response.list) ? response.list : []);
+    uni.setStorageSync(LATEST_ISSUE_STORAGE_KEY, issue);
+    return issue;
+  };
+  const getRenderableNewsBriefIssueById = (issueId = "") => {
+    if (String(issueId || "") === getLatestNewsBriefIssueId()) {
+      return getCachedLatestNewsBriefIssue() || createLatestIssueShell();
+    }
+    return getNewsBriefIssueById(issueId);
+  };
+  const getRenderableNewsBriefItemByIds = (issueId = "", itemId = "") => {
+    const issue = getRenderableNewsBriefIssueById(issueId);
+    const items = Array.isArray(issue == null ? void 0 : issue.items) ? issue.items : [];
+    return items.find((item) => item.id === itemId) || items[0] || null;
+  };
   const _sfc_main$3 = {
     __name: "issue",
     setup(__props, { expose: __expose }) {
       __expose();
       const { statusBarHeight } = getLayoutMetrics();
-      const issue = vue.ref(getLatestNewsBriefIssue());
+      const latestIssueId = getLatestNewsBriefIssueId();
+      const issue = vue.ref(getRenderableNewsBriefIssueById(latestIssueId) || getLatestNewsBriefIssue());
+      const loading = vue.ref(false);
       const openBrief = (item) => {
         if (!(item == null ? void 0 : item.id))
           return;
@@ -5591,8 +5679,28 @@ This will fail in production.`);
       const goBackHome = () => {
         safeNavigateBack("/pages/home/index?openSidebar=1");
       };
-      onLoad((query) => {
-        issue.value = getNewsBriefIssueById(query.id);
+      const loadIssue = async (rawIssueId = "") => {
+        const targetIssueId = rawIssueId || latestIssueId;
+        issue.value = getRenderableNewsBriefIssueById(targetIssueId);
+        if (targetIssueId !== latestIssueId)
+          return;
+        loading.value = true;
+        try {
+          const latestIssue = await fetchLatestNewsBriefIssue();
+          if (Array.isArray(latestIssue == null ? void 0 : latestIssue.items) && latestIssue.items.length > 0) {
+            issue.value = latestIssue;
+          }
+        } catch (error) {
+          uni.showToast({
+            title: (error == null ? void 0 : error.message) || "获取今日趣闻失败",
+            icon: "none"
+          });
+        } finally {
+          loading.value = false;
+        }
+      };
+      onLoad((query = {}) => {
+        loadIssue(query.id);
       });
       onBackPress((options = {}) => {
         if (options.from === "navigateBack")
@@ -5600,14 +5708,18 @@ This will fail in production.`);
         goBackHome();
         return true;
       });
-      const __returned__ = { statusBarHeight, issue, openBrief, openArticle, openArchive, goBackHome, ref: vue.ref, get onBackPress() {
+      const __returned__ = { statusBarHeight, latestIssueId, issue, loading, openBrief, openArticle, openArchive, goBackHome, loadIssue, ref: vue.ref, get onBackPress() {
         return onBackPress;
       }, get onLoad() {
         return onLoad;
       }, NewsBriefSummaryCard, get getLatestNewsBriefIssue() {
         return getLatestNewsBriefIssue;
-      }, get getNewsBriefIssueById() {
-        return getNewsBriefIssueById;
+      }, get fetchLatestNewsBriefIssue() {
+        return fetchLatestNewsBriefIssue;
+      }, get getLatestNewsBriefIssueId() {
+        return getLatestNewsBriefIssueId;
+      }, get getRenderableNewsBriefIssueById() {
+        return getRenderableNewsBriefIssueById;
       }, get getLayoutMetrics() {
         return getLayoutMetrics;
       }, get safeNavigateBack() {
@@ -5651,7 +5763,13 @@ This will fail in production.`);
                 1
                 /* TEXT */
               ),
-              vue.createElementVNode("text", { class: "hero-subtitle" }, " 这里有为你精心挑选的 AI 智慧与生活点滴，每天7点准时更新，希望能伴你度过轻松且有收获的每一天。 ")
+              vue.createElementVNode(
+                "text",
+                { class: "hero-subtitle" },
+                vue.toDisplayString($setup.issue.subtitle),
+                1
+                /* TEXT */
+              )
             ])
           ])
         ],
@@ -5680,6 +5798,12 @@ This will fail in production.`);
             128
             /* KEYED_FRAGMENT */
           )),
+          $setup.loading && !$setup.issue.items.length ? (vue.openBlock(), vue.createElementBlock("view", {
+            key: 0,
+            class: "loading-copy"
+          }, [
+            vue.createElementVNode("text", { class: "loading-copy-text" }, "正在同步今天的 AI 热榜前三条...")
+          ])) : vue.createCommentVNode("v-if", true),
           vue.createElementVNode("view", { class: "footer-copy" }, [
             vue.createElementVNode(
               "text",
@@ -5778,9 +5902,10 @@ This will fail in production.`);
     setup(__props, { expose: __expose }) {
       __expose();
       const { statusBarHeight } = getLayoutMetrics();
-      const issueId = vue.ref("");
+      const latestIssueId = getLatestNewsBriefIssueId();
+      const issueId = vue.ref(latestIssueId);
       const itemId = vue.ref("");
-      const issue = vue.ref(getLatestNewsBriefIssue());
+      const issue = vue.ref(getRenderableNewsBriefIssueById(latestIssueId) || getLatestNewsBriefIssue());
       const item = vue.ref(issue.value.items[0] || {});
       const cardNumber = vue.computed(() => {
         var _a;
@@ -5801,11 +5926,50 @@ This will fail in production.`);
       const goBackToIssue = () => {
         safeNavigateBack(`/pages/news-brief/issue?id=${encodeURIComponent(issueId.value || issue.value.id)}`);
       };
-      onLoad((query) => {
-        issueId.value = query.issueId || query.id || getLatestNewsBriefIssue().id;
+      const applyRemoteBrief = async () => {
+        var _a, _b;
+        const newsId = Number(((_a = item.value) == null ? void 0 : _a.newsId) || ((_b = item.value) == null ? void 0 : _b.id) || 0);
+        if (!newsId)
+          return;
+        try {
+          const response = await getNewsBrief(newsId);
+          const brief = response == null ? void 0 : response.data;
+          if (!brief || typeof brief !== "object")
+            return;
+          const paragraphs = Array.isArray(brief.paragraphs) ? brief.paragraphs.map((paragraph) => String(paragraph || "").trim()).filter(Boolean) : [];
+          item.value = {
+            ...item.value,
+            headline: String(brief.headline || item.value.headline || "").trim(),
+            warning: String(brief.lead || item.value.warning || "").trim(),
+            expandedBody: paragraphs.length > 0 ? paragraphs : item.value.expandedBody
+          };
+        } catch (error) {
+        }
+      };
+      const syncDetail = async () => {
+        var _a;
+        issue.value = getRenderableNewsBriefIssueById(issueId.value);
+        item.value = getRenderableNewsBriefItemByIds(issueId.value, itemId.value) || issue.value.items[0] || {};
+        if (issueId.value !== latestIssueId)
+          return;
+        try {
+          const latestIssue = await fetchLatestNewsBriefIssue();
+          issue.value = latestIssue;
+          item.value = getRenderableNewsBriefItemByIds(issueId.value, itemId.value) || latestIssue.items[0] || {};
+        } catch (error) {
+          if (!((_a = item.value) == null ? void 0 : _a.id)) {
+            uni.showToast({
+              title: (error == null ? void 0 : error.message) || "获取新闻详情失败",
+              icon: "none"
+            });
+          }
+        }
+        await applyRemoteBrief();
+      };
+      onLoad((query = {}) => {
+        issueId.value = query.issueId || query.id || latestIssueId;
         itemId.value = query.itemId || "";
-        issue.value = getNewsBriefIssueById(issueId.value);
-        item.value = getNewsBriefItemByIds(issueId.value, itemId.value) || issue.value.items[0] || {};
+        syncDetail();
       });
       onBackPress((options = {}) => {
         if (options.from === "navigateBack")
@@ -5813,16 +5977,22 @@ This will fail in production.`);
         goBackToIssue();
         return true;
       });
-      const __returned__ = { statusBarHeight, issueId, itemId, issue, item, cardNumber, openArticle, goBackToIssue, computed: vue.computed, ref: vue.ref, get onBackPress() {
+      const __returned__ = { statusBarHeight, latestIssueId, issueId, itemId, issue, item, cardNumber, openArticle, goBackToIssue, applyRemoteBrief, syncDetail, computed: vue.computed, ref: vue.ref, get onBackPress() {
         return onBackPress;
       }, get onLoad() {
         return onLoad;
       }, NewsBriefCard, get getLatestNewsBriefIssue() {
         return getLatestNewsBriefIssue;
-      }, get getNewsBriefIssueById() {
-        return getNewsBriefIssueById;
-      }, get getNewsBriefItemByIds() {
-        return getNewsBriefItemByIds;
+      }, get getNewsBrief() {
+        return getNewsBrief;
+      }, get fetchLatestNewsBriefIssue() {
+        return fetchLatestNewsBriefIssue;
+      }, get getLatestNewsBriefIssueId() {
+        return getLatestNewsBriefIssueId;
+      }, get getRenderableNewsBriefIssueById() {
+        return getRenderableNewsBriefIssueById;
+      }, get getRenderableNewsBriefItemByIds() {
+        return getRenderableNewsBriefItemByIds;
       }, get getLayoutMetrics() {
         return getLayoutMetrics;
       }, get safeNavigateBack() {
