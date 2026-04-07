@@ -49,7 +49,7 @@
             </view>
           </template>
 
-          <text v-else class="history-empty">没有更多内容啦</text>
+          <text v-else class="history-empty">没有更多内容哦</text>
         </view>
       </scroll-view>
 
@@ -68,6 +68,7 @@
 
 <script setup>
 import { computed, onUnmounted, ref, watch } from 'vue'
+import { getLatestNewsBriefIssue } from '@/data/news-brief'
 import { useUserStore } from '@/stores/user'
 import { getLayoutMetrics } from '@/utils/layout'
 
@@ -117,11 +118,14 @@ watch(
   { immediate: true }
 )
 
+const getLatestNewsBriefPath = () =>
+  `/pages/news-brief/issue?id=${encodeURIComponent(getLatestNewsBriefIssue().id)}`
+
 const menuItems = [
   { id: 'school', name: 'AI学堂', path: '/pages/school/input' },
   { id: 'crawl', name: 'AI观察哨', path: '/pages/crawl/index' },
   { id: 'workshop', name: 'AI工坊', path: '/pages/home/index' },
-  { id: 'newsBrief', name: 'AI趣闻萃取', path: '/pages/news-brief/index' },
+  { id: 'newsBrief', name: 'AI趣闻萃取', path: getLatestNewsBriefPath() },
 ]
 
 const recentHistory = computed(() => {
@@ -131,7 +135,12 @@ const recentHistory = computed(() => {
 
 const profileName = computed(() => {
   if (!userStore.isAuthenticated) return '个人信息'
-  return userStore.userInfo?.nickname || userStore.userInfo?.displayName || userStore.userInfo?.username || '个人信息'
+  return (
+    userStore.userInfo?.nickname ||
+    userStore.userInfo?.displayName ||
+    userStore.userInfo?.username ||
+    '个人信息'
+  )
 })
 
 const profileSubtitle = computed(() => {

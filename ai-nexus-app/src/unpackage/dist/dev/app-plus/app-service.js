@@ -2563,6 +2563,463 @@ This will fail in production.`);
     ]);
   }
   const PagesProfileAuth = /* @__PURE__ */ _export_sfc(_sfc_main$e, [["render", _sfc_render$d], ["__scopeId", "data-v-c116c0e0"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/profile/auth.vue"]]);
+  const ISSUE_FOOTER = "AI趣闻萃取：每天筛出值得看的 3 条 AI 资讯，支持简报阅读与原文回看。";
+  const MOCK_ISSUES = [
+    {
+      id: "2026-04-07",
+      date: "04/07",
+      selectionCount: 39,
+      title: "今日 AI 趣闻萃取 / 三条速览",
+      subtitle: "技术突破、实用工具、市场信号",
+      footer: ISSUE_FOOTER,
+      items: [
+        {
+          id: "operator-agent",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "新一代 AI Agent 公测，可自动操控电脑订票、写网报、报销。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会筛选数据的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "人还在盯着单流程，流程已经被 Agent 接管了大半。你真正要重新配置的不是会不会用工具，而是有没有能力拆任务、定边界、验结果。",
+            "这类能力一旦公测，最先被挤压的是重复型脑力劳动：收集、转写、查询、整理、提报、跟进。会不会写提示词已经不是门槛，能不能定义正确目标才是门槛。",
+            "如果你的岗位日常主要由固定动作构成，越早把自己切换成调度者和审稿人的位置，越不会在下一轮效率升级里掉队。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "operator-zip",
+          source: "Operator",
+          sourceStatus: "智能体 · ZIP OPEN",
+          headline: "OpenAI 正式公测 Operator 智能体。",
+          warning: "[预警案例] 电脑不再只执行人类操作，只能涨薪的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "Operator 的意义不是又多了一个模型，而是会操作界面的系统开始成型。它会让表单、订票、比价、报销、投递这些具体动作更像 API 一样被调用。",
+            "这意味着未来的竞争不只发生在知识层，还发生在执行层。谁能把工作拆成清楚、可交付、可校验的步骤，谁就更容易把 AI 变成自己的杠杆。",
+            "别再把智能体理解为聊天机器人。它更像一个随时待命的执行接口，而你要学会的，是给它目标、权限和验收标准。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "virtual-human",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "某品牌签约 AI 虚拟人代言，互动率超过真人明星。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "品牌开始不再把人当作唯一叙事载体。稳定、可控、能 24 小时输出内容的虚拟人，天然就适合高频触达和低风险传播。",
+            "这会反过来抬高真人创作者的要求。普通表达会被稀释，只有观点、风格、真实经历这些不可复制部分，才会继续变得更值钱。",
+            "所以内容工作者接下来要保住的，不是产能，而是不可替代的人味。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-04-06",
+      date: "04/06",
+      selectionCount: 36,
+      title: "04/06 AI 趣闻萃取 / 三条速览",
+      subtitle: "技术突破、实用工具、市场信号",
+      footer: ISSUE_FOOTER,
+      items: [
+        {
+          id: "factory-robot",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "OpenAI Operator 正式版开始企业协作能力，可以任务页一键分派与回传。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会筛选数据的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "企业协作能力让智能体从个人工具进入团队流程。以后不只是你一个人在用，而是整个项目组都可能围绕同一个 AI 执行节点工作。",
+            "这会快速抬高项目交接清晰度的要求。描述不清、文档不全、需求模糊的人，会比以前更容易被看见短板。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "scheduler",
+          source: "Operator",
+          sourceStatus: "智能体 · CLOSED",
+          headline: "多家办公插件上线 Agent 协同模式，周报、排期与会议纪要开始自动联动。",
+          warning: "[预警案例] 电脑不再需要人类操作，只能提效的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "协同模式真正改变的不是某个功能，而是从输入到同步的速度。以前一个人做完再通知别人，现在会变成系统自动推进。",
+            "你的工作如果依赖反复确认和手动搬运，接下来会明显感受到被压缩。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "voice-avatar",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "某头部电商品牌启用 AI 导购分身，夜间咨询转化率连续三日提升。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只要好代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "夜间转化提升说明一件事：不下班、低成本、高一致性的内容角色，正在变成新的商业基础设施。",
+            "人类服务者未来更值钱的部分，不是答常规问题，而是解决非标准问题。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-04-05",
+      date: "04/05",
+      selectionCount: 34,
+      title: "04/05 AI 趣闻萃取 / 三条速览",
+      subtitle: "技术突破、实用工具、市场信号",
+      footer: ISSUE_FOOTER,
+      items: [
+        {
+          id: "multimodal-video",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "新版视频生成模型支持长镜头一致性，广告团队开始缩小外包规模。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会拼素材的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "镜头一致性突破后，AI 不再只是出 demo，而是开始吞掉前期提案、中期产出和后期改稿的部分链条。",
+            "未来内容团队会更重前期审美和脚本判断，弱在执行的人会被替代得更快。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "crm-agent",
+          source: "Operator",
+          sourceStatus: "智能体 · CLOSED",
+          headline: "某 CRM 平台推出销售跟进 Agent，自动补全纪要并推荐下一步动作。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会发消息的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "销售流程标准化后，真正稀缺的是建立信任和做判断，而不是机械性跟进。",
+            "能讲明白客户真正需求的人，会比会重复标准话术的人更值钱。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "avatar-anchor",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "虚拟主播连续 48 小时直播测试完成，品牌开始重新计算人工成本。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "这不是 AI 更会说话，而是系统终于足够稳定。一旦稳定，很多岗位的比较项就变成了成本、时长和一致性。",
+            "真人创作者要保住位置，需要更强的个性表达和更高密度的观点产出。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-04-04",
+      date: "04/04",
+      selectionCount: 31,
+      title: "04/04 AI 趣闻萃取 / 三条速览",
+      subtitle: "技术突破、实用工具、市场信号",
+      footer: ISSUE_FOOTER,
+      items: [
+        {
+          id: "search-agent",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "搜索型 Agent 开始支持多源比对，研究助理岗位被重新定义。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会搬运信息的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "能在几十秒内完成检索、比对、摘录和引用，这会直接改变很多研究支持型岗位的工作方式。",
+            "以后你值钱的不是找资料，而是提出好问题与构造判断框架。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "soc-bot",
+          source: "Operator",
+          sourceStatus: "智能体 · ZIP OPEN",
+          headline: "安全厂商上线值班 Agent，夜间告警先由 AI 处置再升级人工。",
+          warning: "[预警案例] 电脑不再需要人类操作，只能盯盘的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "值班工作最先被重构，因为它本来就强调响应速度、流程清晰和误报过滤。",
+            "安全岗位以后更重要的是策略制定和异常研判，而不是看告警本身。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "idol-script",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "某平台开始测试 AI 偶像剧本联动，角色会依据评论自动二创。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "互动式叙事和角色连续运营会让内容消费更像游戏。平台想要的是持续停留，而不是一次性传播。",
+            "这会让单纯追热点的内容越来越难赢，世界观能力会重新变重要。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-04-03",
+      date: "2026/04/03",
+      selectionCount: 33,
+      title: "04/03 AI 趣闻萃取 / 三条速览",
+      subtitle: "技术突破、实用工具、市场信号",
+      footer: ISSUE_FOOTER,
+      items: [
+        {
+          id: "coding-bench",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "编码智能体基准再次刷新，多文件项目修复准确率继续上涨。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会写函数的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "当模型能改多文件、懂上下文、还能跑验证，初级编码工作会更快地商品化。",
+            "开发者接下来更值钱的是架构判断、边界定义和质量标准，而不是纯输出代码。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "meeting-agent",
+          source: "Operator",
+          sourceStatus: "智能体 · OPEN",
+          headline: "会议 Agent 支持自动行动项追踪，项目管理边界继续外扩。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会写纪要的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "会后追踪是典型低创造、高消耗工作，智能体一接手，团队会更直接暴露真正的执行差异。",
+            "你需要提升的是判断优先级和推动协同的能力。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "synthetic-caster",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "合成播报员开始承担夜间快讯栏目，人类主播转向策划型岗位。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "播报工作被自动化后，行业会把更多预算转向内容判断和节目结构设计。",
+            "内容行业正在加速分层，纯播报和纯剪辑会更先被压价。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-04-02",
+      date: "2026/04/02",
+      selectionCount: 28,
+      title: "04/02 AI 趣闻萃取 / 三条速览",
+      subtitle: "技术突破、实用工具、市场信号",
+      footer: ISSUE_FOOTER,
+      items: [
+        {
+          id: "agent-billing",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "AI 报销与采购流开始接入企业后台，审批动作自动化。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会录入的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "一旦进入后台系统，智能体就不只是助手，而是公司流程的一部分。",
+            "流程岗位未来的核心不是执行，而是设规则、控风险、做抽检。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "resume-bot",
+          source: "Operator",
+          sourceStatus: "智能体 · CLOSED",
+          headline: "招聘筛选 Agent 开始在中型公司试点，初筛速度提升数倍。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会初筛的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "简历筛选和基础匹配天然适合自动化，HR 更重要的部分会转向判断潜力和识别风险。",
+            "这也会反向改变求职者的表达方式，简历将更像结构化数据，而不是文案。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "campus-avatar",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "高校开始试用虚拟讲师形象做公开课导览，互动时长明显上涨。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "教育场景开始引入角色化表达，这会让课程不只是内容，还带有陪伴感和连续性。",
+            "人类教师的优势会更集中在理解学生、调整节奏和给出真正个性化反馈。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-04-01",
+      date: "2026/04/01",
+      selectionCount: 26,
+      title: "2026/04/01 AI 趣闻萃取",
+      subtitle: "收官速览 / 反脆弱备忘",
+      footer: "理解机制，比只看标题更重要。",
+      items: [
+        {
+          id: "summary-agent",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "长文总结 Agent 开始接管内部周报，管理层只看关键分歧。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会写概述的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "总结能力被自动化后，真正重要的是提炼冲突和决策点。",
+            "写报告的人要把自己升级成制造判断价值的人。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "assistant-team",
+          source: "Operator",
+          sourceStatus: "智能体 · TEAM",
+          headline: "团队型智能体进入灰度测试，多 Agent 分工开始稳定。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会单点执行的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "一旦多个智能体协作，人的角色会更像导演，而不是具体执行者。",
+            "组织里的中间层工作方式也会被重塑。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "character-economy",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "虚拟角色经济继续升温，品牌开始长期运营单一人格 IP。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "角色资产一旦建立完成，传播就不再依赖单次热点，而会依赖持续世界观经营。",
+            "未来拼的是谁能稳定生产叙事，不是谁偶尔爆一次。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-03-31",
+      date: "2026/03/31",
+      selectionCount: 24,
+      title: "2026/03/31 AI 趣闻萃取",
+      subtitle: "试运行样刊 / 七日热度补档",
+      footer: "把一天看懂，才能把一周看清。",
+      items: [
+        {
+          id: "ops-agent",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "运维巡检 Agent 开始覆盖跨系统日报汇总，值守时间被重新压缩。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会巡表的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "自动巡检一旦稳定，团队最稀缺的不是看报表，而是发现异常背后的因果关系。",
+            "这类岗位未来更需要系统视角，而不是单点执行熟练度。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "team-bot",
+          source: "Operator",
+          sourceStatus: "智能体 · LAB",
+          headline: "多 Agent 项目协同进入实验阶段，任务分工开始自动化。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会跟单的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "协同自动化意味着项目管理要重新定义节点。以后不是谁盯得紧，而是谁定义得更准确。",
+            "会写清楚目标和验收的人，会比只会催进度的人更有价值。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "ip-economy",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "角色型 AI IP 开始承接连续栏目合作，品牌复用率提升。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "品牌一旦拥有稳定角色，就能持续输出同一人格线索，传播效率远高于一次性热点。",
+            "这会让长期叙事能力重新变成稀缺资源。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    }
+  ];
+  const normalizeIssue = (issue) => ({
+    ...issue,
+    items: Array.isArray(issue.items) ? issue.items : []
+  });
+  const getLatestNewsBriefIssue = () => normalizeIssue(MOCK_ISSUES[0]);
+  const getRecentNewsBriefIssues = (limit = 7) => MOCK_ISSUES.slice(0, limit).map((issue) => normalizeIssue(issue));
+  const getNewsBriefIssueById = (id) => normalizeIssue(MOCK_ISSUES.find((issue) => issue.id === id) || MOCK_ISSUES[0]);
+  const getNewsBriefItemByIds = (issueId, itemId) => {
+    const issue = getNewsBriefIssueById(issueId);
+    return issue.items.find((item) => item.id === itemId) || issue.items[0] || null;
+  };
   const ANIMATION_MS = 220;
   const _sfc_main$d = {
     __name: "Sidebar",
@@ -2611,11 +3068,12 @@ This will fail in production.`);
         },
         { immediate: true }
       );
+      const getLatestNewsBriefPath = () => `/pages/news-brief/issue?id=${encodeURIComponent(getLatestNewsBriefIssue().id)}`;
       const menuItems = [
         { id: "school", name: "AI学堂", path: "/pages/school/input" },
         { id: "crawl", name: "AI观察哨", path: "/pages/crawl/index" },
         { id: "workshop", name: "AI工坊", path: "/pages/home/index" },
-        { id: "newsBrief", name: "AI趣闻萃取", path: "/pages/news-brief/index" }
+        { id: "newsBrief", name: "AI趣闻萃取", path: getLatestNewsBriefPath() }
       ];
       const recentHistory = vue.computed(() => {
         const source = Array.isArray(props.workshopHistory) ? props.workshopHistory : [];
@@ -2716,7 +3174,7 @@ This will fail in production.`);
         return closeTimer;
       }, set closeTimer(v) {
         closeTimer = v;
-      }, menuItems, recentHistory, profileName, profileSubtitle, avatarInitial, handleMenuClick, startNewConversation, openHistory, goToProfile, requestClose, get touchStartX() {
+      }, getLatestNewsBriefPath, menuItems, recentHistory, profileName, profileSubtitle, avatarInitial, handleMenuClick, startNewConversation, openHistory, goToProfile, requestClose, get touchStartX() {
         return touchStartX;
       }, set touchStartX(v) {
         touchStartX = v;
@@ -2736,7 +3194,9 @@ This will fail in production.`);
         return touchTracking;
       }, set touchTracking(v) {
         touchTracking = v;
-      }, onTouchStart, onTouchMove, onTouchEnd, computed: vue.computed, onUnmounted: vue.onUnmounted, ref: vue.ref, watch: vue.watch, get useUserStore() {
+      }, onTouchStart, onTouchMove, onTouchEnd, computed: vue.computed, onUnmounted: vue.onUnmounted, ref: vue.ref, watch: vue.watch, get getLatestNewsBriefIssue() {
+        return getLatestNewsBriefIssue;
+      }, get useUserStore() {
         return useUserStore;
       }, get getLayoutMetrics() {
         return getLayoutMetrics;
@@ -2845,7 +3305,7 @@ This will fail in production.`);
               )) : (vue.openBlock(), vue.createElementBlock("text", {
                 key: 1,
                 class: "history-empty"
-              }, "没有更多内容啦"))
+              }, "没有更多内容哦"))
             ])
           ]),
           vue.createElementVNode(
@@ -4832,463 +5292,6 @@ This will fail in production.`);
     ]);
   }
   const PagesWorkshopPreview = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["render", _sfc_render$5], ["__scopeId", "data-v-2ca49518"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/workshop/preview.vue"]]);
-  const ISSUE_FOOTER = "AI趣闻萃取：每天筛出值得看的 3 条 AI 资讯，支持简报阅读与原文回看。";
-  const MOCK_ISSUES = [
-    {
-      id: "2026-04-07",
-      date: "04/07",
-      selectionCount: 39,
-      title: "今日 AI 趣闻萃取 / 三条速览",
-      subtitle: "技术突破、实用工具、市场信号",
-      footer: ISSUE_FOOTER,
-      items: [
-        {
-          id: "operator-agent",
-          source: "实用工具",
-          sourceStatus: "它们越来越强",
-          headline: "新一代 AI Agent 公测，可自动操控电脑订票、写网报、报销。",
-          warning: "[预警案例] 电脑不再需要人类操作，只会筛选数据的人正在变多。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "人还在盯着单流程，流程已经被 Agent 接管了大半。你真正要重新配置的不是会不会用工具，而是有没有能力拆任务、定边界、验结果。",
-            "这类能力一旦公测，最先被挤压的是重复型脑力劳动：收集、转写、查询、整理、提报、跟进。会不会写提示词已经不是门槛，能不能定义正确目标才是门槛。",
-            "如果你的岗位日常主要由固定动作构成，越早把自己切换成调度者和审稿人的位置，越不会在下一轮效率升级里掉队。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        },
-        {
-          id: "operator-zip",
-          source: "Operator",
-          sourceStatus: "智能体 · ZIP OPEN",
-          headline: "OpenAI 正式公测 Operator 智能体。",
-          warning: "[预警案例] 电脑不再只执行人类操作，只能涨薪的人会变多。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "Operator 的意义不是又多了一个模型，而是会操作界面的系统开始成型。它会让表单、订票、比价、报销、投递这些具体动作更像 API 一样被调用。",
-            "这意味着未来的竞争不只发生在知识层，还发生在执行层。谁能把工作拆成清楚、可交付、可校验的步骤，谁就更容易把 AI 变成自己的杠杆。",
-            "别再把智能体理解为聊天机器人。它更像一个随时待命的执行接口，而你要学会的，是给它目标、权限和验收标准。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        },
-        {
-          id: "virtual-human",
-          source: "奇偶镜头",
-          sourceStatus: "它们在发言",
-          headline: "某品牌签约 AI 虚拟人代言，互动率超过真人明星。",
-          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "品牌开始不再把人当作唯一叙事载体。稳定、可控、能 24 小时输出内容的虚拟人，天然就适合高频触达和低风险传播。",
-            "这会反过来抬高真人创作者的要求。普通表达会被稀释，只有观点、风格、真实经历这些不可复制部分，才会继续变得更值钱。",
-            "所以内容工作者接下来要保住的，不是产能，而是不可替代的人味。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        }
-      ]
-    },
-    {
-      id: "2026-04-06",
-      date: "04/06",
-      selectionCount: 36,
-      title: "04/06 AI 趣闻萃取 / 三条速览",
-      subtitle: "技术突破、实用工具、市场信号",
-      footer: ISSUE_FOOTER,
-      items: [
-        {
-          id: "factory-robot",
-          source: "实用工具",
-          sourceStatus: "它们越来越强",
-          headline: "OpenAI Operator 正式版开始企业协作能力，可以任务页一键分派与回传。",
-          warning: "[预警案例] 电脑不再需要人类操作，只会筛选数据的人正在变多。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "企业协作能力让智能体从个人工具进入团队流程。以后不只是你一个人在用，而是整个项目组都可能围绕同一个 AI 执行节点工作。",
-            "这会快速抬高项目交接清晰度的要求。描述不清、文档不全、需求模糊的人，会比以前更容易被看见短板。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        },
-        {
-          id: "scheduler",
-          source: "Operator",
-          sourceStatus: "智能体 · CLOSED",
-          headline: "多家办公插件上线 Agent 协同模式，周报、排期与会议纪要开始自动联动。",
-          warning: "[预警案例] 电脑不再需要人类操作，只能提效的人会变多。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "协同模式真正改变的不是某个功能，而是从输入到同步的速度。以前一个人做完再通知别人，现在会变成系统自动推进。",
-            "你的工作如果依赖反复确认和手动搬运，接下来会明显感受到被压缩。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        },
-        {
-          id: "voice-avatar",
-          source: "奇偶镜头",
-          sourceStatus: "它们在发言",
-          headline: "某头部电商品牌启用 AI 导购分身，夜间咨询转化率连续三日提升。",
-          warning: "[预警案例] 完美偶像不需要灵魂，只要好代码。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "夜间转化提升说明一件事：不下班、低成本、高一致性的内容角色，正在变成新的商业基础设施。",
-            "人类服务者未来更值钱的部分，不是答常规问题，而是解决非标准问题。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        }
-      ]
-    },
-    {
-      id: "2026-04-05",
-      date: "04/05",
-      selectionCount: 34,
-      title: "04/05 AI 趣闻萃取 / 三条速览",
-      subtitle: "技术突破、实用工具、市场信号",
-      footer: ISSUE_FOOTER,
-      items: [
-        {
-          id: "multimodal-video",
-          source: "实用工具",
-          sourceStatus: "它们越来越强",
-          headline: "新版视频生成模型支持长镜头一致性，广告团队开始缩小外包规模。",
-          warning: "[预警案例] 电脑不再需要人类操作，只会拼素材的人正在变多。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "镜头一致性突破后，AI 不再只是出 demo，而是开始吞掉前期提案、中期产出和后期改稿的部分链条。",
-            "未来内容团队会更重前期审美和脚本判断，弱在执行的人会被替代得更快。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        },
-        {
-          id: "crm-agent",
-          source: "Operator",
-          sourceStatus: "智能体 · CLOSED",
-          headline: "某 CRM 平台推出销售跟进 Agent，自动补全纪要并推荐下一步动作。",
-          warning: "[预警案例] 电脑不再需要人类操作，只会发消息的人会变多。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "销售流程标准化后，真正稀缺的是建立信任和做判断，而不是机械性跟进。",
-            "能讲明白客户真正需求的人，会比会重复标准话术的人更值钱。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        },
-        {
-          id: "avatar-anchor",
-          source: "奇偶镜头",
-          sourceStatus: "它们在发言",
-          headline: "虚拟主播连续 48 小时直播测试完成，品牌开始重新计算人工成本。",
-          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "这不是 AI 更会说话，而是系统终于足够稳定。一旦稳定，很多岗位的比较项就变成了成本、时长和一致性。",
-            "真人创作者要保住位置，需要更强的个性表达和更高密度的观点产出。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        }
-      ]
-    },
-    {
-      id: "2026-04-04",
-      date: "04/04",
-      selectionCount: 31,
-      title: "04/04 AI 趣闻萃取 / 三条速览",
-      subtitle: "技术突破、实用工具、市场信号",
-      footer: ISSUE_FOOTER,
-      items: [
-        {
-          id: "search-agent",
-          source: "实用工具",
-          sourceStatus: "它们越来越强",
-          headline: "搜索型 Agent 开始支持多源比对，研究助理岗位被重新定义。",
-          warning: "[预警案例] 电脑不再需要人类操作，只会搬运信息的人正在变多。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "能在几十秒内完成检索、比对、摘录和引用，这会直接改变很多研究支持型岗位的工作方式。",
-            "以后你值钱的不是找资料，而是提出好问题与构造判断框架。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        },
-        {
-          id: "soc-bot",
-          source: "Operator",
-          sourceStatus: "智能体 · ZIP OPEN",
-          headline: "安全厂商上线值班 Agent，夜间告警先由 AI 处置再升级人工。",
-          warning: "[预警案例] 电脑不再需要人类操作，只能盯盘的人会变多。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "值班工作最先被重构，因为它本来就强调响应速度、流程清晰和误报过滤。",
-            "安全岗位以后更重要的是策略制定和异常研判，而不是看告警本身。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        },
-        {
-          id: "idol-script",
-          source: "奇偶镜头",
-          sourceStatus: "它们在发言",
-          headline: "某平台开始测试 AI 偶像剧本联动，角色会依据评论自动二创。",
-          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "互动式叙事和角色连续运营会让内容消费更像游戏。平台想要的是持续停留，而不是一次性传播。",
-            "这会让单纯追热点的内容越来越难赢，世界观能力会重新变重要。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        }
-      ]
-    },
-    {
-      id: "2026-04-03",
-      date: "2026/04/03",
-      selectionCount: 33,
-      title: "04/03 AI 趣闻萃取 / 三条速览",
-      subtitle: "技术突破、实用工具、市场信号",
-      footer: ISSUE_FOOTER,
-      items: [
-        {
-          id: "coding-bench",
-          source: "实用工具",
-          sourceStatus: "它们越来越强",
-          headline: "编码智能体基准再次刷新，多文件项目修复准确率继续上涨。",
-          warning: "[预警案例] 电脑不再需要人类操作，只会写函数的人正在变多。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "当模型能改多文件、懂上下文、还能跑验证，初级编码工作会更快地商品化。",
-            "开发者接下来更值钱的是架构判断、边界定义和质量标准，而不是纯输出代码。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        },
-        {
-          id: "meeting-agent",
-          source: "Operator",
-          sourceStatus: "智能体 · OPEN",
-          headline: "会议 Agent 支持自动行动项追踪，项目管理边界继续外扩。",
-          warning: "[预警案例] 电脑不再需要人类操作，只会写纪要的人会变多。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "会后追踪是典型低创造、高消耗工作，智能体一接手，团队会更直接暴露真正的执行差异。",
-            "你需要提升的是判断优先级和推动协同的能力。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        },
-        {
-          id: "synthetic-caster",
-          source: "奇偶镜头",
-          sourceStatus: "它们在发言",
-          headline: "合成播报员开始承担夜间快讯栏目，人类主播转向策划型岗位。",
-          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "播报工作被自动化后，行业会把更多预算转向内容判断和节目结构设计。",
-            "内容行业正在加速分层，纯播报和纯剪辑会更先被压价。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        }
-      ]
-    },
-    {
-      id: "2026-04-02",
-      date: "2026/04/02",
-      selectionCount: 28,
-      title: "04/02 AI 趣闻萃取 / 三条速览",
-      subtitle: "技术突破、实用工具、市场信号",
-      footer: ISSUE_FOOTER,
-      items: [
-        {
-          id: "agent-billing",
-          source: "实用工具",
-          sourceStatus: "它们越来越强",
-          headline: "AI 报销与采购流开始接入企业后台，审批动作自动化。",
-          warning: "[预警案例] 电脑不再需要人类操作，只会录入的人正在变多。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "一旦进入后台系统，智能体就不只是助手，而是公司流程的一部分。",
-            "流程岗位未来的核心不是执行，而是设规则、控风险、做抽检。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        },
-        {
-          id: "resume-bot",
-          source: "Operator",
-          sourceStatus: "智能体 · CLOSED",
-          headline: "招聘筛选 Agent 开始在中型公司试点，初筛速度提升数倍。",
-          warning: "[预警案例] 电脑不再需要人类操作，只会初筛的人会变多。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "简历筛选和基础匹配天然适合自动化，HR 更重要的部分会转向判断潜力和识别风险。",
-            "这也会反向改变求职者的表达方式，简历将更像结构化数据，而不是文案。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        },
-        {
-          id: "campus-avatar",
-          source: "奇偶镜头",
-          sourceStatus: "它们在发言",
-          headline: "高校开始试用虚拟讲师形象做公开课导览，互动时长明显上涨。",
-          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "教育场景开始引入角色化表达，这会让课程不只是内容，还带有陪伴感和连续性。",
-            "人类教师的优势会更集中在理解学生、调整节奏和给出真正个性化反馈。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        }
-      ]
-    },
-    {
-      id: "2026-04-01",
-      date: "2026/04/01",
-      selectionCount: 26,
-      title: "2026/04/01 AI 趣闻萃取",
-      subtitle: "收官速览 / 反脆弱备忘",
-      footer: "理解机制，比只看标题更重要。",
-      items: [
-        {
-          id: "summary-agent",
-          source: "实用工具",
-          sourceStatus: "它们越来越强",
-          headline: "长文总结 Agent 开始接管内部周报，管理层只看关键分歧。",
-          warning: "[预警案例] 电脑不再需要人类操作，只会写概述的人正在变多。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "总结能力被自动化后，真正重要的是提炼冲突和决策点。",
-            "写报告的人要把自己升级成制造判断价值的人。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        },
-        {
-          id: "assistant-team",
-          source: "Operator",
-          sourceStatus: "智能体 · TEAM",
-          headline: "团队型智能体进入灰度测试，多 Agent 分工开始稳定。",
-          warning: "[预警案例] 电脑不再需要人类操作，只会单点执行的人会变多。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "一旦多个智能体协作，人的角色会更像导演，而不是具体执行者。",
-            "组织里的中间层工作方式也会被重塑。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        },
-        {
-          id: "character-economy",
-          source: "奇偶镜头",
-          sourceStatus: "它们在发言",
-          headline: "虚拟角色经济继续升温，品牌开始长期运营单一人格 IP。",
-          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "角色资产一旦建立完成，传播就不再依赖单次热点，而会依赖持续世界观经营。",
-            "未来拼的是谁能稳定生产叙事，不是谁偶尔爆一次。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        }
-      ]
-    },
-    {
-      id: "2026-03-31",
-      date: "2026/03/31",
-      selectionCount: 24,
-      title: "2026/03/31 AI 趣闻萃取",
-      subtitle: "试运行样刊 / 七日热度补档",
-      footer: "把一天看懂，才能把一周看清。",
-      items: [
-        {
-          id: "ops-agent",
-          source: "实用工具",
-          sourceStatus: "它们越来越强",
-          headline: "运维巡检 Agent 开始覆盖跨系统日报汇总，值守时间被重新压缩。",
-          warning: "[预警案例] 电脑不再需要人类操作，只会巡表的人正在变多。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "自动巡检一旦稳定，团队最稀缺的不是看报表，而是发现异常背后的因果关系。",
-            "这类岗位未来更需要系统视角，而不是单点执行熟练度。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        },
-        {
-          id: "team-bot",
-          source: "Operator",
-          sourceStatus: "智能体 · LAB",
-          headline: "多 Agent 项目协同进入实验阶段，任务分工开始自动化。",
-          warning: "[预警案例] 电脑不再需要人类操作，只会跟单的人会变多。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "协同自动化意味着项目管理要重新定义节点。以后不是谁盯得紧，而是谁定义得更准确。",
-            "会写清楚目标和验收的人，会比只会催进度的人更有价值。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        },
-        {
-          id: "ip-economy",
-          source: "奇偶镜头",
-          sourceStatus: "它们在发言",
-          headline: "角色型 AI IP 开始承接连续栏目合作，品牌复用率提升。",
-          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
-          buttonText: "展开",
-          expandedTag: "已展开",
-          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
-          expandedBody: [
-            "品牌一旦拥有稳定角色，就能持续输出同一人格线索，传播效率远高于一次性热点。",
-            "这会让长期叙事能力重新变成稀缺资源。"
-          ],
-          articleUrl: "http://8.135.4.46/"
-        }
-      ]
-    }
-  ];
-  const normalizeIssue = (issue) => ({
-    ...issue,
-    items: Array.isArray(issue.items) ? issue.items : []
-  });
-  const getLatestNewsBriefIssue = () => normalizeIssue(MOCK_ISSUES[0]);
-  const getRecentNewsBriefIssues = (limit = 7) => MOCK_ISSUES.slice(0, limit).map((issue) => normalizeIssue(issue));
-  const getNewsBriefIssueById = (id) => normalizeIssue(MOCK_ISSUES.find((issue) => issue.id === id) || MOCK_ISSUES[0]);
-  const getNewsBriefItemByIds = (issueId, itemId) => {
-    const issue = getNewsBriefIssueById(issueId);
-    return issue.items.find((item) => item.id === itemId) || issue.items[0] || null;
-  };
   const _sfc_main$5 = {
     __name: "index",
     setup(__props, { expose: __expose }) {
@@ -5580,8 +5583,13 @@ This will fail in production.`);
           url: `/pages/workshop/preview?url=${encodeURIComponent(item.articleUrl)}&title=${encodeURIComponent(item.headline || "新闻详情")}`
         });
       };
-      const goBackToBrief = () => {
-        safeNavigateBack("/pages/news-brief/index");
+      const openArchive = () => {
+        uni.navigateTo({
+          url: "/pages/news-brief/index"
+        });
+      };
+      const goBackHome = () => {
+        safeNavigateBack("/pages/home/index?openSidebar=1");
       };
       onLoad((query) => {
         issue.value = getNewsBriefIssueById(query.id);
@@ -5589,10 +5597,10 @@ This will fail in production.`);
       onBackPress((options = {}) => {
         if (options.from === "navigateBack")
           return false;
-        goBackToBrief();
+        goBackHome();
         return true;
       });
-      const __returned__ = { statusBarHeight, issue, openBrief, openArticle, goBackToBrief, ref: vue.ref, get onBackPress() {
+      const __returned__ = { statusBarHeight, issue, openBrief, openArticle, openArchive, goBackHome, ref: vue.ref, get onBackPress() {
         return onBackPress;
       }, get onLoad() {
         return onLoad;
@@ -5619,12 +5627,20 @@ This will fail in production.`);
         },
         [
           vue.createElementVNode("view", { class: "hero-block" }, [
-            vue.createElementVNode("view", {
-              class: "back-chip",
-              onClick: $setup.goBackToBrief
-            }, [
-              vue.createElementVNode("text", { class: "back-chip-icon" }, "<"),
-              vue.createElementVNode("text", { class: "back-chip-text" }, "返回")
+            vue.createElementVNode("view", { class: "hero-actions" }, [
+              vue.createElementVNode("view", {
+                class: "back-chip",
+                onClick: $setup.goBackHome
+              }, [
+                vue.createElementVNode("text", { class: "back-chip-icon" }, "<"),
+                vue.createElementVNode("text", { class: "back-chip-text" }, "返回")
+              ]),
+              vue.createElementVNode("view", {
+                class: "archive-chip",
+                onClick: $setup.openArchive
+              }, [
+                vue.createElementVNode("text", { class: "archive-chip-text" }, "往期回顾")
+              ])
             ]),
             vue.createElementVNode("view", { class: "hero-copy" }, [
               vue.createElementVNode("text", { class: "hero-kicker" }, "3 STORIES / 1 DAY"),
@@ -5635,7 +5651,7 @@ This will fail in production.`);
                 1
                 /* TEXT */
               ),
-              vue.createElementVNode("text", { class: "hero-subtitle" }, "这里有为你精心挑选的 AI 智慧与生活点滴，每天7点准时更新，希望能伴你度过轻松且有收获的每一天。")
+              vue.createElementVNode("text", { class: "hero-subtitle" }, " 这里有为你精心挑选的 AI 智慧与生活点滴，每天7点准时更新，希望能伴你度过轻松且有收获的每一天。 ")
             ])
           ])
         ],

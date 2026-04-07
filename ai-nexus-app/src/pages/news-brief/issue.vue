@@ -2,15 +2,23 @@
   <view class="brief-page">
     <view class="safe-top" :style="{ paddingTop: `${statusBarHeight + 12}px` }">
       <view class="hero-block">
-        <view class="back-chip" @click="goBackToBrief">
-          <text class="back-chip-icon">&lt;</text>
-          <text class="back-chip-text">返回</text>
+        <view class="hero-actions">
+          <view class="back-chip" @click="goBackHome">
+            <text class="back-chip-icon">&lt;</text>
+            <text class="back-chip-text">返回</text>
+          </view>
+
+          <view class="archive-chip" @click="openArchive">
+            <text class="archive-chip-text">往期回顾</text>
+          </view>
         </view>
 
         <view class="hero-copy">
           <text class="hero-kicker">3 STORIES / 1 DAY</text>
           <text class="hero-title">{{ issue.title }}</text>
-          <text class="hero-subtitle">这里有为你精心挑选的 AI 智慧与生活点滴，每天7点准时更新，希望能伴你度过轻松且有收获的每一天。</text>
+          <text class="hero-subtitle">
+            这里有为你精心挑选的 AI 智慧与生活点滴，每天7点准时更新，希望能伴你度过轻松且有收获的每一天。
+          </text>
         </view>
       </view>
     </view>
@@ -60,8 +68,14 @@ const openArticle = (item) => {
   })
 }
 
-const goBackToBrief = () => {
-  safeNavigateBack('/pages/news-brief/index')
+const openArchive = () => {
+  uni.navigateTo({
+    url: '/pages/news-brief/index',
+  })
+}
+
+const goBackHome = () => {
+  safeNavigateBack('/pages/home/index?openSidebar=1')
 }
 
 onLoad((query) => {
@@ -70,7 +84,7 @@ onLoad((query) => {
 
 onBackPress((options = {}) => {
   if (options.from === 'navigateBack') return false
-  goBackToBrief()
+  goBackHome()
   return true
 })
 </script>
@@ -98,19 +112,34 @@ onBackPress((options = {}) => {
   padding: 8rpx 4rpx 10rpx;
 }
 
-.back-chip {
-  align-self: flex-start;
-  min-width: 108rpx;
+.hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.back-chip,
+.archive-chip {
   height: 48rpx;
   padding: 0 16rpx;
   border-radius: 999rpx;
   border: 2rpx solid rgba(255, 255, 255, 0.6);
   background: rgba(255, 255, 255, 0.76);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8rpx;
   box-shadow: 0 8rpx 20rpx rgba(37, 28, 12, 0.08);
+}
+
+.back-chip {
+  min-width: 108rpx;
+  gap: 8rpx;
+}
+
+.archive-chip {
+  min-width: 150rpx;
+  padding: 0 18rpx;
 }
 
 .back-chip-icon {
@@ -120,7 +149,8 @@ onBackPress((options = {}) => {
   line-height: 1;
 }
 
-.back-chip-text {
+.back-chip-text,
+.archive-chip-text {
   color: #5d422e;
   font-size: 18rpx;
   font-weight: 800;

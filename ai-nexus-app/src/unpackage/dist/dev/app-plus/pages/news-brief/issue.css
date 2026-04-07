@@ -130,19 +130,31 @@
   gap: 0.6875rem;
   padding: 0.25rem 0.125rem 0.3125rem;
 }
-.back-chip[data-v-24be200d] {
-  align-self: flex-start;
-  min-width: 3.375rem;
+.hero-actions[data-v-24be200d] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.back-chip[data-v-24be200d],
+.archive-chip[data-v-24be200d] {
   height: 1.5rem;
   padding: 0 0.5rem;
   border-radius: 31.21875rem;
   border: 0.0625rem solid rgba(255, 255, 255, 0.6);
   background: rgba(255, 255, 255, 0.76);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
   box-shadow: 0 0.25rem 0.625rem rgba(37, 28, 12, 0.08);
+}
+.back-chip[data-v-24be200d] {
+  min-width: 3.375rem;
+  gap: 0.25rem;
+}
+.archive-chip[data-v-24be200d] {
+  min-width: 4.6875rem;
+  padding: 0 0.5625rem;
 }
 .back-chip-icon[data-v-24be200d] {
   color: #5d422e;
@@ -150,7 +162,8 @@
   font-weight: 800;
   line-height: 1;
 }
-.back-chip-text[data-v-24be200d] {
+.back-chip-text[data-v-24be200d],
+.archive-chip-text[data-v-24be200d] {
   color: #5d422e;
   font-size: 0.5625rem;
   font-weight: 800;
