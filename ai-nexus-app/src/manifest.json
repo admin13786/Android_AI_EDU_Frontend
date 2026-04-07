@@ -16,6 +16,14 @@
         },
         "modules" : {},
         "distribute" : {
+            "icons" : {
+                "android" : {
+                    "hdpi" : "static/app-icons/android-hdpi.png",
+                    "xhdpi" : "static/app-icons/android-xhdpi.png",
+                    "xxhdpi" : "static/app-icons/android-xxhdpi.png",
+                    "xxxhdpi" : "static/app-icons/android-xxxhdpi.png"
+                }
+            },
             "android" : {
                 "permissions" : [
                     "<uses-permission android:name=\"android.permission.INTERNET\"/>",

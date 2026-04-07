@@ -3010,9 +3010,13 @@ This will fail in production.`);
     setup(__props, { expose: __expose }) {
       __expose();
       const systemInfo = uni.getSystemInfoSync();
+      const isAndroidApp = systemInfo.platform === "android";
       const { statusBarHeight, safeAreaInsetsBottom } = getLayoutMetrics();
-      const headerBarHeight = uni.upx2px(68);
+      const headerBarHeight = uni.upx2px(72);
       const headerShellHeight = statusBarHeight + headerBarHeight;
+      const inputHeight = uni.upx2px(88);
+      const inputVerticalPadding = uni.upx2px(12);
+      const inputBaseHeight = inputHeight + inputVerticalPadding * 2;
       const sidebarVisible = vue.ref(false);
       const userInput = vue.ref("");
       const loading = vue.ref(false);
@@ -3021,15 +3025,74 @@ This will fail in production.`);
       const loadingPhase = vue.ref(0);
       const workshopHistory = vue.ref([]);
       const currentConversationId = vue.ref("");
-      let loadingTimer = null;
+      const keyboardHeight = vue.ref(0);
       const workshopSyncInFlight = vue.ref(false);
       const workshopSyncLastAt = vue.ref(0);
       const workshopSyncLastSignature = vue.ref("");
-      const routeWorkshopInput = async () => {
-        throw new Error("workshop router disabled");
-      };
-      const getWorkshopHistoryRemote = async () => ({ list: [] });
-      const saveWorkshopHistoryRemote = async () => ({ success: true });
+      let loadingTimer = null;
+      let keyboardHeightHandler = null;
+      const loadingPhases = ["正在理解需求", "正在生成页面结构", "正在整理运行代码", "正在准备在线预览"];
+      const keyboardLiftOffset = vue.computed(() => {
+        if (isAndroidApp)
+          return 0;
+        return Math.max(Number(keyboardHeight.value || 0), 0);
+      });
+      const inputSafeBottom = vue.computed(() => {
+        if (keyboardLiftOffset.value > 0)
+          return 12;
+        return safeAreaInsetsBottom + 16;
+      });
+      const inputDockHeight = vue.computed(() => inputBaseHeight + inputSafeBottom.value);
+      const chatBottomOffset = vue.computed(() => inputDockHeight.value + keyboardLiftOffset.value);
+      const hasPreview = vue.computed(() => {
+        var _a, _b;
+        return !!(((_a = generatedResult.value) == null ? void 0 : _a.previewUrl) || ((_b = generatedResult.value) == null ? void 0 : _b.url));
+      });
+      const activeLoadingPhase = vue.computed(() => loadingPhases[loadingPhase.value % loadingPhases.length]);
+      const isAssistantReply = vue.computed(() => {
+        var _a;
+        return ((_a = generatedResult.value) == null ? void 0 : _a.kind) === "assistant";
+      });
+      const assistantActions = vue.computed(
+        () => {
+          var _a;
+          return (((_a = generatedResult.value) == null ? void 0 : _a.quickActions) || []).filter((item) => (item == null ? void 0 : item.label) && (item == null ? void 0 : item.path));
+        }
+      );
+      const aiTitle = vue.computed(() => {
+        if (loading.value)
+          return "正在生成中";
+        if (isAssistantReply.value)
+          return "灵境助手";
+        return "应用创建成功";
+      });
+      const introText = vue.computed(() => {
+        var _a;
+        if (!lastPrompt.value) {
+          return "我会先理解你的需求，再产出一版适合继续打磨的移动端结果。";
+        }
+        return ((_a = generatedResult.value) == null ? void 0 : _a.summary) || `围绕“${lastPrompt.value}”，我已经整理出页面结构和交互骨架。`;
+      });
+      const aiBodyText = vue.computed(() => {
+        var _a;
+        if (loading.value)
+          return loadingText;
+        if (isAssistantReply.value)
+          return ((_a = generatedResult.value) == null ? void 0 : _a.text) || "";
+        return introText.value;
+      });
+      const highlights = vue.computed(() => {
+        if (isAssistantReply.value)
+          return [];
+        if (loading.value) {
+          return ["模型已开始生成页面结果", "完成后会自动显示预览卡片", "如果预览可用，可以直接点击试玩"];
+        }
+        if (hasPreview.value) {
+          return ["已生成可访问的网页地址", "前端会通过 WebView 承载结果", "后续可以继续迭代玩法和界面"];
+        }
+        return ["保留核心玩法和页面结构", "先输出可继续修改的代码结果", "下一步可以接入 WebView 或沙盒预览"];
+      });
+      const showHighlights = vue.computed(() => loading.value || !isAssistantReply.value && !!generatedResult.value);
       const coerceText = (value, fallback = "") => {
         if (typeof value === "string") {
           const normalized = value.trim();
@@ -3061,60 +3124,6 @@ This will fail in production.`);
         const message = coerceText((error == null ? void 0 : error.message) || (error == null ? void 0 : error.detail) || (error == null ? void 0 : error.error), "");
         return message || fallback;
       };
-      const loadingPhases = [
-        "正在理解需求",
-        "正在生成页面结构",
-        "正在整理运行代码",
-        "正在准备在线预览"
-      ];
-      const chatHeight = Math.max(systemInfo.windowHeight - headerShellHeight - 190 - safeAreaInsetsBottom, 380);
-      const hasPreview = vue.computed(() => {
-        var _a, _b;
-        return !!(((_a = generatedResult.value) == null ? void 0 : _a.previewUrl) || ((_b = generatedResult.value) == null ? void 0 : _b.url));
-      });
-      const activeLoadingPhase = vue.computed(() => loadingPhases[loadingPhase.value % loadingPhases.length]);
-      const isAssistantReply = vue.computed(() => {
-        var _a;
-        return ((_a = generatedResult.value) == null ? void 0 : _a.kind) === "assistant";
-      });
-      const assistantActions = vue.computed(() => {
-        var _a;
-        return (((_a = generatedResult.value) == null ? void 0 : _a.quickActions) || []).filter((x) => (x == null ? void 0 : x.label) && (x == null ? void 0 : x.path));
-      });
-      const aiTitle = vue.computed(() => {
-        if (loading.value)
-          return "正在生成中";
-        if (isAssistantReply.value)
-          return "灵境助手";
-        return "应用创建成功";
-      });
-      const aiBodyText = vue.computed(() => {
-        var _a;
-        if (loading.value)
-          return loadingText;
-        if (isAssistantReply.value)
-          return ((_a = generatedResult.value) == null ? void 0 : _a.text) || "";
-        return introText.value;
-      });
-      const introText = vue.computed(() => {
-        var _a;
-        if (!lastPrompt.value) {
-          return "我会先理解你的需求，再产出一版可以继续打磨的页面代码。";
-        }
-        return ((_a = generatedResult.value) == null ? void 0 : _a.summary) || `围绕“${lastPrompt.value}”，我已经整理出页面结构和交互骨架。`;
-      });
-      const highlights = vue.computed(() => {
-        if (isAssistantReply.value)
-          return [];
-        if (loading.value) {
-          return ["模型已开始生成应用结构", "结果完成后会自动切换到预览卡片", "如果预览可用，可以直接打开试玩"];
-        }
-        if (hasPreview.value) {
-          return ["已生成可访问的网页地址", "前端将通过 WebView 或浏览器承载运行", "后续可以继续做发布和分享流程"];
-        }
-        return ["保留核心玩法和页面骨架", "先生成可继续修改的代码结果", "下一步可以接入 WebView 或沙盒预览"];
-      });
-      const showHighlights = vue.computed(() => loading.value || !isAssistantReply.value && !!generatedResult.value);
       const toggleSidebar = () => {
         sidebarVisible.value = !sidebarVisible.value;
       };
@@ -3153,22 +3162,25 @@ This will fail in production.`);
             byId.set(item.id, item);
             return;
           }
-          const a = Number(existing.createdAt || 0);
-          const b = Number(item.createdAt || 0);
-          if (b > a)
+          const currentTime = Number(existing.createdAt || 0);
+          const nextTime = Number(item.createdAt || 0);
+          if (nextTime > currentTime) {
             byId.set(item.id, item);
+          }
         });
         return Array.from(byId.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       };
       const historySignature = (list = []) => {
         try {
           return JSON.stringify(
-            (Array.isArray(list) ? list : []).map((x) => ({ id: (x == null ? void 0 : x.id) || "", createdAt: Number((x == null ? void 0 : x.createdAt) || 0) })).filter((x) => x.id).slice(0, 60)
+            (Array.isArray(list) ? list : []).map((item) => ({ id: (item == null ? void 0 : item.id) || "", createdAt: Number((item == null ? void 0 : item.createdAt) || 0) })).filter((item) => item.id).slice(0, 60)
           );
-        } catch (e) {
+        } catch (error) {
           return "";
         }
       };
+      const getWorkshopHistoryRemote = async () => ({ list: [] });
+      const saveWorkshopHistoryRemote = async () => ({ success: true });
       const syncWorkshopHistoryRemote = async ({ silent = true } = {}) => {
         const now2 = Date.now();
         if (workshopSyncInFlight.value)
@@ -3179,8 +3191,8 @@ This will fail in production.`);
         workshopHistory.value = local;
         try {
           workshopSyncInFlight.value = true;
-          const res = await getWorkshopHistoryRemote();
-          const remote = Array.isArray(res.list) ? res.list : [];
+          const response = await getWorkshopHistoryRemote();
+          const remote = Array.isArray(response.list) ? response.list : [];
           const merged = mergeWorkshopHistory(local, remote);
           appendDebugLog("workshop", "history_sync", {
             localCount: local.length,
@@ -3189,12 +3201,12 @@ This will fail in production.`);
           });
           workshopHistory.value = merged;
           setWorkshopHistory(merged);
-          const mergedSig = historySignature(merged);
-          const remoteSig = historySignature(remote);
-          if (mergedSig && mergedSig !== remoteSig && mergedSig !== workshopSyncLastSignature.value) {
+          const mergedSignature = historySignature(merged);
+          const remoteSignature = historySignature(remote);
+          if (mergedSignature && mergedSignature !== remoteSignature && mergedSignature !== workshopSyncLastSignature.value) {
             try {
               await saveWorkshopHistoryRemote(merged);
-              workshopSyncLastSignature.value = mergedSig;
+              workshopSyncLastSignature.value = mergedSignature;
             } catch (error) {
             }
           }
@@ -3204,15 +3216,19 @@ This will fail in production.`);
             error: getErrorMessage(error, "云端历史同步失败")
           });
           if (!silent) {
-            uni.showToast({ title: getErrorMessage(error, "云端历史同步失败"), icon: "none" });
+            uni.showToast({
+              title: getErrorMessage(error, "云端历史同步失败"),
+              icon: "none"
+            });
           }
         } finally {
           workshopSyncInFlight.value = false;
         }
       };
       const startLoadingAnimation = () => {
-        if (loadingTimer)
+        if (loadingTimer) {
           clearInterval(loadingTimer);
+        }
         loadingPhase.value = 0;
         loadingTimer = setInterval(() => {
           loadingPhase.value = (loadingPhase.value + 1) % loadingPhases.length;
@@ -3225,7 +3241,7 @@ This will fail in production.`);
         loadingTimer = null;
       };
       const openPreview = () => {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         const previewUrl = ((_a = generatedResult.value) == null ? void 0 : _a.previewUrl) || ((_b = generatedResult.value) == null ? void 0 : _b.url);
         if (!previewUrl) {
           appendDebugLog("workshop", "open_preview_skipped", {
@@ -3239,7 +3255,9 @@ This will fail in production.`);
           previewUrl
         });
         uni.navigateTo({
-          url: `/pages/workshop/preview?url=${encodeURIComponent(previewUrl)}&title=${encodeURIComponent(generatedResult.value.title || "工坊预览")}`
+          url: `/pages/workshop/preview?url=${encodeURIComponent(previewUrl)}&title=${encodeURIComponent(
+            ((_d = generatedResult.value) == null ? void 0 : _d.title) || "工坊预览"
+          )}`
         });
       };
       const runAssistantAction = (action) => {
@@ -3254,9 +3272,9 @@ This will fail in production.`);
             kind: "assistant",
             text: `我可以带你去看 AI 资讯榜单。
 
-你也可以继续在工坊里输入“${examples[0]}”这类指令来生成小游戏/页面原型。`,
+你也可以继续在工坊里输入“${examples[0]}”这类指令来生成小游戏或页面原型。`,
             quickActions: [
-              { label: "去 AI 资讯页", path: "/pages/crawl/index" },
+              { label: "去 AI 观察哨", path: "/pages/crawl/index" },
               { label: "去 AI 学堂", path: "/pages/school/input" }
             ]
           };
@@ -3264,39 +3282,39 @@ This will fail in production.`);
         if (intent === "school") {
           return {
             kind: "assistant",
-            text: `我可以带你去 AI 学堂生成白板课堂。
+            text: `我可以带你去 AI 学堂。
 
-如果你想在工坊生成小游戏/页面，请直接说：
+如果你想在工坊生成小游戏或页面，请直接这样说：
 - ${examples[0]}
 - ${examples[1]}`,
             quickActions: [
               { label: "去 AI 学堂", path: "/pages/school/input" },
-              { label: "去 AI 资讯页", path: "/pages/crawl/index" }
+              { label: "去 AI 观察哨", path: "/pages/crawl/index" }
             ]
           };
         }
         return {
           kind: "assistant",
           text: `我能做两件事：
-1) 在工坊帮你生成小游戏/页面原型
-2) 带你跳转到 AI 资讯 / AI 学堂
+1. 在工坊帮你生成小游戏或页面原型
+2. 带你跳转到 AI 观察哨 / AI 学堂
 
 如果你要生成，请这样说：
 - ${examples[0]}
 - ${examples[1]}
 - ${examples[2]}`,
           quickActions: [
-            { label: "去 AI 资讯页", path: "/pages/crawl/index" },
+            { label: "去 AI 观察哨", path: "/pages/crawl/index" },
             { label: "去 AI 学堂", path: "/pages/school/input" }
           ]
         };
       };
       const normalizeWorkshopResult = (response, prompt) => {
-        const raw = (response == null ? void 0 : response.result) && typeof response.result === "object" ? response.result : response;
-        const previewUrl = (raw == null ? void 0 : raw.previewUrl) || (raw == null ? void 0 : raw.url) || (response == null ? void 0 : response.url) || (response == null ? void 0 : response.previewUrl) || "";
-        const code = coerceText((raw == null ? void 0 : raw.code) || (raw == null ? void 0 : raw.html) || (response == null ? void 0 : response.html), "");
-        const summary = coerceText((raw == null ? void 0 : raw.summary) || (raw == null ? void 0 : raw.message) || (response == null ? void 0 : response.summary) || (response == null ? void 0 : response.message), "") || `已根据“${prompt}”生成结果，可直接打开预览。`;
-        const title = coerceText((raw == null ? void 0 : raw.title) || (response == null ? void 0 : response.title) || prompt, "工坊预览");
+        const raw = (response == null ? void 0 : response.result) && typeof response.result === "object" ? response.result : response || {};
+        const previewUrl = raw.previewUrl || raw.url || (response == null ? void 0 : response.url) || (response == null ? void 0 : response.previewUrl) || "";
+        const code = coerceText(raw.code || raw.html || (response == null ? void 0 : response.html), "");
+        const summary = coerceText(raw.summary || raw.message || (response == null ? void 0 : response.summary) || (response == null ? void 0 : response.message), "") || `已根据“${prompt}”生成结果，可以直接打开预览。`;
+        const title = coerceText(raw.title || (response == null ? void 0 : response.title) || prompt, "工坊预览");
         const normalizedResult = {
           ...raw,
           title,
@@ -3304,7 +3322,7 @@ This will fail in production.`);
           code,
           url: previewUrl,
           previewUrl,
-          language: (raw == null ? void 0 : raw.language) || "html"
+          language: raw.language || "html"
         };
         appendDebugLog("workshop", "normalize_result", {
           prompt,
@@ -3319,8 +3337,9 @@ This will fail in production.`);
       const handleGenerate = async () => {
         const prompt = userInput.value.trim();
         if (!prompt || loading.value) {
-          if (!prompt)
+          if (!prompt) {
             uni.showToast({ title: "请输入你的需求", icon: "none" });
+          }
           return;
         }
         appendDebugLog("workshop", "generate_submit", {
@@ -3329,40 +3348,23 @@ This will fail in production.`);
         });
         lastPrompt.value = prompt;
         userInput.value = "";
-        try {
-          const routed = await routeWorkshopInput(prompt);
-          appendDebugLog("workshop", "route_result", routed || {});
-          if (!(routed == null ? void 0 : routed.shouldGenerate)) {
-            generatedResult.value = {
-              kind: "assistant",
-              text: (routed == null ? void 0 : routed.replyText) || buildAssistantReply({ intent: (routed == null ? void 0 : routed.intent) || "help" }).text,
-              quickActions: Array.isArray(routed == null ? void 0 : routed.quickActions) ? routed.quickActions : buildAssistantReply({ intent: (routed == null ? void 0 : routed.intent) || "help" }).quickActions
-            };
-            return;
-          }
-          lastPrompt.value = prompt;
-        } catch (error) {
-          appendDebugLog("workshop", "route_fallback", {
-            error: getErrorMessage(error, "router unavailable")
-          });
-          const fallback = classifyWorkshopInput(prompt);
-          if (fallback.intent !== WorkshopIntent.GenerateWorkshop) {
-            generatedResult.value = buildAssistantReply({ intent: "help" });
-            appendDebugLog("workshop", "route_classified_as_help", fallback);
-            return;
-          }
+        const localIntent = classifyWorkshopInput(prompt);
+        if (localIntent.intent !== WorkshopIntent.GenerateWorkshop) {
+          generatedResult.value = buildAssistantReply({ intent: localIntent.intent || "help" });
+          appendDebugLog("workshop", "route_classified_as_help", localIntent);
+          return;
         }
         loading.value = true;
         generatedResult.value = null;
         startLoadingAnimation();
         try {
-          const response = await generateCode(lastPrompt.value);
+          const response = await generateCode(prompt);
           appendDebugLog("workshop", "generate_response", response || {});
-          const nextResult = normalizeWorkshopResult(response, lastPrompt.value);
+          const nextResult = normalizeWorkshopResult(response, prompt);
           generatedResult.value = nextResult;
           const savedConversation = saveWorkshopConversation({
             id: currentConversationId.value || `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
-            prompt: lastPrompt.value,
+            prompt,
             result: nextResult,
             createdAt: Date.now()
           });
@@ -3381,10 +3383,31 @@ This will fail in production.`);
           stopLoadingAnimation();
         }
       };
+      const registerKeyboardListener = () => {
+        if (typeof uni.onKeyboardHeightChange !== "function")
+          return;
+        keyboardHeightHandler = (event = {}) => {
+          keyboardHeight.value = Math.max(Number(event.height || 0), 0);
+        };
+        uni.onKeyboardHeightChange(keyboardHeightHandler);
+      };
+      const unregisterKeyboardListener = () => {
+        if (!keyboardHeightHandler)
+          return;
+        if (typeof uni.offKeyboardHeightChange === "function") {
+          uni.offKeyboardHeightChange(keyboardHeightHandler);
+        }
+        keyboardHeightHandler = null;
+      };
+      vue.onMounted(() => {
+        registerKeyboardListener();
+      });
       vue.onUnmounted(() => {
         stopLoadingAnimation();
+        unregisterKeyboardListener();
       });
       onLoad((query) => {
+        syncWorkshopHistory();
         syncWorkshopHistoryRemote({ silent: true });
         sidebarVisible.value = query.openSidebar === "1";
         if (query.reset === "1") {
@@ -3396,6 +3419,7 @@ This will fail in production.`);
         }
       });
       onShow(() => {
+        syncWorkshopHistory();
         syncWorkshopHistoryRemote({ silent: true });
       });
       let lastBackPressAt = 0;
@@ -3413,15 +3437,19 @@ This will fail in production.`);
         uni.showToast({ title: "再按一次退出应用", icon: "none" });
         return true;
       });
-      const __returned__ = { systemInfo, statusBarHeight, safeAreaInsetsBottom, headerBarHeight, headerShellHeight, sidebarVisible, userInput, loading, generatedResult, lastPrompt, loadingPhase, workshopHistory, currentConversationId, get loadingTimer() {
+      const __returned__ = { systemInfo, isAndroidApp, statusBarHeight, safeAreaInsetsBottom, headerBarHeight, headerShellHeight, inputHeight, inputVerticalPadding, inputBaseHeight, sidebarVisible, userInput, loading, generatedResult, lastPrompt, loadingPhase, workshopHistory, currentConversationId, keyboardHeight, workshopSyncInFlight, workshopSyncLastAt, workshopSyncLastSignature, get loadingTimer() {
         return loadingTimer;
       }, set loadingTimer(v) {
         loadingTimer = v;
-      }, workshopSyncInFlight, workshopSyncLastAt, workshopSyncLastSignature, routeWorkshopInput, getWorkshopHistoryRemote, saveWorkshopHistoryRemote, coerceText, getErrorMessage, loadingPhases, chatHeight, hasPreview, loadingText, activeLoadingPhase, isAssistantReply, assistantActions, aiTitle, aiBodyText, introText, highlights, showHighlights, toggleSidebar, closeSidebar, handleNavigate, clearConversation, syncWorkshopHistory, loadConversation, mergeWorkshopHistory, historySignature, syncWorkshopHistoryRemote, startLoadingAnimation, stopLoadingAnimation, openPreview, runAssistantAction, buildAssistantReply, normalizeWorkshopResult, handleGenerate, get lastBackPressAt() {
+      }, get keyboardHeightHandler() {
+        return keyboardHeightHandler;
+      }, set keyboardHeightHandler(v) {
+        keyboardHeightHandler = v;
+      }, loadingPhases, loadingText, keyboardLiftOffset, inputSafeBottom, inputDockHeight, chatBottomOffset, hasPreview, activeLoadingPhase, isAssistantReply, assistantActions, aiTitle, introText, aiBodyText, highlights, showHighlights, coerceText, getErrorMessage, toggleSidebar, closeSidebar, handleNavigate, clearConversation, syncWorkshopHistory, loadConversation, mergeWorkshopHistory, historySignature, getWorkshopHistoryRemote, saveWorkshopHistoryRemote, syncWorkshopHistoryRemote, startLoadingAnimation, stopLoadingAnimation, openPreview, runAssistantAction, buildAssistantReply, normalizeWorkshopResult, handleGenerate, registerKeyboardListener, unregisterKeyboardListener, get lastBackPressAt() {
         return lastBackPressAt;
       }, set lastBackPressAt(v) {
         lastBackPressAt = v;
-      }, computed: vue.computed, onUnmounted: vue.onUnmounted, ref: vue.ref, get onBackPress() {
+      }, computed: vue.computed, onMounted: vue.onMounted, onUnmounted: vue.onUnmounted, ref: vue.ref, get onBackPress() {
         return onBackPress;
       }, get onLoad() {
         return onLoad;
@@ -3445,10 +3473,10 @@ This will fail in production.`);
         return getWorkshopConversation;
       }, get getWorkshopHistory() {
         return getWorkshopHistory;
-      }, get setWorkshopHistory() {
-        return setWorkshopHistory;
       }, get saveWorkshopConversation() {
         return saveWorkshopConversation;
+      }, get setWorkshopHistory() {
+        return setWorkshopHistory;
       } };
       Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
       return __returned__;
@@ -3456,50 +3484,35 @@ This will fail in production.`);
   };
   function _sfc_render$6(_ctx, _cache, $props, $setup, $data, $options) {
     return vue.openBlock(), vue.createElementBlock("view", { class: "workshop-page" }, [
-      vue.createElementVNode("view", { class: "header-fixed-shell" }, [
-        vue.createElementVNode(
-          "view",
-          {
-            class: "header-fixed-safe",
-            style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
-          },
-          null,
-          4
-          /* STYLE */
-        ),
-        vue.createElementVNode("view", { class: "header-fixed-bar" }, [
-          vue.createElementVNode("text", {
-            class: "header-fixed-action",
-            onClick: $setup.toggleSidebar
-          }, "≡"),
-          vue.createElementVNode("text", { class: "header-fixed-title" }, "AI 工坊"),
-          vue.createElementVNode("view", { class: "header-fixed-placeholder" })
-        ])
-      ]),
       vue.createElementVNode(
         "view",
         {
-          class: "top-safe",
+          class: "header-shell",
           style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
         },
-        null,
+        [
+          vue.createElementVNode("view", { class: "page-header" }, [
+            vue.createElementVNode("text", {
+              class: "header-action",
+              onClick: $setup.toggleSidebar
+            }, "≡"),
+            vue.createElementVNode("text", { class: "header-title" }, "AI工坊"),
+            vue.createElementVNode("view", { class: "header-placeholder" })
+          ])
+        ],
         4
         /* STYLE */
       ),
-      vue.createElementVNode("view", { class: "page-header" }, [
-        vue.createElementVNode("text", {
-          class: "header-action",
-          onClick: $setup.toggleSidebar
-        }, "☰"),
-        vue.createElementVNode("text", { class: "header-title" }, "AI 工坊"),
-        vue.createElementVNode("view", { class: "header-placeholder" })
-      ]),
       vue.createElementVNode(
         "scroll-view",
         {
           class: "chat-scroll",
           "scroll-y": "",
-          style: vue.normalizeStyle({ height: `${$setup.chatHeight}px` })
+          "show-scrollbar": false,
+          style: vue.normalizeStyle({
+            top: `${$setup.headerShellHeight}px`,
+            bottom: `${$setup.chatBottomOffset}px`
+          })
         },
         [
           vue.createElementVNode("view", { class: "chat-content" }, [
@@ -3563,7 +3576,7 @@ This will fail in production.`);
                         1
                         /* TEXT */
                       ),
-                      vue.createElementVNode("text", { class: "loading-subtitle" }, "正在调用模型、整理代码并准备在线预览"),
+                      vue.createElementVNode("text", { class: "loading-subtitle" }, "正在调用模型并整理可预览的移动端结果"),
                       vue.createElementVNode("view", { class: "loading-steps" }, [
                         (vue.openBlock(), vue.createElementBlock(
                           vue.Fragment,
@@ -3608,8 +3621,8 @@ This will fail in production.`);
                       null,
                       vue.renderList($setup.highlights, (point, index) => {
                         return vue.openBlock(), vue.createElementBlock("view", {
-                          class: "idea-item",
-                          key: index
+                          key: index,
+                          class: "idea-item"
                         }, [
                           vue.createElementVNode("text", { class: "idea-dot" }, "•"),
                           vue.createElementVNode(
@@ -3629,20 +3642,6 @@ This will fail in production.`);
                     key: 2,
                     class: "result-card"
                   }, [
-                    vue.createElementVNode("view", { class: "result-toolbar" }, [
-                      vue.createElementVNode("text", {
-                        class: "result-tool",
-                        onClick: $setup.openPreview
-                      }, "试玩"),
-                      vue.createElementVNode("text", {
-                        class: "result-tool",
-                        onClick: $setup.openPreview
-                      }, "发布"),
-                      vue.createElementVNode("text", {
-                        class: "result-tool",
-                        onClick: $setup.openPreview
-                      }, "全屏")
-                    ]),
                     $setup.hasPreview ? (vue.openBlock(), vue.createElementBlock("view", {
                       key: 0,
                       class: "preview-shell preview-clickable",
@@ -3665,7 +3664,7 @@ This will fail in production.`);
                         vue.createElementVNode(
                           "text",
                           { class: "preview-hero-copy" },
-                          vue.toDisplayString($setup.generatedResult.summary || "已生成可在线运行的页面预览。"),
+                          vue.toDisplayString($setup.generatedResult.summary || "已生成可在线运行的页面，点击即可打开。"),
                           1
                           /* TEXT */
                         ),
@@ -3743,58 +3742,58 @@ This will fail in production.`);
               class: "empty-state"
             }, [
               vue.createElementVNode("text", { class: "empty-title" }, "描述你想做的应用"),
-              vue.createElementVNode("text", { class: "empty-copy" }, " 比如“做一个贪吃蛇小游戏”或“生成一个登录页”，我会把它变成可以继续迭代的代码结果。 ")
+              vue.createElementVNode("text", { class: "empty-copy" }, " 比如“做一个贪吃蛇小游戏”或“生成一个登录页”，我会先整理需求，再给出适合移动端的结果。 ")
             ]))
           ])
         ],
         4
         /* STYLE */
       ),
-      $setup.generatedResult && $setup.hasPreview && !$setup.isAssistantReply ? (vue.openBlock(), vue.createElementBlock("view", {
-        key: 0,
-        class: "floating-action",
-        onClick: $setup.openPreview
-      }, [
-        vue.createElementVNode("text", { class: "floating-action-text" }, "↗")
-      ])) : vue.createCommentVNode("v-if", true),
       vue.createElementVNode(
         "view",
         {
-          class: "input-area",
-          style: vue.normalizeStyle({ paddingBottom: `${$setup.safeAreaInsetsBottom + 16}px` })
+          class: "input-dock",
+          style: vue.normalizeStyle({
+            bottom: `${$setup.keyboardLiftOffset}px`,
+            paddingBottom: `${$setup.inputSafeBottom}px`
+          })
         },
         [
-          vue.createElementVNode("view", { class: "input-shell" }, [
-            vue.withDirectives(vue.createElementVNode(
-              "input",
+          vue.createElementVNode("view", { class: "input-area" }, [
+            vue.createElementVNode("view", { class: "input-shell" }, [
+              vue.withDirectives(vue.createElementVNode(
+                "input",
+                {
+                  "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => $setup.userInput = $event),
+                  class: "prompt-input",
+                  placeholder: "输入你的需求...",
+                  "placeholder-class": "prompt-placeholder",
+                  "confirm-type": "send",
+                  maxlength: "500",
+                  "adjust-position": false,
+                  "cursor-spacing": 24,
+                  onConfirm: $setup.handleGenerate
+                },
+                null,
+                544
+                /* NEED_HYDRATION, NEED_PATCH */
+              ), [
+                [vue.vModelText, $setup.userInput]
+              ])
+            ]),
+            vue.createElementVNode(
+              "view",
               {
-                class: "prompt-input",
-                "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => $setup.userInput = $event),
-                placeholder: "输入消息...",
-                "placeholder-class": "prompt-placeholder",
-                "confirm-type": "send",
-                maxlength: "500",
-                onConfirm: $setup.handleGenerate
+                class: vue.normalizeClass(["send-button", { disabled: $setup.loading }]),
+                onClick: $setup.handleGenerate
               },
-              null,
-              544
-              /* NEED_HYDRATION, NEED_PATCH */
-            ), [
-              [vue.vModelText, $setup.userInput]
-            ])
-          ]),
-          vue.createElementVNode(
-            "view",
-            {
-              class: vue.normalizeClass(["send-button", { disabled: $setup.loading }]),
-              onClick: $setup.handleGenerate
-            },
-            [
-              vue.createElementVNode("text", { class: "send-button-text" }, "➜")
-            ],
-            2
-            /* CLASS */
-          )
+              [
+                vue.createElementVNode("text", { class: "send-button-text" }, "发送")
+              ],
+              2
+              /* CLASS */
+            )
+          ])
         ],
         4
         /* STYLE */
