@@ -293,7 +293,9 @@ onBackPress((options = {}) => {
 
 .profile-page {
   min-height: 100vh;
-  background: #0b0b0d;
+  background:
+    radial-gradient(circle at top right, rgba(255, 228, 188, 0.4), transparent 35%),
+    linear-gradient(180deg, #fff9f1 0%, #f6eee2 46%, #efe6da 100%);
 }
 
 .top-bar {
@@ -305,7 +307,9 @@ onBackPress((options = {}) => {
   padding-left: 24rpx;
   padding-right: 24rpx;
   padding-bottom: 18rpx;
-  background: rgba(11, 11, 13, 0.96);
+  background: rgba(255, 248, 240, 0.84);
+  backdrop-filter: blur(18rpx);
+  box-shadow: 0 16rpx 40rpx rgba(73, 49, 24, 0.08);
 }
 
 .page-header {
@@ -317,36 +321,39 @@ onBackPress((options = {}) => {
 
 .header-back,
 .header-placeholder {
-  width: 86rpx;
-  min-width: 86rpx;
-  height: 46rpx;
+  width: 96rpx;
+  min-width: 96rpx;
+  height: 52rpx;
 }
 
 .header-back {
   border-radius: 999rpx;
-  background: #17171c;
-  border: 2rpx solid #272730;
+  background: rgba(255, 255, 255, 0.76);
+  border: 2rpx solid rgba(255, 255, 255, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 10rpx 22rpx rgba(37, 28, 12, 0.08);
 }
 
 .header-back-icon,
 .header-title {
-  color: #f5f5f7;
+  color: #5a3f2d;
 }
 
 .header-back-icon {
   font-size: 30rpx;
   line-height: 1;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .header-title {
   flex: 1;
   text-align: center;
-  font-size: 38rpx;
-  font-weight: 700;
+  font-size: 42rpx;
+  font-weight: 900;
+  color: #18110d;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .profile-scroll {
@@ -354,61 +361,63 @@ onBackPress((options = {}) => {
 }
 
 .profile-body {
-  padding: 0 16rpx;
+  padding: 0 20rpx;
   box-sizing: border-box;
   overflow: hidden;
 }
 
 .avatar-section {
   position: relative;
-  width: 112rpx;
-  height: 112rpx;
+  width: 136rpx;
+  height: 136rpx;
   margin: 0 auto 40rpx;
 }
 
 .avatar-orb {
-  width: 112rpx;
-  height: 112rpx;
+  width: 136rpx;
+  height: 136rpx;
   border-radius: 50%;
-  background: radial-gradient(circle at 28% 30%, #d8f2ff 0%, #4db1ff 42%, #2e89ea 72%, #1f5eb4 100%);
+  background: radial-gradient(circle at 32% 28%, #fff3da 0%, #d89553 36%, #9a5a29 72%, #6b391a 100%);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  box-shadow: 0 20rpx 42rpx rgba(104, 59, 25, 0.16);
 }
 
 .avatar-highlight {
   position: absolute;
-  inset: 6rpx;
+  inset: 8rpx;
   border-radius: 50%;
-  background: radial-gradient(circle at 68% 32%, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0) 50%);
+  background: radial-gradient(circle at 68% 32%, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0) 50%);
 }
 
 .avatar-initial {
   position: relative;
   z-index: 1;
-  color: rgba(245, 245, 247, 0.94);
-  font-size: 40rpx;
-  font-weight: 700;
+  color: rgba(255, 250, 245, 0.96);
+  font-size: 44rpx;
+  font-weight: 800;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .camera-badge {
   position: absolute;
   right: -10rpx;
-  bottom: 0;
-  width: 40rpx;
-  height: 40rpx;
+  bottom: 2rpx;
+  width: 46rpx;
+  height: 46rpx;
   border-radius: 50%;
-  background: #1d1d23;
-  border: 2rpx solid #272730;
+  background: rgba(255, 255, 255, 0.86);
+  border: 2rpx solid rgba(255, 255, 255, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .camera-badge-text {
-  color: #f5f5f7;
+  color: #8a5528;
   font-size: 20rpx;
   font-weight: 700;
 }
@@ -418,20 +427,23 @@ onBackPress((options = {}) => {
 .meta-card,
 .guest-card {
   width: 100%;
-  border-radius: 20rpx;
-  background: #17171c;
-  border: 2rpx solid #272730;
+  border-radius: 28rpx;
+  border: 2rpx solid rgba(255, 255, 255, 0.72);
+  background:
+    radial-gradient(circle at top right, rgba(255, 244, 223, 0.82), transparent 36%),
+    linear-gradient(160deg, rgba(255, 252, 247, 0.98), rgba(244, 232, 215, 0.98));
+  box-shadow: 0 16rpx 38rpx rgba(37, 28, 12, 0.08);
   box-sizing: border-box;
 }
 
 .info-card,
 .meta-card,
 .guest-card {
-  padding: 20rpx 22rpx;
+  padding: 24rpx 24rpx;
 }
 
 .intro-card {
-  padding: 20rpx 22rpx;
+  padding: 24rpx 24rpx;
   margin-top: 20rpx;
 }
 
@@ -449,13 +461,13 @@ onBackPress((options = {}) => {
 }
 
 .info-row.clickable {
-  min-height: 52rpx;
+  min-height: 58rpx;
 }
 
 .row-label {
-  color: #f5f5f7;
+  color: #21150e;
   font-size: 30rpx;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .row-right {
@@ -467,7 +479,7 @@ onBackPress((options = {}) => {
 }
 
 .row-value {
-  color: #a7a7b3;
+  color: #85705f;
   font-size: 28rpx;
   text-align: right;
   min-width: 0;
@@ -478,43 +490,45 @@ onBackPress((options = {}) => {
 }
 
 .row-arrow {
-  color: #a7a7b3;
+  color: #a3846c;
   font-size: 30rpx;
   line-height: 1;
 }
 
 .divider {
   height: 2rpx;
-  background: #272730;
+  background: rgba(120, 114, 104, 0.1);
   margin: 18rpx 0;
 }
 
 .intro-title {
   display: block;
-  color: #f5f5f7;
-  font-size: 32rpx;
-  font-weight: 600;
+  color: #1d140e;
+  font-size: 34rpx;
+  font-weight: 800;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .intro-value {
   display: block;
   margin-top: 18rpx;
-  color: #a7a7b3;
+  color: #786251;
   font-size: 28rpx;
-  line-height: 1.6;
+  line-height: 1.68;
 }
 
 .guest-title {
   display: block;
-  color: #f5f5f7;
-  font-size: 34rpx;
-  font-weight: 700;
+  color: #1d140e;
+  font-size: 36rpx;
+  font-weight: 800;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .guest-copy {
   display: block;
   margin-top: 14rpx;
-  color: #a7a7b3;
+  color: #7c6654;
   font-size: 26rpx;
   line-height: 1.7;
 }
@@ -529,12 +543,12 @@ onBackPress((options = {}) => {
 }
 
 .guest-action.primary {
-  background: #f5f5f7;
+  background: linear-gradient(135deg, #c97832, #915020);
 }
 
 .guest-action.secondary {
-  background: #0b0b0d;
-  border: 2rpx solid #3a3a45;
+  background: rgba(255, 255, 255, 0.56);
+  border: 2rpx solid rgba(255, 255, 255, 0.68);
 }
 
 .guest-action-text {
@@ -543,19 +557,19 @@ onBackPress((options = {}) => {
 }
 
 .guest-action-text.dark {
-  color: #0b0b0d;
+  color: #fffaf5;
 }
 
 .guest-action-text.light {
-  color: #f5f5f7;
+  color: #6d4220;
 }
 
 .logout-button {
   width: 100%;
-  min-height: 56rpx;
+  min-height: 64rpx;
   border-radius: 999rpx;
-  background: #0b0b0d;
-  border: 3rpx solid #3a3a45;
+  background: rgba(255, 255, 255, 0.58);
+  border: 2rpx solid rgba(255, 255, 255, 0.68);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -563,16 +577,16 @@ onBackPress((options = {}) => {
 }
 
 .logout-text {
-  color: #f5f5f7;
+  color: #7b4521;
   font-size: 30rpx;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .sheet-mask {
   position: fixed;
   inset: 0;
   z-index: 40;
-  background: rgba(17, 17, 24, 0.72);
+  background: rgba(84, 60, 40, 0.18);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -582,15 +596,17 @@ onBackPress((options = {}) => {
 .gender-sheet {
   width: 100%;
   border-radius: 28rpx 28rpx 0 0;
-  background: #17171c;
+  background:
+    radial-gradient(circle at top right, rgba(255, 244, 223, 0.82), transparent 36%),
+    linear-gradient(160deg, rgba(255, 252, 247, 0.98), rgba(244, 232, 215, 0.98));
   padding: 28rpx 24rpx 36rpx;
 }
 
 .sheet-title {
   display: block;
-  color: #f5f5f7;
+  color: #21150e;
   font-size: 30rpx;
-  font-weight: 700;
+  font-weight: 800;
   text-align: center;
   margin-bottom: 24rpx;
 }
@@ -598,16 +614,16 @@ onBackPress((options = {}) => {
 .sheet-option {
   min-height: 84rpx;
   border-radius: 20rpx;
-  background: #0b0b0d;
+  background: rgba(255, 255, 255, 0.58);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 12rpx;
-  border: 2rpx solid #272730;
+  border: 2rpx solid rgba(255, 255, 255, 0.68);
 }
 
 .sheet-option-text {
-  color: #f5f5f7;
+  color: #6d4220;
   font-size: 28rpx;
 }
 
@@ -627,8 +643,8 @@ onBackPress((options = {}) => {
   min-width: 280rpx;
   padding: 28rpx 32rpx;
   border-radius: 28rpx;
-  background: rgba(8, 8, 8, 0.92);
-  box-shadow: 0 18rpx 40rpx rgba(0, 0, 0, 0.3);
+  background: rgba(255, 252, 247, 0.96);
+  box-shadow: 0 18rpx 40rpx rgba(97, 68, 40, 0.18);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -637,14 +653,14 @@ onBackPress((options = {}) => {
 }
 
 .floating-toast-icon {
-  color: #ffffff;
+  color: #c16224;
   font-size: 72rpx;
   font-weight: 700;
   line-height: 1;
 }
 
 .floating-toast-text {
-  color: #ffffff;
+  color: #6d4d3c;
   font-size: 30rpx;
   font-weight: 600;
   line-height: 1.5;

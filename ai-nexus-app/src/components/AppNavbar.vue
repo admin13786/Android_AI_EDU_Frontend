@@ -57,7 +57,9 @@ const { statusBarHeight } = getLayoutMetrics()
   box-sizing: border-box;
   padding-left: 20rpx;
   padding-right: 20rpx;
-  background: $bg-card;
+  background: rgba(255, 248, 240, 0.84);
+  backdrop-filter: blur(18rpx);
+  box-shadow: 0 12rpx 28rpx rgba(73, 49, 24, 0.06);
 }
 
 .nav-side {
@@ -79,16 +81,25 @@ const { statusBarHeight } = getLayoutMetrics()
   justify-content: center;
 }
 
+.icon-btn {
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.74);
+  border: 2rpx solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 10rpx 22rpx rgba(37, 28, 12, 0.08);
+}
+
 .title {
   flex: 1;
   text-align: center;
-  font-size: 36rpx;
-  font-weight: 700;
-  color: $text-white;
+  font-size: 38rpx;
+  font-weight: 900;
+  color: #18110d;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .icon {
-  font-size: 44rpx;
-  color: $text-white;
+  font-size: 40rpx;
+  color: #5a3f2d;
+  font-weight: 800;
 }
 </style>
