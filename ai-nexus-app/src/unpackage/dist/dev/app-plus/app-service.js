@@ -1,0 +1,6162 @@
+if (typeof Promise !== "undefined" && !Promise.prototype.finally) {
+  Promise.prototype.finally = function(callback) {
+    const promise = this.constructor;
+    return this.then(
+      (value) => promise.resolve(callback()).then(() => value),
+      (reason) => promise.resolve(callback()).then(() => {
+        throw reason;
+      })
+    );
+  };
+}
+;
+if (typeof uni !== "undefined" && uni && uni.requireGlobal) {
+  const global2 = uni.requireGlobal();
+  ArrayBuffer = global2.ArrayBuffer;
+  Int8Array = global2.Int8Array;
+  Uint8Array = global2.Uint8Array;
+  Uint8ClampedArray = global2.Uint8ClampedArray;
+  Int16Array = global2.Int16Array;
+  Uint16Array = global2.Uint16Array;
+  Int32Array = global2.Int32Array;
+  Uint32Array = global2.Uint32Array;
+  Float32Array = global2.Float32Array;
+  Float64Array = global2.Float64Array;
+  BigInt64Array = global2.BigInt64Array;
+  BigUint64Array = global2.BigUint64Array;
+}
+;
+if (uni.restoreGlobal) {
+  uni.restoreGlobal(Vue, weex, plus, setTimeout, clearTimeout, setInterval, clearInterval);
+}
+(function(vue) {
+  "use strict";
+  const ON_SHOW = "onShow";
+  const ON_LOAD = "onLoad";
+  const ON_BACK_PRESS = "onBackPress";
+  const ON_NAVIGATION_BAR_BUTTON_TAP = "onNavigationBarButtonTap";
+  function formatAppLog(type, filename, ...args) {
+    if (uni.__log__) {
+      uni.__log__(type, filename, ...args);
+    } else {
+      console[type].apply(console, [...args, filename]);
+    }
+  }
+  const createLifeCycleHook = (lifecycle, flag = 0) => (hook, target = vue.getCurrentInstance()) => {
+    !vue.isInSSRComponentSetup && vue.injectHook(lifecycle, hook, target);
+  };
+  const onShow = /* @__PURE__ */ createLifeCycleHook(
+    ON_SHOW,
+    1 | 2
+    /* HookFlags.PAGE */
+  );
+  const onLoad = /* @__PURE__ */ createLifeCycleHook(
+    ON_LOAD,
+    2
+    /* HookFlags.PAGE */
+  );
+  const onBackPress = /* @__PURE__ */ createLifeCycleHook(
+    ON_BACK_PRESS,
+    2
+    /* HookFlags.PAGE */
+  );
+  const onNavigationBarButtonTap = /* @__PURE__ */ createLifeCycleHook(
+    ON_NAVIGATION_BAR_BUTTON_TAP,
+    2
+    /* HookFlags.PAGE */
+  );
+  var isVue2 = false;
+  function set(target, key, val) {
+    if (Array.isArray(target)) {
+      target.length = Math.max(target.length, key);
+      target.splice(key, 1, val);
+      return val;
+    }
+    target[key] = val;
+    return val;
+  }
+  function del(target, key) {
+    if (Array.isArray(target)) {
+      target.splice(key, 1);
+      return;
+    }
+    delete target[key];
+  }
+  function getDevtoolsGlobalHook() {
+    return getTarget().__VUE_DEVTOOLS_GLOBAL_HOOK__;
+  }
+  function getTarget() {
+    return typeof navigator !== "undefined" && typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : {};
+  }
+  const isProxyAvailable = typeof Proxy === "function";
+  const HOOK_SETUP = "devtools-plugin:setup";
+  const HOOK_PLUGIN_SETTINGS_SET = "plugin:settings:set";
+  let supported;
+  let perf;
+  function isPerformanceSupported() {
+    var _a;
+    if (supported !== void 0) {
+      return supported;
+    }
+    if (typeof window !== "undefined" && window.performance) {
+      supported = true;
+      perf = window.performance;
+    } else if (typeof global !== "undefined" && ((_a = global.perf_hooks) === null || _a === void 0 ? void 0 : _a.performance)) {
+      supported = true;
+      perf = global.perf_hooks.performance;
+    } else {
+      supported = false;
+    }
+    return supported;
+  }
+  function now() {
+    return isPerformanceSupported() ? perf.now() : Date.now();
+  }
+  class ApiProxy {
+    constructor(plugin, hook) {
+      this.target = null;
+      this.targetQueue = [];
+      this.onQueue = [];
+      this.plugin = plugin;
+      this.hook = hook;
+      const defaultSettings = {};
+      if (plugin.settings) {
+        for (const id in plugin.settings) {
+          const item = plugin.settings[id];
+          defaultSettings[id] = item.defaultValue;
+        }
+      }
+      const localSettingsSaveId = `__vue-devtools-plugin-settings__${plugin.id}`;
+      let currentSettings = Object.assign({}, defaultSettings);
+      try {
+        const raw = localStorage.getItem(localSettingsSaveId);
+        const data = JSON.parse(raw);
+        Object.assign(currentSettings, data);
+      } catch (e) {
+      }
+      this.fallbacks = {
+        getSettings() {
+          return currentSettings;
+        },
+        setSettings(value) {
+          try {
+            localStorage.setItem(localSettingsSaveId, JSON.stringify(value));
+          } catch (e) {
+          }
+          currentSettings = value;
+        },
+        now() {
+          return now();
+        }
+      };
+      if (hook) {
+        hook.on(HOOK_PLUGIN_SETTINGS_SET, (pluginId, value) => {
+          if (pluginId === this.plugin.id) {
+            this.fallbacks.setSettings(value);
+          }
+        });
+      }
+      this.proxiedOn = new Proxy({}, {
+        get: (_target, prop) => {
+          if (this.target) {
+            return this.target.on[prop];
+          } else {
+            return (...args) => {
+              this.onQueue.push({
+                method: prop,
+                args
+              });
+            };
+          }
+        }
+      });
+      this.proxiedTarget = new Proxy({}, {
+        get: (_target, prop) => {
+          if (this.target) {
+            return this.target[prop];
+          } else if (prop === "on") {
+            return this.proxiedOn;
+          } else if (Object.keys(this.fallbacks).includes(prop)) {
+            return (...args) => {
+              this.targetQueue.push({
+                method: prop,
+                args,
+                resolve: () => {
+                }
+              });
+              return this.fallbacks[prop](...args);
+            };
+          } else {
+            return (...args) => {
+              return new Promise((resolve) => {
+                this.targetQueue.push({
+                  method: prop,
+                  args,
+                  resolve
+                });
+              });
+            };
+          }
+        }
+      });
+    }
+    async setRealTarget(target) {
+      this.target = target;
+      for (const item of this.onQueue) {
+        this.target.on[item.method](...item.args);
+      }
+      for (const item of this.targetQueue) {
+        item.resolve(await this.target[item.method](...item.args));
+      }
+    }
+  }
+  function setupDevtoolsPlugin(pluginDescriptor, setupFn) {
+    const descriptor = pluginDescriptor;
+    const target = getTarget();
+    const hook = getDevtoolsGlobalHook();
+    const enableProxy = isProxyAvailable && descriptor.enableEarlyProxy;
+    if (hook && (target.__VUE_DEVTOOLS_PLUGIN_API_AVAILABLE__ || !enableProxy)) {
+      hook.emit(HOOK_SETUP, pluginDescriptor, setupFn);
+    } else {
+      const proxy = enableProxy ? new ApiProxy(descriptor, hook) : null;
+      const list = target.__VUE_DEVTOOLS_PLUGINS__ = target.__VUE_DEVTOOLS_PLUGINS__ || [];
+      list.push({
+        pluginDescriptor: descriptor,
+        setupFn,
+        proxy
+      });
+      if (proxy)
+        setupFn(proxy.proxiedTarget);
+    }
+  }
+  /*!
+   * pinia v2.1.7
+   * (c) 2023 Eduardo San Martin Morote
+   * @license MIT
+   */
+  let activePinia;
+  const setActivePinia = (pinia) => activePinia = pinia;
+  const piniaSymbol = Symbol("pinia");
+  function isPlainObject$2(o) {
+    return o && typeof o === "object" && Object.prototype.toString.call(o) === "[object Object]" && typeof o.toJSON !== "function";
+  }
+  var MutationType;
+  (function(MutationType2) {
+    MutationType2["direct"] = "direct";
+    MutationType2["patchObject"] = "patch object";
+    MutationType2["patchFunction"] = "patch function";
+  })(MutationType || (MutationType = {}));
+  const IS_CLIENT = typeof window !== "undefined";
+  const USE_DEVTOOLS = IS_CLIENT;
+  const _global = /* @__PURE__ */ (() => typeof window === "object" && window.window === window ? window : typeof self === "object" && self.self === self ? self : typeof global === "object" && global.global === global ? global : typeof globalThis === "object" ? globalThis : { HTMLElement: null })();
+  function bom(blob, { autoBom = false } = {}) {
+    if (autoBom && /^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(blob.type)) {
+      return new Blob([String.fromCharCode(65279), blob], { type: blob.type });
+    }
+    return blob;
+  }
+  function download(url, name, opts) {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+    xhr.responseType = "blob";
+    xhr.onload = function() {
+      saveAs(xhr.response, name, opts);
+    };
+    xhr.onerror = function() {
+      console.error("could not download file");
+    };
+    xhr.send();
+  }
+  function corsEnabled(url) {
+    const xhr = new XMLHttpRequest();
+    xhr.open("HEAD", url, false);
+    try {
+      xhr.send();
+    } catch (e) {
+    }
+    return xhr.status >= 200 && xhr.status <= 299;
+  }
+  function click(node) {
+    try {
+      node.dispatchEvent(new MouseEvent("click"));
+    } catch (e) {
+      const evt = document.createEvent("MouseEvents");
+      evt.initMouseEvent("click", true, true, window, 0, 0, 0, 80, 20, false, false, false, false, 0, null);
+      node.dispatchEvent(evt);
+    }
+  }
+  const _navigator = typeof navigator === "object" ? navigator : { userAgent: "" };
+  const isMacOSWebView = /* @__PURE__ */ (() => /Macintosh/.test(_navigator.userAgent) && /AppleWebKit/.test(_navigator.userAgent) && !/Safari/.test(_navigator.userAgent))();
+  const saveAs = !IS_CLIENT ? () => {
+  } : (
+    // Use download attribute first if possible (#193 Lumia mobile) unless this is a macOS WebView or mini program
+    typeof HTMLAnchorElement !== "undefined" && "download" in HTMLAnchorElement.prototype && !isMacOSWebView ? downloadSaveAs : (
+      // Use msSaveOrOpenBlob as a second approach
+      "msSaveOrOpenBlob" in _navigator ? msSaveAs : (
+        // Fallback to using FileReader and a popup
+        fileSaverSaveAs
+      )
+    )
+  );
+  function downloadSaveAs(blob, name = "download", opts) {
+    const a = document.createElement("a");
+    a.download = name;
+    a.rel = "noopener";
+    if (typeof blob === "string") {
+      a.href = blob;
+      if (a.origin !== location.origin) {
+        if (corsEnabled(a.href)) {
+          download(blob, name, opts);
+        } else {
+          a.target = "_blank";
+          click(a);
+        }
+      } else {
+        click(a);
+      }
+    } else {
+      a.href = URL.createObjectURL(blob);
+      setTimeout(function() {
+        URL.revokeObjectURL(a.href);
+      }, 4e4);
+      setTimeout(function() {
+        click(a);
+      }, 0);
+    }
+  }
+  function msSaveAs(blob, name = "download", opts) {
+    if (typeof blob === "string") {
+      if (corsEnabled(blob)) {
+        download(blob, name, opts);
+      } else {
+        const a = document.createElement("a");
+        a.href = blob;
+        a.target = "_blank";
+        setTimeout(function() {
+          click(a);
+        });
+      }
+    } else {
+      navigator.msSaveOrOpenBlob(bom(blob, opts), name);
+    }
+  }
+  function fileSaverSaveAs(blob, name, opts, popup) {
+    popup = popup || open("", "_blank");
+    if (popup) {
+      popup.document.title = popup.document.body.innerText = "downloading...";
+    }
+    if (typeof blob === "string")
+      return download(blob, name, opts);
+    const force = blob.type === "application/octet-stream";
+    const isSafari = /constructor/i.test(String(_global.HTMLElement)) || "safari" in _global;
+    const isChromeIOS = /CriOS\/[\d]+/.test(navigator.userAgent);
+    if ((isChromeIOS || force && isSafari || isMacOSWebView) && typeof FileReader !== "undefined") {
+      const reader = new FileReader();
+      reader.onloadend = function() {
+        let url = reader.result;
+        if (typeof url !== "string") {
+          popup = null;
+          throw new Error("Wrong reader.result type");
+        }
+        url = isChromeIOS ? url : url.replace(/^data:[^;]*;/, "data:attachment/file;");
+        if (popup) {
+          popup.location.href = url;
+        } else {
+          location.assign(url);
+        }
+        popup = null;
+      };
+      reader.readAsDataURL(blob);
+    } else {
+      const url = URL.createObjectURL(blob);
+      if (popup)
+        popup.location.assign(url);
+      else
+        location.href = url;
+      popup = null;
+      setTimeout(function() {
+        URL.revokeObjectURL(url);
+      }, 4e4);
+    }
+  }
+  function toastMessage(message, type) {
+    const piniaMessage = "🍍 " + message;
+    if (typeof __VUE_DEVTOOLS_TOAST__ === "function") {
+      __VUE_DEVTOOLS_TOAST__(piniaMessage, type);
+    } else if (type === "error") {
+      console.error(piniaMessage);
+    } else if (type === "warn") {
+      console.warn(piniaMessage);
+    } else {
+      console.log(piniaMessage);
+    }
+  }
+  function isPinia(o) {
+    return "_a" in o && "install" in o;
+  }
+  function checkClipboardAccess() {
+    if (!("clipboard" in navigator)) {
+      toastMessage(`Your browser doesn't support the Clipboard API`, "error");
+      return true;
+    }
+  }
+  function checkNotFocusedError(error) {
+    if (error instanceof Error && error.message.toLowerCase().includes("document is not focused")) {
+      toastMessage('You need to activate the "Emulate a focused page" setting in the "Rendering" panel of devtools.', "warn");
+      return true;
+    }
+    return false;
+  }
+  async function actionGlobalCopyState(pinia) {
+    if (checkClipboardAccess())
+      return;
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(pinia.state.value));
+      toastMessage("Global state copied to clipboard.");
+    } catch (error) {
+      if (checkNotFocusedError(error))
+        return;
+      toastMessage(`Failed to serialize the state. Check the console for more details.`, "error");
+      console.error(error);
+    }
+  }
+  async function actionGlobalPasteState(pinia) {
+    if (checkClipboardAccess())
+      return;
+    try {
+      loadStoresState(pinia, JSON.parse(await navigator.clipboard.readText()));
+      toastMessage("Global state pasted from clipboard.");
+    } catch (error) {
+      if (checkNotFocusedError(error))
+        return;
+      toastMessage(`Failed to deserialize the state from clipboard. Check the console for more details.`, "error");
+      console.error(error);
+    }
+  }
+  async function actionGlobalSaveState(pinia) {
+    try {
+      saveAs(new Blob([JSON.stringify(pinia.state.value)], {
+        type: "text/plain;charset=utf-8"
+      }), "pinia-state.json");
+    } catch (error) {
+      toastMessage(`Failed to export the state as JSON. Check the console for more details.`, "error");
+      console.error(error);
+    }
+  }
+  let fileInput;
+  function getFileOpener() {
+    if (!fileInput) {
+      fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = ".json";
+    }
+    function openFile() {
+      return new Promise((resolve, reject) => {
+        fileInput.onchange = async () => {
+          const files = fileInput.files;
+          if (!files)
+            return resolve(null);
+          const file = files.item(0);
+          if (!file)
+            return resolve(null);
+          return resolve({ text: await file.text(), file });
+        };
+        fileInput.oncancel = () => resolve(null);
+        fileInput.onerror = reject;
+        fileInput.click();
+      });
+    }
+    return openFile;
+  }
+  async function actionGlobalOpenStateFile(pinia) {
+    try {
+      const open2 = getFileOpener();
+      const result = await open2();
+      if (!result)
+        return;
+      const { text, file } = result;
+      loadStoresState(pinia, JSON.parse(text));
+      toastMessage(`Global state imported from "${file.name}".`);
+    } catch (error) {
+      toastMessage(`Failed to import the state from JSON. Check the console for more details.`, "error");
+      console.error(error);
+    }
+  }
+  function loadStoresState(pinia, state) {
+    for (const key in state) {
+      const storeState = pinia.state.value[key];
+      if (storeState) {
+        Object.assign(storeState, state[key]);
+      } else {
+        pinia.state.value[key] = state[key];
+      }
+    }
+  }
+  function formatDisplay(display) {
+    return {
+      _custom: {
+        display
+      }
+    };
+  }
+  const PINIA_ROOT_LABEL = "🍍 Pinia (root)";
+  const PINIA_ROOT_ID = "_root";
+  function formatStoreForInspectorTree(store) {
+    return isPinia(store) ? {
+      id: PINIA_ROOT_ID,
+      label: PINIA_ROOT_LABEL
+    } : {
+      id: store.$id,
+      label: store.$id
+    };
+  }
+  function formatStoreForInspectorState(store) {
+    if (isPinia(store)) {
+      const storeNames = Array.from(store._s.keys());
+      const storeMap = store._s;
+      const state2 = {
+        state: storeNames.map((storeId) => ({
+          editable: true,
+          key: storeId,
+          value: store.state.value[storeId]
+        })),
+        getters: storeNames.filter((id) => storeMap.get(id)._getters).map((id) => {
+          const store2 = storeMap.get(id);
+          return {
+            editable: false,
+            key: id,
+            value: store2._getters.reduce((getters, key) => {
+              getters[key] = store2[key];
+              return getters;
+            }, {})
+          };
+        })
+      };
+      return state2;
+    }
+    const state = {
+      state: Object.keys(store.$state).map((key) => ({
+        editable: true,
+        key,
+        value: store.$state[key]
+      }))
+    };
+    if (store._getters && store._getters.length) {
+      state.getters = store._getters.map((getterName) => ({
+        editable: false,
+        key: getterName,
+        value: store[getterName]
+      }));
+    }
+    if (store._customProperties.size) {
+      state.customProperties = Array.from(store._customProperties).map((key) => ({
+        editable: true,
+        key,
+        value: store[key]
+      }));
+    }
+    return state;
+  }
+  function formatEventData(events) {
+    if (!events)
+      return {};
+    if (Array.isArray(events)) {
+      return events.reduce((data, event) => {
+        data.keys.push(event.key);
+        data.operations.push(event.type);
+        data.oldValue[event.key] = event.oldValue;
+        data.newValue[event.key] = event.newValue;
+        return data;
+      }, {
+        oldValue: {},
+        keys: [],
+        operations: [],
+        newValue: {}
+      });
+    } else {
+      return {
+        operation: formatDisplay(events.type),
+        key: formatDisplay(events.key),
+        oldValue: events.oldValue,
+        newValue: events.newValue
+      };
+    }
+  }
+  function formatMutationType(type) {
+    switch (type) {
+      case MutationType.direct:
+        return "mutation";
+      case MutationType.patchFunction:
+        return "$patch";
+      case MutationType.patchObject:
+        return "$patch";
+      default:
+        return "unknown";
+    }
+  }
+  let isTimelineActive = true;
+  const componentStateTypes = [];
+  const MUTATIONS_LAYER_ID = "pinia:mutations";
+  const INSPECTOR_ID = "pinia";
+  const { assign: assign$1 } = Object;
+  const getStoreType = (id) => "🍍 " + id;
+  function registerPiniaDevtools(app, pinia) {
+    setupDevtoolsPlugin({
+      id: "dev.esm.pinia",
+      label: "Pinia 🍍",
+      logo: "https://pinia.vuejs.org/logo.svg",
+      packageName: "pinia",
+      homepage: "https://pinia.vuejs.org",
+      componentStateTypes,
+      app
+    }, (api) => {
+      if (typeof api.now !== "function") {
+        toastMessage("You seem to be using an outdated version of Vue Devtools. Are you still using the Beta release instead of the stable one? You can find the links at https://devtools.vuejs.org/guide/installation.html.");
+      }
+      api.addTimelineLayer({
+        id: MUTATIONS_LAYER_ID,
+        label: `Pinia 🍍`,
+        color: 15064968
+      });
+      api.addInspector({
+        id: INSPECTOR_ID,
+        label: "Pinia 🍍",
+        icon: "storage",
+        treeFilterPlaceholder: "Search stores",
+        actions: [
+          {
+            icon: "content_copy",
+            action: () => {
+              actionGlobalCopyState(pinia);
+            },
+            tooltip: "Serialize and copy the state"
+          },
+          {
+            icon: "content_paste",
+            action: async () => {
+              await actionGlobalPasteState(pinia);
+              api.sendInspectorTree(INSPECTOR_ID);
+              api.sendInspectorState(INSPECTOR_ID);
+            },
+            tooltip: "Replace the state with the content of your clipboard"
+          },
+          {
+            icon: "save",
+            action: () => {
+              actionGlobalSaveState(pinia);
+            },
+            tooltip: "Save the state as a JSON file"
+          },
+          {
+            icon: "folder_open",
+            action: async () => {
+              await actionGlobalOpenStateFile(pinia);
+              api.sendInspectorTree(INSPECTOR_ID);
+              api.sendInspectorState(INSPECTOR_ID);
+            },
+            tooltip: "Import the state from a JSON file"
+          }
+        ],
+        nodeActions: [
+          {
+            icon: "restore",
+            tooltip: 'Reset the state (with "$reset")',
+            action: (nodeId) => {
+              const store = pinia._s.get(nodeId);
+              if (!store) {
+                toastMessage(`Cannot reset "${nodeId}" store because it wasn't found.`, "warn");
+              } else if (typeof store.$reset !== "function") {
+                toastMessage(`Cannot reset "${nodeId}" store because it doesn't have a "$reset" method implemented.`, "warn");
+              } else {
+                store.$reset();
+                toastMessage(`Store "${nodeId}" reset.`);
+              }
+            }
+          }
+        ]
+      });
+      api.on.inspectComponent((payload, ctx) => {
+        const proxy = payload.componentInstance && payload.componentInstance.proxy;
+        if (proxy && proxy._pStores) {
+          const piniaStores = payload.componentInstance.proxy._pStores;
+          Object.values(piniaStores).forEach((store) => {
+            payload.instanceData.state.push({
+              type: getStoreType(store.$id),
+              key: "state",
+              editable: true,
+              value: store._isOptionsAPI ? {
+                _custom: {
+                  value: vue.toRaw(store.$state),
+                  actions: [
+                    {
+                      icon: "restore",
+                      tooltip: "Reset the state of this store",
+                      action: () => store.$reset()
+                    }
+                  ]
+                }
+              } : (
+                // NOTE: workaround to unwrap transferred refs
+                Object.keys(store.$state).reduce((state, key) => {
+                  state[key] = store.$state[key];
+                  return state;
+                }, {})
+              )
+            });
+            if (store._getters && store._getters.length) {
+              payload.instanceData.state.push({
+                type: getStoreType(store.$id),
+                key: "getters",
+                editable: false,
+                value: store._getters.reduce((getters, key) => {
+                  try {
+                    getters[key] = store[key];
+                  } catch (error) {
+                    getters[key] = error;
+                  }
+                  return getters;
+                }, {})
+              });
+            }
+          });
+        }
+      });
+      api.on.getInspectorTree((payload) => {
+        if (payload.app === app && payload.inspectorId === INSPECTOR_ID) {
+          let stores = [pinia];
+          stores = stores.concat(Array.from(pinia._s.values()));
+          payload.rootNodes = (payload.filter ? stores.filter((store) => "$id" in store ? store.$id.toLowerCase().includes(payload.filter.toLowerCase()) : PINIA_ROOT_LABEL.toLowerCase().includes(payload.filter.toLowerCase())) : stores).map(formatStoreForInspectorTree);
+        }
+      });
+      api.on.getInspectorState((payload) => {
+        if (payload.app === app && payload.inspectorId === INSPECTOR_ID) {
+          const inspectedStore = payload.nodeId === PINIA_ROOT_ID ? pinia : pinia._s.get(payload.nodeId);
+          if (!inspectedStore) {
+            return;
+          }
+          if (inspectedStore) {
+            payload.state = formatStoreForInspectorState(inspectedStore);
+          }
+        }
+      });
+      api.on.editInspectorState((payload, ctx) => {
+        if (payload.app === app && payload.inspectorId === INSPECTOR_ID) {
+          const inspectedStore = payload.nodeId === PINIA_ROOT_ID ? pinia : pinia._s.get(payload.nodeId);
+          if (!inspectedStore) {
+            return toastMessage(`store "${payload.nodeId}" not found`, "error");
+          }
+          const { path } = payload;
+          if (!isPinia(inspectedStore)) {
+            if (path.length !== 1 || !inspectedStore._customProperties.has(path[0]) || path[0] in inspectedStore.$state) {
+              path.unshift("$state");
+            }
+          } else {
+            path.unshift("state");
+          }
+          isTimelineActive = false;
+          payload.set(inspectedStore, path, payload.state.value);
+          isTimelineActive = true;
+        }
+      });
+      api.on.editComponentState((payload) => {
+        if (payload.type.startsWith("🍍")) {
+          const storeId = payload.type.replace(/^🍍\s*/, "");
+          const store = pinia._s.get(storeId);
+          if (!store) {
+            return toastMessage(`store "${storeId}" not found`, "error");
+          }
+          const { path } = payload;
+          if (path[0] !== "state") {
+            return toastMessage(`Invalid path for store "${storeId}":
+${path}
+Only state can be modified.`);
+          }
+          path[0] = "$state";
+          isTimelineActive = false;
+          payload.set(store, path, payload.state.value);
+          isTimelineActive = true;
+        }
+      });
+    });
+  }
+  function addStoreToDevtools(app, store) {
+    if (!componentStateTypes.includes(getStoreType(store.$id))) {
+      componentStateTypes.push(getStoreType(store.$id));
+    }
+    setupDevtoolsPlugin({
+      id: "dev.esm.pinia",
+      label: "Pinia 🍍",
+      logo: "https://pinia.vuejs.org/logo.svg",
+      packageName: "pinia",
+      homepage: "https://pinia.vuejs.org",
+      componentStateTypes,
+      app,
+      settings: {
+        logStoreChanges: {
+          label: "Notify about new/deleted stores",
+          type: "boolean",
+          defaultValue: true
+        }
+        // useEmojis: {
+        //   label: 'Use emojis in messages ⚡️',
+        //   type: 'boolean',
+        //   defaultValue: true,
+        // },
+      }
+    }, (api) => {
+      const now2 = typeof api.now === "function" ? api.now.bind(api) : Date.now;
+      store.$onAction(({ after, onError, name, args }) => {
+        const groupId = runningActionId++;
+        api.addTimelineEvent({
+          layerId: MUTATIONS_LAYER_ID,
+          event: {
+            time: now2(),
+            title: "🛫 " + name,
+            subtitle: "start",
+            data: {
+              store: formatDisplay(store.$id),
+              action: formatDisplay(name),
+              args
+            },
+            groupId
+          }
+        });
+        after((result) => {
+          activeAction = void 0;
+          api.addTimelineEvent({
+            layerId: MUTATIONS_LAYER_ID,
+            event: {
+              time: now2(),
+              title: "🛬 " + name,
+              subtitle: "end",
+              data: {
+                store: formatDisplay(store.$id),
+                action: formatDisplay(name),
+                args,
+                result
+              },
+              groupId
+            }
+          });
+        });
+        onError((error) => {
+          activeAction = void 0;
+          api.addTimelineEvent({
+            layerId: MUTATIONS_LAYER_ID,
+            event: {
+              time: now2(),
+              logType: "error",
+              title: "💥 " + name,
+              subtitle: "end",
+              data: {
+                store: formatDisplay(store.$id),
+                action: formatDisplay(name),
+                args,
+                error
+              },
+              groupId
+            }
+          });
+        });
+      }, true);
+      store._customProperties.forEach((name) => {
+        vue.watch(() => vue.unref(store[name]), (newValue, oldValue) => {
+          api.notifyComponentUpdate();
+          api.sendInspectorState(INSPECTOR_ID);
+          if (isTimelineActive) {
+            api.addTimelineEvent({
+              layerId: MUTATIONS_LAYER_ID,
+              event: {
+                time: now2(),
+                title: "Change",
+                subtitle: name,
+                data: {
+                  newValue,
+                  oldValue
+                },
+                groupId: activeAction
+              }
+            });
+          }
+        }, { deep: true });
+      });
+      store.$subscribe(({ events, type }, state) => {
+        api.notifyComponentUpdate();
+        api.sendInspectorState(INSPECTOR_ID);
+        if (!isTimelineActive)
+          return;
+        const eventData = {
+          time: now2(),
+          title: formatMutationType(type),
+          data: assign$1({ store: formatDisplay(store.$id) }, formatEventData(events)),
+          groupId: activeAction
+        };
+        if (type === MutationType.patchFunction) {
+          eventData.subtitle = "⤵️";
+        } else if (type === MutationType.patchObject) {
+          eventData.subtitle = "🧩";
+        } else if (events && !Array.isArray(events)) {
+          eventData.subtitle = events.type;
+        }
+        if (events) {
+          eventData.data["rawEvent(s)"] = {
+            _custom: {
+              display: "DebuggerEvent",
+              type: "object",
+              tooltip: "raw DebuggerEvent[]",
+              value: events
+            }
+          };
+        }
+        api.addTimelineEvent({
+          layerId: MUTATIONS_LAYER_ID,
+          event: eventData
+        });
+      }, { detached: true, flush: "sync" });
+      const hotUpdate = store._hotUpdate;
+      store._hotUpdate = vue.markRaw((newStore) => {
+        hotUpdate(newStore);
+        api.addTimelineEvent({
+          layerId: MUTATIONS_LAYER_ID,
+          event: {
+            time: now2(),
+            title: "🔥 " + store.$id,
+            subtitle: "HMR update",
+            data: {
+              store: formatDisplay(store.$id),
+              info: formatDisplay(`HMR update`)
+            }
+          }
+        });
+        api.notifyComponentUpdate();
+        api.sendInspectorTree(INSPECTOR_ID);
+        api.sendInspectorState(INSPECTOR_ID);
+      });
+      const { $dispose } = store;
+      store.$dispose = () => {
+        $dispose();
+        api.notifyComponentUpdate();
+        api.sendInspectorTree(INSPECTOR_ID);
+        api.sendInspectorState(INSPECTOR_ID);
+        api.getSettings().logStoreChanges && toastMessage(`Disposed "${store.$id}" store 🗑`);
+      };
+      api.notifyComponentUpdate();
+      api.sendInspectorTree(INSPECTOR_ID);
+      api.sendInspectorState(INSPECTOR_ID);
+      api.getSettings().logStoreChanges && toastMessage(`"${store.$id}" store installed 🆕`);
+    });
+  }
+  let runningActionId = 0;
+  let activeAction;
+  function patchActionForGrouping(store, actionNames, wrapWithProxy) {
+    const actions = actionNames.reduce((storeActions, actionName) => {
+      storeActions[actionName] = vue.toRaw(store)[actionName];
+      return storeActions;
+    }, {});
+    for (const actionName in actions) {
+      store[actionName] = function() {
+        const _actionId = runningActionId;
+        const trackedStore = wrapWithProxy ? new Proxy(store, {
+          get(...args) {
+            activeAction = _actionId;
+            return Reflect.get(...args);
+          },
+          set(...args) {
+            activeAction = _actionId;
+            return Reflect.set(...args);
+          }
+        }) : store;
+        activeAction = _actionId;
+        const retValue = actions[actionName].apply(trackedStore, arguments);
+        activeAction = void 0;
+        return retValue;
+      };
+    }
+  }
+  function devtoolsPlugin({ app, store, options }) {
+    if (store.$id.startsWith("__hot:")) {
+      return;
+    }
+    store._isOptionsAPI = !!options.state;
+    patchActionForGrouping(store, Object.keys(options.actions), store._isOptionsAPI);
+    const originalHotUpdate = store._hotUpdate;
+    vue.toRaw(store)._hotUpdate = function(newStore) {
+      originalHotUpdate.apply(this, arguments);
+      patchActionForGrouping(store, Object.keys(newStore._hmrPayload.actions), !!store._isOptionsAPI);
+    };
+    addStoreToDevtools(
+      app,
+      // FIXME: is there a way to allow the assignment from Store<Id, S, G, A> to StoreGeneric?
+      store
+    );
+  }
+  function createPinia() {
+    const scope = vue.effectScope(true);
+    const state = scope.run(() => vue.ref({}));
+    let _p = [];
+    let toBeInstalled = [];
+    const pinia = vue.markRaw({
+      install(app) {
+        setActivePinia(pinia);
+        {
+          pinia._a = app;
+          app.provide(piniaSymbol, pinia);
+          app.config.globalProperties.$pinia = pinia;
+          if (USE_DEVTOOLS) {
+            registerPiniaDevtools(app, pinia);
+          }
+          toBeInstalled.forEach((plugin) => _p.push(plugin));
+          toBeInstalled = [];
+        }
+      },
+      use(plugin) {
+        if (!this._a && !isVue2) {
+          toBeInstalled.push(plugin);
+        } else {
+          _p.push(plugin);
+        }
+        return this;
+      },
+      _p,
+      // it's actually undefined here
+      // @ts-expect-error
+      _a: null,
+      _e: scope,
+      _s: /* @__PURE__ */ new Map(),
+      state
+    });
+    if (USE_DEVTOOLS && typeof Proxy !== "undefined") {
+      pinia.use(devtoolsPlugin);
+    }
+    return pinia;
+  }
+  function patchObject(newState, oldState) {
+    for (const key in oldState) {
+      const subPatch = oldState[key];
+      if (!(key in newState)) {
+        continue;
+      }
+      const targetValue = newState[key];
+      if (isPlainObject$2(targetValue) && isPlainObject$2(subPatch) && !vue.isRef(subPatch) && !vue.isReactive(subPatch)) {
+        newState[key] = patchObject(targetValue, subPatch);
+      } else {
+        {
+          newState[key] = subPatch;
+        }
+      }
+    }
+    return newState;
+  }
+  const noop = () => {
+  };
+  function addSubscription(subscriptions, callback, detached, onCleanup = noop) {
+    subscriptions.push(callback);
+    const removeSubscription = () => {
+      const idx = subscriptions.indexOf(callback);
+      if (idx > -1) {
+        subscriptions.splice(idx, 1);
+        onCleanup();
+      }
+    };
+    if (!detached && vue.getCurrentScope()) {
+      vue.onScopeDispose(removeSubscription);
+    }
+    return removeSubscription;
+  }
+  function triggerSubscriptions(subscriptions, ...args) {
+    subscriptions.slice().forEach((callback) => {
+      callback(...args);
+    });
+  }
+  const fallbackRunWithContext = (fn) => fn();
+  function mergeReactiveObjects(target, patchToApply) {
+    if (target instanceof Map && patchToApply instanceof Map) {
+      patchToApply.forEach((value, key) => target.set(key, value));
+    }
+    if (target instanceof Set && patchToApply instanceof Set) {
+      patchToApply.forEach(target.add, target);
+    }
+    for (const key in patchToApply) {
+      if (!patchToApply.hasOwnProperty(key))
+        continue;
+      const subPatch = patchToApply[key];
+      const targetValue = target[key];
+      if (isPlainObject$2(targetValue) && isPlainObject$2(subPatch) && target.hasOwnProperty(key) && !vue.isRef(subPatch) && !vue.isReactive(subPatch)) {
+        target[key] = mergeReactiveObjects(targetValue, subPatch);
+      } else {
+        target[key] = subPatch;
+      }
+    }
+    return target;
+  }
+  const skipHydrateSymbol = Symbol("pinia:skipHydration");
+  function shouldHydrate(obj) {
+    return !isPlainObject$2(obj) || !obj.hasOwnProperty(skipHydrateSymbol);
+  }
+  const { assign } = Object;
+  function isComputed(o) {
+    return !!(vue.isRef(o) && o.effect);
+  }
+  function createOptionsStore(id, options, pinia, hot) {
+    const { state, actions, getters } = options;
+    const initialState = pinia.state.value[id];
+    let store;
+    function setup() {
+      if (!initialState && !hot) {
+        {
+          pinia.state.value[id] = state ? state() : {};
+        }
+      }
+      const localState = hot ? (
+        // use ref() to unwrap refs inside state TODO: check if this is still necessary
+        vue.toRefs(vue.ref(state ? state() : {}).value)
+      ) : vue.toRefs(pinia.state.value[id]);
+      return assign(localState, actions, Object.keys(getters || {}).reduce((computedGetters, name) => {
+        if (name in localState) {
+          console.warn(`[🍍]: A getter cannot have the same name as another state property. Rename one of them. Found with "${name}" in store "${id}".`);
+        }
+        computedGetters[name] = vue.markRaw(vue.computed(() => {
+          setActivePinia(pinia);
+          const store2 = pinia._s.get(id);
+          return getters[name].call(store2, store2);
+        }));
+        return computedGetters;
+      }, {}));
+    }
+    store = createSetupStore(id, setup, options, pinia, hot, true);
+    return store;
+  }
+  function createSetupStore($id, setup, options = {}, pinia, hot, isOptionsStore) {
+    let scope;
+    const optionsForPlugin = assign({ actions: {} }, options);
+    if (!pinia._e.active) {
+      throw new Error("Pinia destroyed");
+    }
+    const $subscribeOptions = {
+      deep: true
+      // flush: 'post',
+    };
+    {
+      $subscribeOptions.onTrigger = (event) => {
+        if (isListening) {
+          debuggerEvents = event;
+        } else if (isListening == false && !store._hotUpdating) {
+          if (Array.isArray(debuggerEvents)) {
+            debuggerEvents.push(event);
+          } else {
+            console.error("🍍 debuggerEvents should be an array. This is most likely an internal Pinia bug.");
+          }
+        }
+      };
+    }
+    let isListening;
+    let isSyncListening;
+    let subscriptions = [];
+    let actionSubscriptions = [];
+    let debuggerEvents;
+    const initialState = pinia.state.value[$id];
+    if (!isOptionsStore && !initialState && !hot) {
+      {
+        pinia.state.value[$id] = {};
+      }
+    }
+    const hotState = vue.ref({});
+    let activeListener;
+    function $patch(partialStateOrMutator) {
+      let subscriptionMutation;
+      isListening = isSyncListening = false;
+      {
+        debuggerEvents = [];
+      }
+      if (typeof partialStateOrMutator === "function") {
+        partialStateOrMutator(pinia.state.value[$id]);
+        subscriptionMutation = {
+          type: MutationType.patchFunction,
+          storeId: $id,
+          events: debuggerEvents
+        };
+      } else {
+        mergeReactiveObjects(pinia.state.value[$id], partialStateOrMutator);
+        subscriptionMutation = {
+          type: MutationType.patchObject,
+          payload: partialStateOrMutator,
+          storeId: $id,
+          events: debuggerEvents
+        };
+      }
+      const myListenerId = activeListener = Symbol();
+      vue.nextTick().then(() => {
+        if (activeListener === myListenerId) {
+          isListening = true;
+        }
+      });
+      isSyncListening = true;
+      triggerSubscriptions(subscriptions, subscriptionMutation, pinia.state.value[$id]);
+    }
+    const $reset = isOptionsStore ? function $reset2() {
+      const { state } = options;
+      const newState = state ? state() : {};
+      this.$patch(($state) => {
+        assign($state, newState);
+      });
+    } : (
+      /* istanbul ignore next */
+      () => {
+        throw new Error(`🍍: Store "${$id}" is built using the setup syntax and does not implement $reset().`);
+      }
+    );
+    function $dispose() {
+      scope.stop();
+      subscriptions = [];
+      actionSubscriptions = [];
+      pinia._s.delete($id);
+    }
+    function wrapAction(name, action) {
+      return function() {
+        setActivePinia(pinia);
+        const args = Array.from(arguments);
+        const afterCallbackList = [];
+        const onErrorCallbackList = [];
+        function after(callback) {
+          afterCallbackList.push(callback);
+        }
+        function onError(callback) {
+          onErrorCallbackList.push(callback);
+        }
+        triggerSubscriptions(actionSubscriptions, {
+          args,
+          name,
+          store,
+          after,
+          onError
+        });
+        let ret;
+        try {
+          ret = action.apply(this && this.$id === $id ? this : store, args);
+        } catch (error) {
+          triggerSubscriptions(onErrorCallbackList, error);
+          throw error;
+        }
+        if (ret instanceof Promise) {
+          return ret.then((value) => {
+            triggerSubscriptions(afterCallbackList, value);
+            return value;
+          }).catch((error) => {
+            triggerSubscriptions(onErrorCallbackList, error);
+            return Promise.reject(error);
+          });
+        }
+        triggerSubscriptions(afterCallbackList, ret);
+        return ret;
+      };
+    }
+    const _hmrPayload = /* @__PURE__ */ vue.markRaw({
+      actions: {},
+      getters: {},
+      state: [],
+      hotState
+    });
+    const partialStore = {
+      _p: pinia,
+      // _s: scope,
+      $id,
+      $onAction: addSubscription.bind(null, actionSubscriptions),
+      $patch,
+      $reset,
+      $subscribe(callback, options2 = {}) {
+        const removeSubscription = addSubscription(subscriptions, callback, options2.detached, () => stopWatcher());
+        const stopWatcher = scope.run(() => vue.watch(() => pinia.state.value[$id], (state) => {
+          if (options2.flush === "sync" ? isSyncListening : isListening) {
+            callback({
+              storeId: $id,
+              type: MutationType.direct,
+              events: debuggerEvents
+            }, state);
+          }
+        }, assign({}, $subscribeOptions, options2)));
+        return removeSubscription;
+      },
+      $dispose
+    };
+    const store = vue.reactive(assign(
+      {
+        _hmrPayload,
+        _customProperties: vue.markRaw(/* @__PURE__ */ new Set())
+        // devtools custom properties
+      },
+      partialStore
+      // must be added later
+      // setupStore
+    ));
+    pinia._s.set($id, store);
+    const runWithContext = pinia._a && pinia._a.runWithContext || fallbackRunWithContext;
+    const setupStore = runWithContext(() => pinia._e.run(() => (scope = vue.effectScope()).run(setup)));
+    for (const key in setupStore) {
+      const prop = setupStore[key];
+      if (vue.isRef(prop) && !isComputed(prop) || vue.isReactive(prop)) {
+        if (hot) {
+          set(hotState.value, key, vue.toRef(setupStore, key));
+        } else if (!isOptionsStore) {
+          if (initialState && shouldHydrate(prop)) {
+            if (vue.isRef(prop)) {
+              prop.value = initialState[key];
+            } else {
+              mergeReactiveObjects(prop, initialState[key]);
+            }
+          }
+          {
+            pinia.state.value[$id][key] = prop;
+          }
+        }
+        {
+          _hmrPayload.state.push(key);
+        }
+      } else if (typeof prop === "function") {
+        const actionValue = hot ? prop : wrapAction(key, prop);
+        {
+          setupStore[key] = actionValue;
+        }
+        {
+          _hmrPayload.actions[key] = prop;
+        }
+        optionsForPlugin.actions[key] = prop;
+      } else {
+        if (isComputed(prop)) {
+          _hmrPayload.getters[key] = isOptionsStore ? (
+            // @ts-expect-error
+            options.getters[key]
+          ) : prop;
+          if (IS_CLIENT) {
+            const getters = setupStore._getters || // @ts-expect-error: same
+            (setupStore._getters = vue.markRaw([]));
+            getters.push(key);
+          }
+        }
+      }
+    }
+    {
+      assign(store, setupStore);
+      assign(vue.toRaw(store), setupStore);
+    }
+    Object.defineProperty(store, "$state", {
+      get: () => hot ? hotState.value : pinia.state.value[$id],
+      set: (state) => {
+        if (hot) {
+          throw new Error("cannot set hotState");
+        }
+        $patch(($state) => {
+          assign($state, state);
+        });
+      }
+    });
+    {
+      store._hotUpdate = vue.markRaw((newStore) => {
+        store._hotUpdating = true;
+        newStore._hmrPayload.state.forEach((stateKey) => {
+          if (stateKey in store.$state) {
+            const newStateTarget = newStore.$state[stateKey];
+            const oldStateSource = store.$state[stateKey];
+            if (typeof newStateTarget === "object" && isPlainObject$2(newStateTarget) && isPlainObject$2(oldStateSource)) {
+              patchObject(newStateTarget, oldStateSource);
+            } else {
+              newStore.$state[stateKey] = oldStateSource;
+            }
+          }
+          set(store, stateKey, vue.toRef(newStore.$state, stateKey));
+        });
+        Object.keys(store.$state).forEach((stateKey) => {
+          if (!(stateKey in newStore.$state)) {
+            del(store, stateKey);
+          }
+        });
+        isListening = false;
+        isSyncListening = false;
+        pinia.state.value[$id] = vue.toRef(newStore._hmrPayload, "hotState");
+        isSyncListening = true;
+        vue.nextTick().then(() => {
+          isListening = true;
+        });
+        for (const actionName in newStore._hmrPayload.actions) {
+          const action = newStore[actionName];
+          set(store, actionName, wrapAction(actionName, action));
+        }
+        for (const getterName in newStore._hmrPayload.getters) {
+          const getter = newStore._hmrPayload.getters[getterName];
+          const getterValue = isOptionsStore ? (
+            // special handling of options api
+            vue.computed(() => {
+              setActivePinia(pinia);
+              return getter.call(store, store);
+            })
+          ) : getter;
+          set(store, getterName, getterValue);
+        }
+        Object.keys(store._hmrPayload.getters).forEach((key) => {
+          if (!(key in newStore._hmrPayload.getters)) {
+            del(store, key);
+          }
+        });
+        Object.keys(store._hmrPayload.actions).forEach((key) => {
+          if (!(key in newStore._hmrPayload.actions)) {
+            del(store, key);
+          }
+        });
+        store._hmrPayload = newStore._hmrPayload;
+        store._getters = newStore._getters;
+        store._hotUpdating = false;
+      });
+    }
+    if (USE_DEVTOOLS) {
+      const nonEnumerable = {
+        writable: true,
+        configurable: true,
+        // avoid warning on devtools trying to display this property
+        enumerable: false
+      };
+      ["_p", "_hmrPayload", "_getters", "_customProperties"].forEach((p) => {
+        Object.defineProperty(store, p, assign({ value: store[p] }, nonEnumerable));
+      });
+    }
+    pinia._p.forEach((extender) => {
+      if (USE_DEVTOOLS) {
+        const extensions = scope.run(() => extender({
+          store,
+          app: pinia._a,
+          pinia,
+          options: optionsForPlugin
+        }));
+        Object.keys(extensions || {}).forEach((key) => store._customProperties.add(key));
+        assign(store, extensions);
+      } else {
+        assign(store, scope.run(() => extender({
+          store,
+          app: pinia._a,
+          pinia,
+          options: optionsForPlugin
+        })));
+      }
+    });
+    if (store.$state && typeof store.$state === "object" && typeof store.$state.constructor === "function" && !store.$state.constructor.toString().includes("[native code]")) {
+      console.warn(`[🍍]: The "state" must be a plain object. It cannot be
+	state: () => new MyClass()
+Found in store "${store.$id}".`);
+    }
+    if (initialState && isOptionsStore && options.hydrate) {
+      options.hydrate(store.$state, initialState);
+    }
+    isListening = true;
+    isSyncListening = true;
+    return store;
+  }
+  function defineStore(idOrOptions, setup, setupOptions) {
+    let id;
+    let options;
+    const isSetupStore = typeof setup === "function";
+    if (typeof idOrOptions === "string") {
+      id = idOrOptions;
+      options = isSetupStore ? setupOptions : setup;
+    } else {
+      options = idOrOptions;
+      id = idOrOptions.id;
+      if (typeof id !== "string") {
+        throw new Error(`[🍍]: "defineStore()" must be passed a store id as its first argument.`);
+      }
+    }
+    function useStore(pinia, hot) {
+      const hasContext = vue.hasInjectionContext();
+      pinia = // in test mode, ignore the argument provided as we can always retrieve a
+      // pinia instance with getActivePinia()
+      pinia || (hasContext ? vue.inject(piniaSymbol, null) : null);
+      if (pinia)
+        setActivePinia(pinia);
+      if (!activePinia) {
+        throw new Error(`[🍍]: "getActivePinia()" was called but there was no active Pinia. Are you trying to use a store before calling "app.use(pinia)"?
+See https://pinia.vuejs.org/core-concepts/outside-component-usage.html for help.
+This will fail in production.`);
+      }
+      pinia = activePinia;
+      if (!pinia._s.has(id)) {
+        if (isSetupStore) {
+          createSetupStore(id, setup, options, pinia);
+        } else {
+          createOptionsStore(id, options, pinia);
+        }
+        {
+          useStore._pinia = pinia;
+        }
+      }
+      const store = pinia._s.get(id);
+      if (hot) {
+        const hotId = "__hot:" + id;
+        const newStore = isSetupStore ? createSetupStore(hotId, setup, options, pinia, true) : createOptionsStore(hotId, assign({}, options), pinia, true);
+        hot._hotUpdate(newStore);
+        delete pinia.state.value[hotId];
+        pinia._s.delete(hotId);
+      }
+      if (IS_CLIENT) {
+        const currentInstance = vue.getCurrentInstance();
+        if (currentInstance && currentInstance.proxy && // avoid adding stores that are just built for hot module replacement
+        !hot) {
+          const vm = currentInstance.proxy;
+          const cache = "_pStores" in vm ? vm._pStores : vm._pStores = {};
+          cache[id] = store;
+        }
+      }
+      return store;
+    }
+    useStore.$id = id;
+    return useStore;
+  }
+  const AUTH_ROUTE = "/pages/profile/auth";
+  const COMPANY_SESSION_TOKEN_KEY = "companySessionToken";
+  const COMPANY_USER_INFO_KEY = "companyUserInfo";
+  const LEGACY_TOKEN_KEY = "token";
+  const LEGACY_USER_INFO_KEY = "userInfo";
+  const LAST_LOGIN_USERNAME_KEY = "lastLoginUsername";
+  const PUBLIC_ROUTES = /* @__PURE__ */ new Set([AUTH_ROUTE]);
+  const isPlainObject$1 = (value) => !!value && typeof value === "object" && !Array.isArray(value);
+  const getRememberedUsername = () => String(uni.getStorageSync(LAST_LOGIN_USERNAME_KEY) || "").trim();
+  const buildFallbackUserInfo = (username) => {
+    const normalizedUsername = String(username || "").trim();
+    if (!normalizedUsername)
+      return null;
+    return {
+      id: normalizedUsername,
+      username: normalizedUsername,
+      displayName: normalizedUsername,
+      nickname: normalizedUsername
+    };
+  };
+  const normalizeStoredUserInfo = (userInfo) => {
+    if (!isPlainObject$1(userInfo))
+      return null;
+    const rememberedUsername = getRememberedUsername();
+    const username = String(userInfo.username || userInfo.id || rememberedUsername || "").trim();
+    if (!username)
+      return userInfo;
+    return {
+      ...userInfo,
+      id: String(userInfo.id || username).trim(),
+      username,
+      displayName: String(userInfo.displayName || userInfo.display_name || userInfo.nickname || username).trim(),
+      nickname: String(userInfo.nickname || userInfo.displayName || userInfo.display_name || username).trim()
+    };
+  };
+  const normalizeRoute = (route) => {
+    const normalized = String(route || "").trim();
+    if (!normalized)
+      return "";
+    return normalized.split("?")[0];
+  };
+  const routeRequiresAuth = (route) => {
+    const normalized = normalizeRoute(route);
+    if (!normalized)
+      return false;
+    return !PUBLIC_ROUTES.has(normalized);
+  };
+  const getStoredSessionToken = () => {
+    const nextToken = String(
+      uni.getStorageSync(COMPANY_SESSION_TOKEN_KEY) || uni.getStorageSync(LEGACY_TOKEN_KEY) || ""
+    ).trim();
+    return nextToken;
+  };
+  const hasStoredSessionToken = () => !!getStoredSessionToken();
+  const setStoredSessionToken = (token) => {
+    const nextToken = String(token || "").trim();
+    if (nextToken) {
+      uni.setStorageSync(COMPANY_SESSION_TOKEN_KEY, nextToken);
+      uni.setStorageSync(LEGACY_TOKEN_KEY, nextToken);
+      return;
+    }
+    uni.removeStorageSync(COMPANY_SESSION_TOKEN_KEY);
+    uni.removeStorageSync(LEGACY_TOKEN_KEY);
+  };
+  const getStoredUserInfo = () => {
+    const primary = normalizeStoredUserInfo(uni.getStorageSync(COMPANY_USER_INFO_KEY));
+    if (primary)
+      return primary;
+    const legacy = normalizeStoredUserInfo(uni.getStorageSync(LEGACY_USER_INFO_KEY));
+    if (legacy)
+      return legacy;
+    if (getStoredSessionToken()) {
+      return buildFallbackUserInfo(getRememberedUsername());
+    }
+    return null;
+  };
+  const getStoredAuthSnapshot = () => ({
+    token: getStoredSessionToken(),
+    userInfo: getStoredUserInfo()
+  });
+  const setStoredUserInfo = (userInfo) => {
+    const normalized = normalizeStoredUserInfo(userInfo);
+    if (normalized) {
+      uni.setStorageSync(COMPANY_USER_INFO_KEY, normalized);
+      uni.setStorageSync(LEGACY_USER_INFO_KEY, normalized);
+      if (normalized.username) {
+        uni.setStorageSync(LAST_LOGIN_USERNAME_KEY, normalized.username);
+      }
+      return;
+    }
+    uni.removeStorageSync(COMPANY_USER_INFO_KEY);
+    uni.removeStorageSync(LEGACY_USER_INFO_KEY);
+  };
+  const clearAuthSessionStorage = () => {
+    setStoredSessionToken("");
+    setStoredUserInfo(null);
+  };
+  const getCurrentUserScope = () => {
+    const userInfo = getStoredUserInfo();
+    if (!userInfo)
+      return "guest";
+    return String(userInfo.username || userInfo.id || "guest").trim() || "guest";
+  };
+  const buildAuthRedirectUrl = (redirectRoute = "") => {
+    const normalized = normalizeRoute(redirectRoute);
+    if (routeRequiresAuth(normalized)) {
+      return `${AUTH_ROUTE}?redirect=${encodeURIComponent(redirectRoute)}`;
+    }
+    return AUTH_ROUTE;
+  };
+  const redirectToAuth = (redirectRoute = "") => {
+    uni.reLaunch({ url: buildAuthRedirectUrl(redirectRoute) });
+  };
+  const DEBUG_LOG_STORAGE_KEY = "aiNexusDebugLogs";
+  const DEBUG_LOG_FILE_PATH = "_doc/ai-nexus-debug/workshop-debug.log";
+  const DEBUG_LOG_MAX_ENTRIES = 200;
+  const isPlainObject = (value) => !!value && typeof value === "object" && !Array.isArray(value);
+  const safeSerialize = (value) => {
+    if (value === null || value === void 0)
+      return "";
+    if (typeof value === "string")
+      return value;
+    if (typeof value === "number" || typeof value === "boolean")
+      return String(value);
+    try {
+      return JSON.stringify(value);
+    } catch (error) {
+      return "[unserializable]";
+    }
+  };
+  const normalizeDetail = (detail) => {
+    if (detail === null || detail === void 0)
+      return "";
+    if (typeof detail === "string")
+      return detail;
+    if (Array.isArray(detail)) {
+      return detail.map((item) => safeSerialize(item)).join(" ");
+    }
+    if (isPlainObject(detail)) {
+      const next = {};
+      Object.keys(detail).forEach((key) => {
+        const value = detail[key];
+        if (value === void 0)
+          return;
+        next[key] = typeof value === "string" ? value : safeSerialize(value);
+      });
+      return safeSerialize(next);
+    }
+    return safeSerialize(detail);
+  };
+  const readDebugLogs = () => {
+    const stored = uni.getStorageSync(DEBUG_LOG_STORAGE_KEY);
+    return Array.isArray(stored) ? stored : [];
+  };
+  const writeDebugLogs = (list) => {
+    uni.setStorageSync(DEBUG_LOG_STORAGE_KEY, Array.isArray(list) ? list.slice(-DEBUG_LOG_MAX_ENTRIES) : []);
+  };
+  const appendFileLog = (line) => {
+    var _a;
+    try {
+      if (!((_a = plus == null ? void 0 : plus.io) == null ? void 0 : _a.requestFileSystem))
+        return;
+      plus.io.requestFileSystem(
+        plus.io.PRIVATE_DOC,
+        (fs) => {
+          fs.root.getFile(
+            DEBUG_LOG_FILE_PATH,
+            { create: true },
+            (entry) => {
+              entry.createWriter(
+                (writer) => {
+                  const previousError = writer.onerror;
+                  writer.onerror = (error) => {
+                    if (typeof previousError === "function")
+                      previousError(error);
+                  };
+                  writer.seek(writer.length);
+                  writer.write(`${line}
+`);
+                },
+                () => {
+                }
+              );
+            },
+            () => {
+            }
+          );
+        },
+        () => {
+        }
+      );
+    } catch (error) {
+    }
+  };
+  const appendDebugLog = (scope, event, detail = "") => {
+    const entry = {
+      at: (/* @__PURE__ */ new Date()).toISOString(),
+      scope: String(scope || "app").trim() || "app",
+      event: String(event || "event").trim() || "event",
+      detail: normalizeDetail(detail)
+    };
+    const line = `[${entry.at}] [${entry.scope}] ${entry.event}${entry.detail ? ` ${entry.detail}` : ""}`;
+    const logs = readDebugLogs();
+    logs.push(entry);
+    writeDebugLogs(logs);
+    formatAppLog("log", "at utils/debug-log.js:95", line);
+    appendFileLog(line);
+    return entry;
+  };
+  const DEBUG_LOG_FILE_HINT = DEBUG_LOG_FILE_PATH;
+  let unauthorizedHandler = null;
+  let handling401 = false;
+  let last401At = 0;
+  const DEFAULT_API_BASE_URL = "http://121.89.87.255:10001";
+  const DEFAULT_NEWS_BASE_URL = "http://8.135.4.46";
+  const DEFAULT_OPENMAIC_BASE_URL = "http://8.135.4.46:3000";
+  function setUnauthorizedHandler(fn) {
+    unauthorizedHandler = typeof fn === "function" ? fn : null;
+  }
+  const normalizeStoredUrl = (value) => {
+    if (!value)
+      return "";
+    const normalizedUrl = String(value).trim().replace(/\/+$/, "");
+    if (!normalizedUrl)
+      return "";
+    if (/^https?:\/\/(10\.0\.2\.2|127\.0\.0\.1|localhost)(:\d+)?$/i.test(normalizedUrl))
+      return "";
+    return normalizedUrl;
+  };
+  const getConfiguredBaseUrl = (storageKey, fallbackUrl) => {
+    const storedBaseUrl = normalizeStoredUrl(uni.getStorageSync(storageKey));
+    if (storedBaseUrl)
+      return storedBaseUrl;
+    return fallbackUrl;
+  };
+  const getBaseUrl = () => getConfiguredBaseUrl("apiBaseUrl", DEFAULT_API_BASE_URL);
+  const getNewsBaseUrl = () => getConfiguredBaseUrl("newsBaseUrl", DEFAULT_NEWS_BASE_URL);
+  const getOpenmaicBaseUrl = () => getConfiguredBaseUrl("openmaicBaseUrl", DEFAULT_OPENMAIC_BASE_URL);
+  const stringifyErrorPayload = (value) => {
+    if (value === null || value === void 0)
+      return "";
+    if (typeof value === "string")
+      return value.trim();
+    if (typeof value === "number" || typeof value === "boolean")
+      return String(value);
+    if (Array.isArray(value)) {
+      const message = value.map((item) => stringifyErrorPayload(item)).filter(Boolean).join("；");
+      if (message)
+        return message;
+    }
+    if (typeof value === "object") {
+      const preferredKeys = ["detail", "message", "error", "msg", "title", "reason", "description"];
+      for (const key of preferredKeys) {
+        const message = stringifyErrorPayload(value[key]);
+        if (message)
+          return message;
+      }
+      for (const nestedValue of Object.values(value)) {
+        const message = stringifyErrorPayload(nestedValue);
+        if (message)
+          return message;
+      }
+      try {
+        return JSON.stringify(value);
+      } catch (error) {
+        return "";
+      }
+    }
+    return "";
+  };
+  const normalizeError = (statusCode, data) => {
+    const message = stringifyErrorPayload(data);
+    if (message)
+      return message;
+    if (statusCode === 404)
+      return "Resource not found";
+    if (statusCode >= 500)
+      return "Server error, please retry later";
+    return "Request failed";
+  };
+  const request = (options) => {
+    const token = options.withAuth ? getStoredSessionToken() : "";
+    const unifiedKey = uni.getStorageSync("unifiedApiKey");
+    const baseUrl = options.baseUrl || getBaseUrl();
+    const skipUnauthorizedRedirect = !!options.skipUnauthorizedRedirect;
+    const shouldDebugLog = !!options.debugLog || /\/api\/workshop\//.test(String(options.url || ""));
+    if (shouldDebugLog) {
+      appendDebugLog("request", "start", {
+        method: options.method || "GET",
+        url: `${baseUrl}${options.url}`,
+        withAuth: !!options.withAuth,
+        payload: options.data || ""
+      });
+    }
+    return new Promise((resolve, reject) => {
+      uni.request({
+        url: baseUrl + options.url,
+        method: options.method || "GET",
+        data: options.data,
+        timeout: options.timeout || 18e4,
+        header: {
+          "Content-Type": "application/json",
+          ...token ? { Authorization: `Bearer ${token}` } : {},
+          ...unifiedKey ? { "X-Api-Key": unifiedKey } : {},
+          ...options.header
+        },
+        success: (res) => {
+          if (res.statusCode === 401) {
+            if (shouldDebugLog) {
+              appendDebugLog("request", "unauthorized", {
+                method: options.method || "GET",
+                url: `${baseUrl}${options.url}`,
+                statusCode: res.statusCode,
+                response: res.data
+              });
+            }
+            if (!options.withAuth || skipUnauthorizedRedirect) {
+              const error = new Error(normalizeError(res.statusCode, res.data));
+              error.statusCode = res.statusCode;
+              reject(error);
+              return;
+            }
+            clearAuthSessionStorage();
+            try {
+              if (unauthorizedHandler)
+                unauthorizedHandler();
+            } catch (error) {
+            }
+            const now2 = Date.now();
+            if (!handling401 || now2 - last401At > 2e3) {
+              handling401 = true;
+              last401At = now2;
+              const pages = (getCurrentPages == null ? void 0 : getCurrentPages()) || [];
+              const currentRoute = pages.length ? `/${pages[pages.length - 1].route}` : "";
+              if (normalizeRoute(currentRoute) !== "/pages/profile/auth") {
+                redirectToAuth(currentRoute);
+              }
+              setTimeout(() => {
+                handling401 = false;
+              }, 2200);
+            }
+            reject(new Error("Unauthorized"));
+            return;
+          }
+          if (res.statusCode < 200 || res.statusCode >= 300) {
+            if (shouldDebugLog) {
+              appendDebugLog("request", "http_error", {
+                method: options.method || "GET",
+                url: `${baseUrl}${options.url}`,
+                statusCode: res.statusCode,
+                response: res.data
+              });
+            }
+            const error = new Error(normalizeError(res.statusCode, res.data));
+            error.statusCode = res.statusCode;
+            reject(error);
+            return;
+          }
+          if (shouldDebugLog) {
+            appendDebugLog("request", "success", {
+              method: options.method || "GET",
+              url: `${baseUrl}${options.url}`,
+              statusCode: res.statusCode,
+              response: res.data
+            });
+          }
+          resolve(res.data);
+        },
+        fail: (error) => {
+          if (shouldDebugLog) {
+            appendDebugLog("request", "network_fail", {
+              method: options.method || "GET",
+              url: `${baseUrl}${options.url}`,
+              error: (error == null ? void 0 : error.errMsg) || error
+            });
+          }
+          reject(new Error((error == null ? void 0 : error.errMsg) || "Network request failed"));
+        }
+      });
+    });
+  };
+  const NEWS_BOARD_BY_TYPE = {
+    business: "main",
+    personal: "sub"
+  };
+  const normalizeNewsItem = (item = {}, index = 0) => {
+    const score = item.viewsNum || item.total_score || item.score || "0";
+    const source = item.source || item.tag || "AI资讯";
+    const summary = item.summary || item.brief || item.description || `${source} 热榜内容，点击查看原文详情。`;
+    return {
+      id: item.newsId || item.id || `news-${index}`,
+      title: item.title || "未命名资讯",
+      summary,
+      url: item.url || "",
+      source,
+      score,
+      coverUrl: item.coverUrl || item.cover_url || "",
+      raw: item
+    };
+  };
+  const getNewsList = async (type = "business") => {
+    const board = NEWS_BOARD_BY_TYPE[type] || NEWS_BOARD_BY_TYPE.business;
+    const response = await request({
+      baseUrl: getNewsBaseUrl(),
+      url: `/api/ranks/${board}/weibo`,
+      timeout: 18e4
+    });
+    return {
+      ...response,
+      list: Array.isArray(response == null ? void 0 : response.list) ? response.list.map((item, index) => normalizeNewsItem(item, index)) : []
+    };
+  };
+  const getNewsBrief = (newsId) => request({
+    baseUrl: getNewsBaseUrl(),
+    url: "/api/news/brief",
+    method: "POST",
+    data: { news_id: Number(newsId) },
+    timeout: 18e4
+  });
+  const loginSession = (data) => request({
+    baseUrl: getNewsBaseUrl(),
+    url: "/api/auth/sessions",
+    method: "POST",
+    data,
+    timeout: 18e4,
+    skipUnauthorizedRedirect: true
+  });
+  const registerSession = (data) => request({
+    baseUrl: getNewsBaseUrl(),
+    url: "/api/auth/register",
+    method: "POST",
+    data,
+    timeout: 18e4,
+    skipUnauthorizedRedirect: true
+  });
+  const logoutCurrentSession = () => request({
+    baseUrl: getNewsBaseUrl(),
+    url: "/api/auth/sessions/current",
+    method: "DELETE",
+    timeout: 18e4,
+    withAuth: true,
+    skipUnauthorizedRedirect: true
+  });
+  const generateCode = (prompt) => request({
+    baseUrl: getBaseUrl(),
+    url: "/api/workshop/generate",
+    method: "POST",
+    data: { prompt },
+    timeout: 6e5
+  });
+  const normalizeUserInfo = (info) => {
+    if (!info || typeof info !== "object")
+      return null;
+    const username = String(info.username || "").trim();
+    const displayName = String(info.displayName || info.display_name || info.nickname || username).trim();
+    return {
+      ...info,
+      username,
+      displayName: displayName || username,
+      nickname: String(info.nickname || displayName || username || "灵境用户").trim(),
+      id: String(info.id || username || "guest").trim(),
+      phone: String(info.phone || "").trim(),
+      createdAt: String(info.createdAt || info.created_at || "").trim()
+    };
+  };
+  const isUnauthorizedError = (error) => Number((error == null ? void 0 : error.statusCode) || 0) === 401;
+  const useUserStore = defineStore("user", () => {
+    const token = vue.ref(getStoredSessionToken());
+    const userInfo = vue.ref(normalizeUserInfo(getStoredUserInfo()) || null);
+    const apiBaseUrl = vue.ref(uni.getStorageSync("apiBaseUrl") || "");
+    const isAuthenticated = vue.computed(() => {
+      var _a, _b;
+      return !!token.value && !!(((_a = userInfo.value) == null ? void 0 : _a.username) || ((_b = userInfo.value) == null ? void 0 : _b.id));
+    });
+    const setToken = (t) => {
+      const nextToken = String(t || "").trim();
+      token.value = nextToken;
+      setStoredSessionToken(nextToken);
+    };
+    const setUserInfo = (info) => {
+      const normalized = normalizeUserInfo(info);
+      userInfo.value = normalized;
+      setStoredUserInfo(normalized);
+    };
+    const setApiBaseUrl = (value) => {
+      apiBaseUrl.value = value;
+      if (value) {
+        uni.setStorageSync("apiBaseUrl", value);
+      } else {
+        uni.removeStorageSync("apiBaseUrl");
+      }
+    };
+    const applyAuthResponse = (response) => {
+      const nextToken = String((response == null ? void 0 : response.token) || "").trim();
+      if (!nextToken) {
+        throw new Error("登录成功，但后端没有返回 token");
+      }
+      setToken(nextToken);
+      setUserInfo((response == null ? void 0 : response.user) || null);
+      return userInfo.value;
+    };
+    const login = async (payload) => {
+      const response = await loginSession(payload);
+      return applyAuthResponse(response);
+    };
+    const register = async (payload) => {
+      const response = await registerSession(payload);
+      return applyAuthResponse(response);
+    };
+    const fetchUserInfo = async () => {
+      return userInfo.value;
+    };
+    const restoreSession = () => {
+      var _a, _b;
+      const snapshot = getStoredAuthSnapshot();
+      token.value = String(snapshot.token || "").trim();
+      userInfo.value = normalizeUserInfo(snapshot.userInfo) || null;
+      return !!token.value && !!(((_a = userInfo.value) == null ? void 0 : _a.username) || ((_b = userInfo.value) == null ? void 0 : _b.id));
+    };
+    const logout = () => {
+      token.value = "";
+      userInfo.value = null;
+      clearAuthSessionStorage();
+    };
+    const logoutRemote = async () => {
+      try {
+        if (token.value) {
+          try {
+            await logoutCurrentSession();
+          } catch (error) {
+            if (!isUnauthorizedError(error)) {
+              throw error;
+            }
+          }
+        }
+      } finally {
+        logout();
+      }
+    };
+    return {
+      token,
+      userInfo,
+      apiBaseUrl,
+      isAuthenticated,
+      setToken,
+      setUserInfo,
+      setApiBaseUrl,
+      login,
+      register,
+      fetchUserInfo,
+      restoreSession,
+      logout,
+      logoutRemote
+    };
+  });
+  const getLayoutMetrics = () => {
+    var _a;
+    const systemInfo = uni.getSystemInfoSync();
+    return {
+      statusBarHeight: systemInfo.statusBarHeight || 0,
+      safeAreaInsetsBottom: ((_a = systemInfo.safeAreaInsets) == null ? void 0 : _a.bottom) ?? 0
+    };
+  };
+  const ROOT_PAGES = /* @__PURE__ */ new Set([
+    "/pages/home/index",
+    "/pages/crawl/index",
+    "/pages/profile/index",
+    "/pages/news-brief/index"
+  ]);
+  const navigateByPath = (path) => {
+    if (!path)
+      return;
+    const [basePath] = path.split("?");
+    if (ROOT_PAGES.has(basePath)) {
+      uni.reLaunch({ url: path });
+      return;
+    }
+    uni.navigateTo({ url: path });
+  };
+  const safeNavigateBack = (fallbackUrl = "/pages/home/index?openSidebar=1") => {
+    const pages = getCurrentPages();
+    if (pages.length > 1) {
+      uni.navigateBack();
+      return;
+    }
+    uni.reLaunch({ url: fallbackUrl });
+  };
+  const PROFILE_STORAGE_KEY = "localProfile";
+  const PROFILE_TOAST_KEY = "profilePendingToast";
+  const PROFILE_TOAST_TTL = 15e3;
+  const DEFAULT_PROFILE = {
+    nickname: "灵境体验官",
+    gender: "未设置",
+    bio: "正在用真机测试 AI 工坊、AI 学堂和 AI 观察哨的整体流程。"
+  };
+  const isLegacyProfileShape = (value) => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      return false;
+    }
+    return "nickname" in value || "gender" in value || "bio" in value;
+  };
+  const normalizeProfileScope = (scope) => {
+    const normalized = String(scope || "").trim();
+    return normalized || "guest";
+  };
+  const getStoredUserScope = () => {
+    const userInfo = getStoredUserInfo();
+    if (!userInfo || typeof userInfo !== "object") {
+      return "guest";
+    }
+    return normalizeProfileScope(userInfo.username || userInfo.id || "guest");
+  };
+  const getProfileStorageBucket = () => {
+    const raw = uni.getStorageSync(PROFILE_STORAGE_KEY);
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      return {};
+    }
+    if (isLegacyProfileShape(raw)) {
+      return {
+        [getStoredUserScope()]: {
+          ...DEFAULT_PROFILE,
+          ...raw
+        }
+      };
+    }
+    return raw;
+  };
+  const getLocalProfile = (scope) => {
+    const bucket = getProfileStorageBucket();
+    const scopedProfile = bucket[normalizeProfileScope(scope || getStoredUserScope())];
+    if (!scopedProfile || typeof scopedProfile !== "object" || Array.isArray(scopedProfile)) {
+      return { ...DEFAULT_PROFILE };
+    }
+    return {
+      ...DEFAULT_PROFILE,
+      ...scopedProfile
+    };
+  };
+  const saveLocalProfile = (patch = {}, scope) => {
+    const profileScope = normalizeProfileScope(scope || getStoredUserScope());
+    const bucket = getProfileStorageBucket();
+    const nextProfile = {
+      ...getLocalProfile(profileScope),
+      ...patch
+    };
+    uni.setStorageSync(PROFILE_STORAGE_KEY, {
+      ...bucket,
+      [profileScope]: nextProfile
+    });
+    return nextProfile;
+  };
+  const setProfilePendingToast = (message) => {
+    if (!message)
+      return;
+    uni.setStorageSync(PROFILE_TOAST_KEY, {
+      message,
+      createdAt: Date.now()
+    });
+  };
+  const consumeProfilePendingToast = () => {
+    const payload = uni.getStorageSync(PROFILE_TOAST_KEY);
+    if (payload) {
+      uni.removeStorageSync(PROFILE_TOAST_KEY);
+    }
+    if (!payload || typeof payload !== "object") {
+      return "";
+    }
+    const message = typeof payload.message === "string" ? payload.message : "";
+    const createdAt = Number(payload.createdAt || 0);
+    if (!message || !createdAt) {
+      return "";
+    }
+    if (Date.now() - createdAt > PROFILE_TOAST_TTL) {
+      return "";
+    }
+    return message;
+  };
+  const _export_sfc = (sfc, props) => {
+    const target = sfc.__vccOpts || sfc;
+    for (const [key, val] of props) {
+      target[key] = val;
+    }
+    return target;
+  };
+  const HOME_ROUTE = "/pages/home/index";
+  const PROFILE_ROUTE = "/pages/profile/index";
+  const _sfc_main$e = {
+    __name: "auth",
+    setup(__props, { expose: __expose }) {
+      __expose();
+      const { statusBarHeight, safeAreaInsetsBottom } = getLayoutMetrics();
+      const userStore = useUserStore();
+      const mode = vue.ref("login");
+      const submitting = vue.ref(false);
+      const agreementChecked = vue.ref(uni.getStorageSync("authAgreementAccepted") === "1");
+      const redirectUrl = vue.ref(HOME_ROUTE);
+      const showBack = vue.ref(false);
+      const lastBackPressAt = vue.ref(0);
+      const form = vue.ref({
+        username: "",
+        password: "",
+        displayName: ""
+      });
+      const rememberedAccount = vue.computed(() => String(uni.getStorageSync("lastLoginUsername") || "").trim());
+      const providerCopy = vue.computed(() => {
+        if (rememberedAccount.value && mode.value === "login") {
+          return `已识别上次登录账号：${rememberedAccount.value}`;
+        }
+        return mode.value === "login" ? "使用公司账号体系登录后进入应用。" : "注册完成后会自动登录并进入应用。";
+      });
+      const modeCaption = vue.computed(() => mode.value === "login" ? "进入你的 AI 工作空间" : "注册后即可同步个人身份");
+      const submitLabel = vue.computed(() => mode.value === "login" ? "登录" : "完成注册");
+      const toggleLabel = vue.computed(() => mode.value === "login" ? "新用户注册" : "返回登录");
+      const ensureAgreed = () => {
+        if (agreementChecked.value)
+          return true;
+        uni.showToast({ title: "请先勾选协议", icon: "none" });
+        return false;
+      };
+      const shouldShowBackForRoute = (route) => {
+        const normalized = String(route || "").trim();
+        if (!normalized)
+          return false;
+        return normalized !== HOME_ROUTE;
+      };
+      const redirectToTarget = () => {
+        uni.reLaunch({ url: redirectUrl.value || HOME_ROUTE });
+      };
+      const tryAutoEnter = () => {
+        if (userStore.isAuthenticated) {
+          redirectToTarget();
+        }
+      };
+      const hydrateLoginUsername = () => {
+        if (mode.value === "login" && !form.value.username && rememberedAccount.value) {
+          form.value.username = rememberedAccount.value;
+        }
+      };
+      const toggleMode = () => {
+        if (submitting.value)
+          return;
+        mode.value = mode.value === "login" ? "register" : "login";
+        hydrateLoginUsername();
+      };
+      const toggleAgreement = () => {
+        agreementChecked.value = !agreementChecked.value;
+        uni.setStorageSync("authAgreementAccepted", agreementChecked.value ? "1" : "0");
+      };
+      const goBack = () => {
+        safeNavigateBack(redirectUrl.value || PROFILE_ROUTE);
+      };
+      const validateForm = () => {
+        const username = form.value.username.trim();
+        const password = form.value.password.trim();
+        const displayName = form.value.displayName.trim();
+        if (!username) {
+          throw new Error("请输入用户名");
+        }
+        if (!password) {
+          throw new Error("请输入密码");
+        }
+        if (mode.value === "register" && password.length < 6) {
+          throw new Error("注册密码至少需要 6 位");
+        }
+        return {
+          username,
+          password,
+          display_name: displayName || username
+        };
+      };
+      const handleSubmit = async () => {
+        if (submitting.value)
+          return;
+        if (!ensureAgreed())
+          return;
+        try {
+          const payload = validateForm();
+          submitting.value = true;
+          if (mode.value === "login") {
+            await userStore.login({
+              username: payload.username,
+              password: payload.password
+            });
+            setProfilePendingToast("登录成功");
+          } else {
+            await userStore.register(payload);
+            setProfilePendingToast("注册并登录成功");
+          }
+          uni.setStorageSync("lastLoginUsername", payload.username);
+          redirectToTarget();
+        } catch (error) {
+          uni.showToast({ title: error.message || "提交失败", icon: "none" });
+        } finally {
+          submitting.value = false;
+        }
+      };
+      const openMoreActions = () => {
+        const itemList = mode.value === "login" ? ["切换到注册", "填入上次账号", "清空输入"] : ["切换到登录", "清空输入"];
+        uni.showActionSheet({
+          itemList,
+          success: ({ tapIndex }) => {
+            if (mode.value === "login") {
+              if (tapIndex === 0) {
+                toggleMode();
+                return;
+              }
+              if (tapIndex === 1) {
+                form.value.username = rememberedAccount.value;
+                return;
+              }
+              if (tapIndex === 2) {
+                form.value.username = "";
+                form.value.password = "";
+                return;
+              }
+            } else {
+              if (tapIndex === 0) {
+                toggleMode();
+                return;
+              }
+              if (tapIndex === 1) {
+                form.value.username = "";
+                form.value.password = "";
+                form.value.displayName = "";
+              }
+            }
+          }
+        });
+      };
+      onLoad((options = {}) => {
+        mode.value = options.mode === "register" ? "register" : "login";
+        if (options.redirect) {
+          try {
+            redirectUrl.value = decodeURIComponent(options.redirect);
+          } catch (error) {
+            redirectUrl.value = PROFILE_ROUTE;
+          }
+          showBack.value = shouldShowBackForRoute(redirectUrl.value);
+        } else {
+          redirectUrl.value = HOME_ROUTE;
+          showBack.value = false;
+        }
+        hydrateLoginUsername();
+      });
+      onShow(() => {
+        tryAutoEnter();
+      });
+      onBackPress((options = {}) => {
+        if (options.from === "navigateBack") {
+          return false;
+        }
+        if (showBack.value) {
+          goBack();
+          return true;
+        }
+        if (mode.value === "register") {
+          mode.value = "login";
+          hydrateLoginUsername();
+          return true;
+        }
+        const now2 = Date.now();
+        if (now2 - lastBackPressAt.value < 1500) {
+          plus.runtime.quit();
+          return true;
+        }
+        lastBackPressAt.value = now2;
+        uni.showToast({ title: "再按一次退出应用", icon: "none" });
+        return true;
+      });
+      const __returned__ = { HOME_ROUTE, PROFILE_ROUTE, statusBarHeight, safeAreaInsetsBottom, userStore, mode, submitting, agreementChecked, redirectUrl, showBack, lastBackPressAt, form, rememberedAccount, providerCopy, modeCaption, submitLabel, toggleLabel, ensureAgreed, shouldShowBackForRoute, redirectToTarget, tryAutoEnter, hydrateLoginUsername, toggleMode, toggleAgreement, goBack, validateForm, handleSubmit, openMoreActions, computed: vue.computed, ref: vue.ref, get onBackPress() {
+        return onBackPress;
+      }, get onLoad() {
+        return onLoad;
+      }, get onShow() {
+        return onShow;
+      }, get useUserStore() {
+        return useUserStore;
+      }, get getLayoutMetrics() {
+        return getLayoutMetrics;
+      }, get safeNavigateBack() {
+        return safeNavigateBack;
+      }, get setProfilePendingToast() {
+        return setProfilePendingToast;
+      } };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render$d(_ctx, _cache, $props, $setup, $data, $options) {
+    return vue.openBlock(), vue.createElementBlock("view", { class: "auth-page" }, [
+      vue.createElementVNode("view", { class: "auth-bg" }, [
+        vue.createElementVNode("view", { class: "glow glow-primary" }),
+        vue.createElementVNode("view", { class: "glow glow-secondary" })
+      ]),
+      vue.createElementVNode(
+        "view",
+        {
+          class: "auth-shell",
+          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight + 16}px`, paddingBottom: `${$setup.safeAreaInsetsBottom + 24}px` })
+        },
+        [
+          $setup.showBack ? (vue.openBlock(), vue.createElementBlock("view", {
+            key: 0,
+            class: "top-action",
+            onClick: $setup.goBack
+          }, [
+            vue.createElementVNode("text", { class: "top-action-icon" }, "‹")
+          ])) : vue.createCommentVNode("v-if", true),
+          vue.createElementVNode("view", { class: "brand-block" }, [
+            vue.createElementVNode("text", { class: "brand-title" }, "灵境"),
+            vue.createElementVNode("text", { class: "brand-subtitle" }, "AI 教育工作台"),
+            vue.createElementVNode(
+              "text",
+              { class: "brand-caption" },
+              vue.toDisplayString($setup.modeCaption),
+              1
+              /* TEXT */
+            )
+          ]),
+          vue.createElementVNode("view", { class: "form-block" }, [
+            vue.createElementVNode("view", { class: "mode-pill" }, [
+              vue.createElementVNode(
+                "text",
+                { class: "mode-pill-text" },
+                vue.toDisplayString($setup.mode === "login" ? "账号登录" : "创建新账号"),
+                1
+                /* TEXT */
+              )
+            ]),
+            vue.withDirectives(vue.createElementVNode("input", {
+              class: "auth-input",
+              "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => $setup.form.username = $event),
+              maxlength: "24",
+              placeholder: $setup.mode === "login" ? "输入灵境号" : "设置灵境号",
+              "placeholder-class": "auth-placeholder"
+            }, null, 8, ["placeholder"]), [
+              [vue.vModelText, $setup.form.username]
+            ]),
+            $setup.mode === "register" ? vue.withDirectives((vue.openBlock(), vue.createElementBlock(
+              "input",
+              {
+                key: 0,
+                class: "auth-input",
+                "onUpdate:modelValue": _cache[1] || (_cache[1] = ($event) => $setup.form.displayName = $event),
+                maxlength: "24",
+                placeholder: "输入显示名称（选填）",
+                "placeholder-class": "auth-placeholder"
+              },
+              null,
+              512
+              /* NEED_PATCH */
+            )), [
+              [vue.vModelText, $setup.form.displayName]
+            ]) : vue.createCommentVNode("v-if", true),
+            vue.withDirectives(vue.createElementVNode("input", {
+              class: "auth-input",
+              "onUpdate:modelValue": _cache[2] || (_cache[2] = ($event) => $setup.form.password = $event),
+              password: "",
+              maxlength: "32",
+              placeholder: $setup.mode === "login" ? "输入灵境密码" : "设置灵境密码",
+              "placeholder-class": "auth-placeholder"
+            }, null, 8, ["placeholder"]), [
+              [vue.vModelText, $setup.form.password]
+            ]),
+            vue.createElementVNode(
+              "view",
+              {
+                class: vue.normalizeClass(["submit-button", { disabled: $setup.submitting }]),
+                onClick: $setup.handleSubmit
+              },
+              [
+                vue.createElementVNode(
+                  "text",
+                  { class: "submit-button-text" },
+                  vue.toDisplayString($setup.submitting ? "提交中..." : $setup.submitLabel),
+                  1
+                  /* TEXT */
+                )
+              ],
+              2
+              /* CLASS */
+            ),
+            vue.createElementVNode("view", { class: "mode-switch-row" }, [
+              vue.createElementVNode(
+                "text",
+                { class: "mode-switch-copy" },
+                vue.toDisplayString($setup.mode === "login" ? "还没有账号？" : "已经有账号？"),
+                1
+                /* TEXT */
+              ),
+              vue.createElementVNode(
+                "text",
+                {
+                  class: "mode-switch-action",
+                  onClick: $setup.toggleMode
+                },
+                vue.toDisplayString($setup.toggleLabel),
+                1
+                /* TEXT */
+              )
+            ]),
+            vue.createElementVNode("view", {
+              class: "agreement-row",
+              onClick: $setup.toggleAgreement
+            }, [
+              vue.createElementVNode(
+                "view",
+                {
+                  class: vue.normalizeClass(["agreement-checkbox", { checked: $setup.agreementChecked }])
+                },
+                null,
+                2
+                /* CLASS */
+              ),
+              vue.createElementVNode("text", { class: "agreement-text" }, "已阅读并同意服务协议和灵境隐私保护指引")
+            ]),
+            vue.createElementVNode(
+              "text",
+              { class: "helper-text" },
+              vue.toDisplayString($setup.providerCopy),
+              1
+              /* TEXT */
+            )
+          ]),
+          vue.createElementVNode("view", { class: "bottom-actions" }, [
+            vue.createElementVNode("view", {
+              class: "action-item",
+              onClick: $setup.toggleMode
+            }, [
+              vue.createElementVNode("view", { class: "action-circle" }, [
+                vue.createElementVNode(
+                  "text",
+                  { class: "action-circle-text" },
+                  vue.toDisplayString($setup.mode === "login" ? "+" : "↺"),
+                  1
+                  /* TEXT */
+                )
+              ]),
+              vue.createElementVNode(
+                "text",
+                { class: "action-label" },
+                vue.toDisplayString($setup.toggleLabel),
+                1
+                /* TEXT */
+              )
+            ]),
+            vue.createElementVNode("view", {
+              class: "action-item",
+              onClick: $setup.openMoreActions
+            }, [
+              vue.createElementVNode("view", { class: "action-circle" }, [
+                vue.createElementVNode("text", { class: "action-circle-text" }, "···")
+              ]),
+              vue.createElementVNode("text", { class: "action-label" }, "更多")
+            ])
+          ])
+        ],
+        4
+        /* STYLE */
+      )
+    ]);
+  }
+  const PagesProfileAuth = /* @__PURE__ */ _export_sfc(_sfc_main$e, [["render", _sfc_render$d], ["__scopeId", "data-v-c116c0e0"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/profile/auth.vue"]]);
+  const ISSUE_FOOTER = "AI趣闻萃取：每天筛出值得看的 3 条 AI 资讯，支持简报阅读与原文回看。";
+  const MOCK_ISSUES = [
+    {
+      id: "2026-04-07",
+      date: "04/07",
+      selectionCount: 39,
+      title: "今日 AI 趣闻萃取 / 三条速览",
+      subtitle: "技术突破、实用工具、市场信号",
+      footer: ISSUE_FOOTER,
+      items: [
+        {
+          id: "operator-agent",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "新一代 AI Agent 公测，可自动操控电脑订票、写网报、报销。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会筛选数据的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "人还在盯着单流程，流程已经被 Agent 接管了大半。你真正要重新配置的不是会不会用工具，而是有没有能力拆任务、定边界、验结果。",
+            "这类能力一旦公测，最先被挤压的是重复型脑力劳动：收集、转写、查询、整理、提报、跟进。会不会写提示词已经不是门槛，能不能定义正确目标才是门槛。",
+            "如果你的岗位日常主要由固定动作构成，越早把自己切换成调度者和审稿人的位置，越不会在下一轮效率升级里掉队。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "operator-zip",
+          source: "Operator",
+          sourceStatus: "智能体 · ZIP OPEN",
+          headline: "OpenAI 正式公测 Operator 智能体。",
+          warning: "[预警案例] 电脑不再只执行人类操作，只能涨薪的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "Operator 的意义不是又多了一个模型，而是会操作界面的系统开始成型。它会让表单、订票、比价、报销、投递这些具体动作更像 API 一样被调用。",
+            "这意味着未来的竞争不只发生在知识层，还发生在执行层。谁能把工作拆成清楚、可交付、可校验的步骤，谁就更容易把 AI 变成自己的杠杆。",
+            "别再把智能体理解为聊天机器人。它更像一个随时待命的执行接口，而你要学会的，是给它目标、权限和验收标准。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "virtual-human",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "某品牌签约 AI 虚拟人代言，互动率超过真人明星。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "品牌开始不再把人当作唯一叙事载体。稳定、可控、能 24 小时输出内容的虚拟人，天然就适合高频触达和低风险传播。",
+            "这会反过来抬高真人创作者的要求。普通表达会被稀释，只有观点、风格、真实经历这些不可复制部分，才会继续变得更值钱。",
+            "所以内容工作者接下来要保住的，不是产能，而是不可替代的人味。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-04-06",
+      date: "04/06",
+      selectionCount: 36,
+      title: "04/06 AI 趣闻萃取 / 三条速览",
+      subtitle: "技术突破、实用工具、市场信号",
+      footer: ISSUE_FOOTER,
+      items: [
+        {
+          id: "factory-robot",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "OpenAI Operator 正式版开始企业协作能力，可以任务页一键分派与回传。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会筛选数据的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "企业协作能力让智能体从个人工具进入团队流程。以后不只是你一个人在用，而是整个项目组都可能围绕同一个 AI 执行节点工作。",
+            "这会快速抬高项目交接清晰度的要求。描述不清、文档不全、需求模糊的人，会比以前更容易被看见短板。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "scheduler",
+          source: "Operator",
+          sourceStatus: "智能体 · CLOSED",
+          headline: "多家办公插件上线 Agent 协同模式，周报、排期与会议纪要开始自动联动。",
+          warning: "[预警案例] 电脑不再需要人类操作，只能提效的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "协同模式真正改变的不是某个功能，而是从输入到同步的速度。以前一个人做完再通知别人，现在会变成系统自动推进。",
+            "你的工作如果依赖反复确认和手动搬运，接下来会明显感受到被压缩。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "voice-avatar",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "某头部电商品牌启用 AI 导购分身，夜间咨询转化率连续三日提升。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只要好代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "夜间转化提升说明一件事：不下班、低成本、高一致性的内容角色，正在变成新的商业基础设施。",
+            "人类服务者未来更值钱的部分，不是答常规问题，而是解决非标准问题。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-04-05",
+      date: "04/05",
+      selectionCount: 34,
+      title: "04/05 AI 趣闻萃取 / 三条速览",
+      subtitle: "技术突破、实用工具、市场信号",
+      footer: ISSUE_FOOTER,
+      items: [
+        {
+          id: "multimodal-video",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "新版视频生成模型支持长镜头一致性，广告团队开始缩小外包规模。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会拼素材的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "镜头一致性突破后，AI 不再只是出 demo，而是开始吞掉前期提案、中期产出和后期改稿的部分链条。",
+            "未来内容团队会更重前期审美和脚本判断，弱在执行的人会被替代得更快。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "crm-agent",
+          source: "Operator",
+          sourceStatus: "智能体 · CLOSED",
+          headline: "某 CRM 平台推出销售跟进 Agent，自动补全纪要并推荐下一步动作。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会发消息的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "销售流程标准化后，真正稀缺的是建立信任和做判断，而不是机械性跟进。",
+            "能讲明白客户真正需求的人，会比会重复标准话术的人更值钱。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "avatar-anchor",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "虚拟主播连续 48 小时直播测试完成，品牌开始重新计算人工成本。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "这不是 AI 更会说话，而是系统终于足够稳定。一旦稳定，很多岗位的比较项就变成了成本、时长和一致性。",
+            "真人创作者要保住位置，需要更强的个性表达和更高密度的观点产出。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-04-04",
+      date: "04/04",
+      selectionCount: 31,
+      title: "04/04 AI 趣闻萃取 / 三条速览",
+      subtitle: "技术突破、实用工具、市场信号",
+      footer: ISSUE_FOOTER,
+      items: [
+        {
+          id: "search-agent",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "搜索型 Agent 开始支持多源比对，研究助理岗位被重新定义。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会搬运信息的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "能在几十秒内完成检索、比对、摘录和引用，这会直接改变很多研究支持型岗位的工作方式。",
+            "以后你值钱的不是找资料，而是提出好问题与构造判断框架。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "soc-bot",
+          source: "Operator",
+          sourceStatus: "智能体 · ZIP OPEN",
+          headline: "安全厂商上线值班 Agent，夜间告警先由 AI 处置再升级人工。",
+          warning: "[预警案例] 电脑不再需要人类操作，只能盯盘的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "值班工作最先被重构，因为它本来就强调响应速度、流程清晰和误报过滤。",
+            "安全岗位以后更重要的是策略制定和异常研判，而不是看告警本身。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "idol-script",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "某平台开始测试 AI 偶像剧本联动，角色会依据评论自动二创。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "互动式叙事和角色连续运营会让内容消费更像游戏。平台想要的是持续停留，而不是一次性传播。",
+            "这会让单纯追热点的内容越来越难赢，世界观能力会重新变重要。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-04-03",
+      date: "2026/04/03",
+      selectionCount: 33,
+      title: "04/03 AI 趣闻萃取 / 三条速览",
+      subtitle: "技术突破、实用工具、市场信号",
+      footer: ISSUE_FOOTER,
+      items: [
+        {
+          id: "coding-bench",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "编码智能体基准再次刷新，多文件项目修复准确率继续上涨。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会写函数的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "当模型能改多文件、懂上下文、还能跑验证，初级编码工作会更快地商品化。",
+            "开发者接下来更值钱的是架构判断、边界定义和质量标准，而不是纯输出代码。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "meeting-agent",
+          source: "Operator",
+          sourceStatus: "智能体 · OPEN",
+          headline: "会议 Agent 支持自动行动项追踪，项目管理边界继续外扩。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会写纪要的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "会后追踪是典型低创造、高消耗工作，智能体一接手，团队会更直接暴露真正的执行差异。",
+            "你需要提升的是判断优先级和推动协同的能力。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "synthetic-caster",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "合成播报员开始承担夜间快讯栏目，人类主播转向策划型岗位。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "播报工作被自动化后，行业会把更多预算转向内容判断和节目结构设计。",
+            "内容行业正在加速分层，纯播报和纯剪辑会更先被压价。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-04-02",
+      date: "2026/04/02",
+      selectionCount: 28,
+      title: "04/02 AI 趣闻萃取 / 三条速览",
+      subtitle: "技术突破、实用工具、市场信号",
+      footer: ISSUE_FOOTER,
+      items: [
+        {
+          id: "agent-billing",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "AI 报销与采购流开始接入企业后台，审批动作自动化。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会录入的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "一旦进入后台系统，智能体就不只是助手，而是公司流程的一部分。",
+            "流程岗位未来的核心不是执行，而是设规则、控风险、做抽检。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "resume-bot",
+          source: "Operator",
+          sourceStatus: "智能体 · CLOSED",
+          headline: "招聘筛选 Agent 开始在中型公司试点，初筛速度提升数倍。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会初筛的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "简历筛选和基础匹配天然适合自动化，HR 更重要的部分会转向判断潜力和识别风险。",
+            "这也会反向改变求职者的表达方式，简历将更像结构化数据，而不是文案。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "campus-avatar",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "高校开始试用虚拟讲师形象做公开课导览，互动时长明显上涨。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "教育场景开始引入角色化表达，这会让课程不只是内容，还带有陪伴感和连续性。",
+            "人类教师的优势会更集中在理解学生、调整节奏和给出真正个性化反馈。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-04-01",
+      date: "2026/04/01",
+      selectionCount: 26,
+      title: "2026/04/01 AI 趣闻萃取",
+      subtitle: "收官速览 / 反脆弱备忘",
+      footer: "理解机制，比只看标题更重要。",
+      items: [
+        {
+          id: "summary-agent",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "长文总结 Agent 开始接管内部周报，管理层只看关键分歧。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会写概述的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "总结能力被自动化后，真正重要的是提炼冲突和决策点。",
+            "写报告的人要把自己升级成制造判断价值的人。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "assistant-team",
+          source: "Operator",
+          sourceStatus: "智能体 · TEAM",
+          headline: "团队型智能体进入灰度测试，多 Agent 分工开始稳定。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会单点执行的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "一旦多个智能体协作，人的角色会更像导演，而不是具体执行者。",
+            "组织里的中间层工作方式也会被重塑。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "character-economy",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "虚拟角色经济继续升温，品牌开始长期运营单一人格 IP。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "角色资产一旦建立完成，传播就不再依赖单次热点，而会依赖持续世界观经营。",
+            "未来拼的是谁能稳定生产叙事，不是谁偶尔爆一次。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    },
+    {
+      id: "2026-03-31",
+      date: "2026/03/31",
+      selectionCount: 24,
+      title: "2026/03/31 AI 趣闻萃取",
+      subtitle: "试运行样刊 / 七日热度补档",
+      footer: "把一天看懂，才能把一周看清。",
+      items: [
+        {
+          id: "ops-agent",
+          source: "实用工具",
+          sourceStatus: "它们越来越强",
+          headline: "运维巡检 Agent 开始覆盖跨系统日报汇总，值守时间被重新压缩。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会巡表的人正在变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "自动巡检一旦稳定，团队最稀缺的不是看报表，而是发现异常背后的因果关系。",
+            "这类岗位未来更需要系统视角，而不是单点执行熟练度。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "team-bot",
+          source: "Operator",
+          sourceStatus: "智能体 · LAB",
+          headline: "多 Agent 项目协同进入实验阶段，任务分工开始自动化。",
+          warning: "[预警案例] 电脑不再需要人类操作，只会跟单的人会变多。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "协同自动化意味着项目管理要重新定义节点。以后不是谁盯得紧，而是谁定义得更准确。",
+            "会写清楚目标和验收的人，会比只会催进度的人更有价值。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        },
+        {
+          id: "ip-economy",
+          source: "奇偶镜头",
+          sourceStatus: "它们在发言",
+          headline: "角色型 AI IP 开始承接连续栏目合作，品牌复用率提升。",
+          warning: "[预警案例] 完美偶像不需要灵魂，只需要代码。",
+          buttonText: "展开",
+          expandedTag: "已展开",
+          expandedTitle: "正文回顾 / 人话翻译 + 发散拆解",
+          expandedBody: [
+            "品牌一旦拥有稳定角色，就能持续输出同一人格线索，传播效率远高于一次性热点。",
+            "这会让长期叙事能力重新变成稀缺资源。"
+          ],
+          articleUrl: "http://8.135.4.46/"
+        }
+      ]
+    }
+  ];
+  const normalizeIssue = (issue) => ({
+    ...issue,
+    items: Array.isArray(issue.items) ? issue.items : []
+  });
+  const getLatestNewsBriefIssue = () => normalizeIssue(MOCK_ISSUES[0]);
+  const getRecentNewsBriefIssues = (limit = 7) => MOCK_ISSUES.slice(0, limit).map((issue) => normalizeIssue(issue));
+  const getNewsBriefIssueById = (id) => normalizeIssue(MOCK_ISSUES.find((issue) => issue.id === id) || MOCK_ISSUES[0]);
+  const ANIMATION_MS = 220;
+  const _sfc_main$d = {
+    __name: "Sidebar",
+    props: {
+      visible: Boolean,
+      activeSection: {
+        type: String,
+        default: "workshop"
+      },
+      workshopHistory: {
+        type: Array,
+        default: () => []
+      }
+    },
+    emits: ["close", "navigate"],
+    setup(__props, { expose: __expose, emit: __emit }) {
+      __expose();
+      const props = __props;
+      const emit = __emit;
+      const { statusBarHeight, safeAreaInsetsBottom } = getLayoutMetrics();
+      const userStore = useUserStore();
+      const rendered = vue.ref(props.visible);
+      const isClosing = vue.ref(false);
+      let closeTimer = null;
+      vue.watch(
+        () => props.visible,
+        (nextVisible) => {
+          if (nextVisible) {
+            rendered.value = true;
+            isClosing.value = false;
+            if (closeTimer)
+              clearTimeout(closeTimer);
+            closeTimer = null;
+            return;
+          }
+          if (!rendered.value)
+            return;
+          isClosing.value = true;
+          if (closeTimer)
+            clearTimeout(closeTimer);
+          closeTimer = setTimeout(() => {
+            rendered.value = false;
+            isClosing.value = false;
+            closeTimer = null;
+          }, ANIMATION_MS);
+        },
+        { immediate: true }
+      );
+      const getLatestNewsBriefPath = () => `/pages/news-brief/issue?id=${encodeURIComponent(getLatestNewsBriefIssue().id)}`;
+      const menuItems = [
+        { id: "school", name: "AI学堂", meta: "外部课堂 WebView", path: "/pages/school/input" },
+        { id: "crawl", name: "AI观察哨", meta: "实时新闻榜单", path: "/pages/crawl/index" },
+        { id: "workshop", name: "AI工坊", meta: "新建创作任务", path: "/pages/home/index" },
+        { id: "newsBrief", name: "AI趣闻萃取", meta: "每日三条速览", path: getLatestNewsBriefPath() }
+      ];
+      menuItems[0].meta = "外部课堂";
+      const recentHistory = vue.computed(() => {
+        const source = Array.isArray(props.workshopHistory) ? props.workshopHistory : [];
+        return source.slice(0, 8);
+      });
+      const profileName = vue.computed(() => {
+        var _a, _b, _c;
+        if (!userStore.isAuthenticated)
+          return "个人信息";
+        return ((_a = userStore.userInfo) == null ? void 0 : _a.nickname) || ((_b = userStore.userInfo) == null ? void 0 : _b.displayName) || ((_c = userStore.userInfo) == null ? void 0 : _c.username) || "个人信息";
+      });
+      const profileSubtitle = vue.computed(() => {
+        var _a;
+        if (!userStore.isAuthenticated)
+          return "查看资料与设置";
+        return ((_a = userStore.userInfo) == null ? void 0 : _a.username) || "查看资料与设置";
+      });
+      const avatarInitial = vue.computed(() => {
+        const source = profileName.value || "灵";
+        return String(source).trim().slice(0, 1) || "灵";
+      });
+      const handleMenuClick = (item) => {
+        if (item.id === "workshop") {
+          startNewConversation();
+          return;
+        }
+        if (item.id === props.activeSection) {
+          emit("close");
+          return;
+        }
+        emit("navigate", item.path);
+        emit("close");
+      };
+      const startNewConversation = () => {
+        emit("navigate", "/pages/home/index?reset=1");
+        emit("close");
+      };
+      const openHistory = (id) => {
+        emit("navigate", `/pages/home/index?chatId=${encodeURIComponent(id)}`);
+        emit("close");
+      };
+      const goToProfile = () => {
+        emit("navigate", "/pages/profile/index");
+        emit("close");
+      };
+      const requestClose = () => {
+        if (isClosing.value)
+          return;
+        isClosing.value = true;
+        if (closeTimer)
+          clearTimeout(closeTimer);
+        closeTimer = setTimeout(() => {
+          emit("close");
+          closeTimer = null;
+        }, ANIMATION_MS);
+      };
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let touchLastX = 0;
+      let touchLastY = 0;
+      let touchTracking = false;
+      const onTouchStart = (event) => {
+        var _a;
+        const touch = (_a = event == null ? void 0 : event.touches) == null ? void 0 : _a[0];
+        if (!touch)
+          return;
+        touchTracking = true;
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        touchLastX = touch.clientX;
+        touchLastY = touch.clientY;
+      };
+      const onTouchMove = (event) => {
+        var _a;
+        if (!touchTracking)
+          return;
+        const touch = (_a = event == null ? void 0 : event.touches) == null ? void 0 : _a[0];
+        if (!touch)
+          return;
+        touchLastX = touch.clientX;
+        touchLastY = touch.clientY;
+      };
+      const onTouchEnd = () => {
+        if (!touchTracking)
+          return;
+        touchTracking = false;
+        const dx = touchLastX - touchStartX;
+        const dy = touchLastY - touchStartY;
+        if (dx < -70 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+          requestClose();
+        }
+      };
+      vue.onUnmounted(() => {
+        if (closeTimer)
+          clearTimeout(closeTimer);
+      });
+      const __returned__ = { props, emit, statusBarHeight, safeAreaInsetsBottom, userStore, ANIMATION_MS, rendered, isClosing, get closeTimer() {
+        return closeTimer;
+      }, set closeTimer(v) {
+        closeTimer = v;
+      }, getLatestNewsBriefPath, menuItems, recentHistory, profileName, profileSubtitle, avatarInitial, handleMenuClick, startNewConversation, openHistory, goToProfile, requestClose, get touchStartX() {
+        return touchStartX;
+      }, set touchStartX(v) {
+        touchStartX = v;
+      }, get touchStartY() {
+        return touchStartY;
+      }, set touchStartY(v) {
+        touchStartY = v;
+      }, get touchLastX() {
+        return touchLastX;
+      }, set touchLastX(v) {
+        touchLastX = v;
+      }, get touchLastY() {
+        return touchLastY;
+      }, set touchLastY(v) {
+        touchLastY = v;
+      }, get touchTracking() {
+        return touchTracking;
+      }, set touchTracking(v) {
+        touchTracking = v;
+      }, onTouchStart, onTouchMove, onTouchEnd, computed: vue.computed, onUnmounted: vue.onUnmounted, ref: vue.ref, watch: vue.watch, get getLatestNewsBriefIssue() {
+        return getLatestNewsBriefIssue;
+      }, get useUserStore() {
+        return useUserStore;
+      }, get getLayoutMetrics() {
+        return getLayoutMetrics;
+      } };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render$c(_ctx, _cache, $props, $setup, $data, $options) {
+    return $setup.rendered ? (vue.openBlock(), vue.createElementBlock("view", {
+      key: 0,
+      class: "sidebar-wrapper"
+    }, [
+      vue.createElementVNode(
+        "view",
+        {
+          class: vue.normalizeClass(["sidebar-mask", { closing: $setup.isClosing }]),
+          onClick: $setup.requestClose
+        },
+        null,
+        2
+        /* CLASS */
+      ),
+      vue.createElementVNode(
+        "view",
+        {
+          class: vue.normalizeClass(["sidebar-panel", { closing: $setup.isClosing }]),
+          onTouchstart: $setup.onTouchStart,
+          onTouchmove: $setup.onTouchMove,
+          onTouchend: $setup.onTouchEnd,
+          onTouchcancel: $setup.onTouchEnd
+        },
+        [
+          vue.createElementVNode(
+            "view",
+            {
+              class: "sidebar-header",
+              style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight + 10}px` })
+            },
+            [
+              vue.createElementVNode("view", { class: "brand-badge" }, [
+                vue.createElementVNode("text", { class: "brand-badge-text" }, "LJ")
+              ]),
+              vue.createElementVNode("view", { class: "brand-copy" }, [
+                vue.createElementVNode("text", { class: "brand-title" }, "灵境"),
+                vue.createElementVNode("text", { class: "brand-subtitle" }, "AI 教育工作台")
+              ])
+            ],
+            4
+            /* STYLE */
+          ),
+          vue.createElementVNode("scroll-view", {
+            class: "sidebar-scroll",
+            "scroll-y": "",
+            "show-scrollbar": ""
+          }, [
+            vue.createElementVNode("view", {
+              class: "quick-action",
+              onClick: $setup.startNewConversation
+            }, [
+              vue.createElementVNode("text", { class: "quick-action-kicker" }, "START FRESH"),
+              vue.createElementVNode("text", { class: "quick-action-text" }, "开启新对话")
+            ]),
+            vue.createElementVNode("view", { class: "menu-group" }, [
+              (vue.openBlock(), vue.createElementBlock(
+                vue.Fragment,
+                null,
+                vue.renderList($setup.menuItems, (item) => {
+                  return vue.createElementVNode("view", {
+                    key: item.id,
+                    class: vue.normalizeClass(["menu-item", { active: item.id === $props.activeSection }]),
+                    onClick: ($event) => $setup.handleMenuClick(item)
+                  }, [
+                    vue.createElementVNode("view", { class: "menu-copy" }, [
+                      vue.createElementVNode(
+                        "text",
+                        { class: "menu-label" },
+                        vue.toDisplayString(item.name),
+                        1
+                        /* TEXT */
+                      ),
+                      vue.createElementVNode(
+                        "text",
+                        { class: "menu-meta" },
+                        vue.toDisplayString(item.meta),
+                        1
+                        /* TEXT */
+                      )
+                    ]),
+                    vue.createElementVNode("text", { class: "menu-arrow" }, "›")
+                  ], 10, ["onClick"]);
+                }),
+                64
+                /* STABLE_FRAGMENT */
+              ))
+            ]),
+            vue.createElementVNode("view", { class: "history-block" }, [
+              vue.createElementVNode("view", { class: "history-heading" }, [
+                vue.createElementVNode("text", { class: "history-title" }, "工坊记录"),
+                vue.createElementVNode("text", { class: "history-window" }, "30 天内")
+              ]),
+              $setup.recentHistory.length ? (vue.openBlock(true), vue.createElementBlock(
+                vue.Fragment,
+                { key: 0 },
+                vue.renderList($setup.recentHistory, (item) => {
+                  return vue.openBlock(), vue.createElementBlock("view", {
+                    key: item.id,
+                    class: "history-item",
+                    onClick: ($event) => $setup.openHistory(item.id)
+                  }, [
+                    vue.createElementVNode(
+                      "text",
+                      { class: "history-item-text" },
+                      vue.toDisplayString(item.prompt || "未命名对话"),
+                      1
+                      /* TEXT */
+                    )
+                  ], 8, ["onClick"]);
+                }),
+                128
+                /* KEYED_FRAGMENT */
+              )) : (vue.openBlock(), vue.createElementBlock("text", {
+                key: 1,
+                class: "history-empty"
+              }, "还没有更多对话记录"))
+            ])
+          ]),
+          vue.createElementVNode(
+            "view",
+            {
+              class: "profile-anchor",
+              style: vue.normalizeStyle({ paddingBottom: `${$setup.safeAreaInsetsBottom + 16}px` }),
+              onClick: $setup.goToProfile
+            },
+            [
+              vue.createElementVNode("view", { class: "profile-avatar" }, [
+                vue.createElementVNode(
+                  "text",
+                  { class: "profile-avatar-text" },
+                  vue.toDisplayString($setup.avatarInitial),
+                  1
+                  /* TEXT */
+                )
+              ]),
+              vue.createElementVNode("view", { class: "profile-meta" }, [
+                vue.createElementVNode(
+                  "text",
+                  { class: "profile-name" },
+                  vue.toDisplayString($setup.profileName),
+                  1
+                  /* TEXT */
+                ),
+                vue.createElementVNode(
+                  "text",
+                  { class: "profile-subtitle" },
+                  vue.toDisplayString($setup.profileSubtitle),
+                  1
+                  /* TEXT */
+                )
+              ])
+            ],
+            4
+            /* STYLE */
+          )
+        ],
+        34
+        /* CLASS, NEED_HYDRATION */
+      )
+    ])) : vue.createCommentVNode("v-if", true);
+  }
+  const Sidebar = /* @__PURE__ */ _export_sfc(_sfc_main$d, [["render", _sfc_render$c], ["__scopeId", "data-v-3801e5de"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/components/Sidebar.vue"]]);
+  const WorkshopIntent = {
+    GenerateWorkshop: "generate_workshop",
+    News: "news",
+    School: "school",
+    Help: "help"
+  };
+  const GENERATE_KEYWORDS = [
+    "生成",
+    "制作",
+    "开发",
+    "写一个",
+    "做一个",
+    "做个",
+    "页面",
+    "网页",
+    "网站",
+    "小程序",
+    "小游戏",
+    "应用",
+    "app",
+    "h5",
+    "html",
+    "ui",
+    "登录页",
+    "贪吃蛇"
+  ];
+  const NEWS_KEYWORDS = [
+    "资讯",
+    "新闻",
+    "热点",
+    "榜单",
+    "crawl"
+  ];
+  const SCHOOL_KEYWORDS = [
+    "学堂",
+    "课堂",
+    "课程",
+    "教学",
+    "学习",
+    "school",
+    "openmaic"
+  ];
+  const containsAnyKeyword = (text, keywords) => keywords.some((keyword) => text.includes(keyword));
+  const classifyWorkshopInput = (input = "") => {
+    const normalized = String(input).trim().toLowerCase();
+    if (!normalized) {
+      return { intent: WorkshopIntent.Help };
+    }
+    if (containsAnyKeyword(normalized, GENERATE_KEYWORDS)) {
+      return { intent: WorkshopIntent.GenerateWorkshop };
+    }
+    if (containsAnyKeyword(normalized, NEWS_KEYWORDS)) {
+      return { intent: WorkshopIntent.News };
+    }
+    if (containsAnyKeyword(normalized, SCHOOL_KEYWORDS)) {
+      return { intent: WorkshopIntent.School };
+    }
+    return { intent: WorkshopIntent.Help };
+  };
+  const WORKSHOP_HISTORY_KEY = "workshopHistory";
+  const WORKSHOP_HISTORY_BUCKET_KEY = "workshopHistoryByUser";
+  const normalizeHistoryItem = (item = {}) => ({
+    id: item.id || `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
+    prompt: item.prompt || "",
+    result: item.result || null,
+    createdAt: item.createdAt || Date.now()
+  });
+  const normalizeWorkshopScope = (scope) => {
+    const normalized = String(scope || "").trim();
+    return normalized || "guest";
+  };
+  const getWorkshopHistoryBucket = () => {
+    const scoped = uni.getStorageSync(WORKSHOP_HISTORY_BUCKET_KEY);
+    if (scoped && typeof scoped === "object" && !Array.isArray(scoped)) {
+      return scoped;
+    }
+    const legacy = uni.getStorageSync(WORKSHOP_HISTORY_KEY);
+    if (Array.isArray(legacy)) {
+      return {
+        [normalizeWorkshopScope(getCurrentUserScope())]: legacy.map((item) => normalizeHistoryItem(item))
+      };
+    }
+    return {};
+  };
+  const getWorkshopHistory = (scope) => {
+    const bucket = getWorkshopHistoryBucket();
+    const raw = bucket[normalizeWorkshopScope(scope || getCurrentUserScope())];
+    if (!Array.isArray(raw))
+      return [];
+    return raw.map((item) => normalizeHistoryItem(item)).sort((a, b) => b.createdAt - a.createdAt);
+  };
+  const setWorkshopHistory = (list = [], scope) => {
+    const workshopScope = normalizeWorkshopScope(scope || getCurrentUserScope());
+    const bucket = getWorkshopHistoryBucket();
+    const nextHistory = (Array.isArray(list) ? list : []).map((item) => normalizeHistoryItem(item));
+    uni.setStorageSync(WORKSHOP_HISTORY_BUCKET_KEY, {
+      ...bucket,
+      [workshopScope]: nextHistory
+    });
+    uni.setStorageSync(WORKSHOP_HISTORY_KEY, nextHistory);
+    return nextHistory;
+  };
+  const getWorkshopConversation = (id, scope) => {
+    if (!id)
+      return null;
+    return getWorkshopHistory(scope).find((item) => item.id === id) || null;
+  };
+  const saveWorkshopConversation = (conversation, scope) => {
+    const nextConversation = normalizeHistoryItem(conversation);
+    const history = getWorkshopHistory(scope).filter((item) => item.id !== nextConversation.id);
+    history.unshift(nextConversation);
+    setWorkshopHistory(history, scope);
+    return nextConversation;
+  };
+  const loadingText = "正在生成页面并准备在线预览，请稍等片刻。";
+  const _sfc_main$c = {
+    __name: "index",
+    setup(__props, { expose: __expose }) {
+      __expose();
+      const systemInfo = uni.getSystemInfoSync();
+      const isAndroidApp = systemInfo.platform === "android";
+      const { statusBarHeight, safeAreaInsetsBottom } = getLayoutMetrics();
+      const headerBarHeight = uni.upx2px(72);
+      const headerShellHeight = statusBarHeight + headerBarHeight;
+      const inputHeight = uni.upx2px(88);
+      const inputVerticalPadding = uni.upx2px(12);
+      const inputBaseHeight = inputHeight + inputVerticalPadding * 2;
+      const sidebarVisible = vue.ref(false);
+      const userInput = vue.ref("");
+      const loading = vue.ref(false);
+      const generatedResult = vue.ref(null);
+      const lastPrompt = vue.ref("");
+      const loadingPhase = vue.ref(0);
+      const workshopHistory = vue.ref([]);
+      const currentConversationId = vue.ref("");
+      const keyboardHeight = vue.ref(0);
+      const workshopSyncInFlight = vue.ref(false);
+      const workshopSyncLastAt = vue.ref(0);
+      const workshopSyncLastSignature = vue.ref("");
+      let loadingTimer = null;
+      let keyboardHeightHandler = null;
+      const loadingPhases = ["正在理解需求", "正在生成页面结构", "正在整理运行代码", "正在准备在线预览"];
+      const keyboardLiftOffset = vue.computed(() => {
+        if (isAndroidApp)
+          return 0;
+        return Math.max(Number(keyboardHeight.value || 0), 0);
+      });
+      const inputSafeBottom = vue.computed(() => {
+        if (keyboardLiftOffset.value > 0)
+          return 12;
+        return safeAreaInsetsBottom + 16;
+      });
+      const inputDockHeight = vue.computed(() => inputBaseHeight + inputSafeBottom.value);
+      const chatBottomOffset = vue.computed(() => inputDockHeight.value + keyboardLiftOffset.value);
+      const hasPreview = vue.computed(() => {
+        var _a, _b;
+        return !!(((_a = generatedResult.value) == null ? void 0 : _a.previewUrl) || ((_b = generatedResult.value) == null ? void 0 : _b.url));
+      });
+      const activeLoadingPhase = vue.computed(() => loadingPhases[loadingPhase.value % loadingPhases.length]);
+      const isAssistantReply = vue.computed(() => {
+        var _a;
+        return ((_a = generatedResult.value) == null ? void 0 : _a.kind) === "assistant";
+      });
+      const assistantActions = vue.computed(
+        () => {
+          var _a;
+          return (((_a = generatedResult.value) == null ? void 0 : _a.quickActions) || []).filter((item) => (item == null ? void 0 : item.label) && (item == null ? void 0 : item.path));
+        }
+      );
+      const aiTitle = vue.computed(() => {
+        if (loading.value)
+          return "正在生成中";
+        if (isAssistantReply.value)
+          return "灵境助手";
+        return "应用创建成功";
+      });
+      const introText = vue.computed(() => {
+        var _a;
+        if (!lastPrompt.value) {
+          return "我会先理解你的需求，再产出一版适合继续打磨的移动端结果。";
+        }
+        return ((_a = generatedResult.value) == null ? void 0 : _a.summary) || `围绕“${lastPrompt.value}”，我已经整理出页面结构和交互骨架。`;
+      });
+      const aiBodyText = vue.computed(() => {
+        var _a;
+        if (loading.value)
+          return loadingText;
+        if (isAssistantReply.value)
+          return ((_a = generatedResult.value) == null ? void 0 : _a.text) || "";
+        return introText.value;
+      });
+      const highlights = vue.computed(() => {
+        if (isAssistantReply.value)
+          return [];
+        if (loading.value) {
+          return ["模型已开始生成页面结果", "完成后会自动显示预览卡片", "如果预览可用，可以直接点击试玩"];
+        }
+        if (hasPreview.value) {
+          return ["已生成可访问的网页地址", "前端会通过 WebView 承载结果", "后续可以继续迭代玩法和界面"];
+        }
+        return ["保留核心玩法和页面结构", "先输出可继续修改的代码结果", "下一步可以接入 WebView 或沙盒预览"];
+      });
+      const showHighlights = vue.computed(() => loading.value || !isAssistantReply.value && !!generatedResult.value);
+      const coerceText = (value, fallback = "") => {
+        if (typeof value === "string") {
+          const normalized = value.trim();
+          return normalized || fallback;
+        }
+        if (typeof value === "number" || typeof value === "boolean") {
+          return String(value);
+        }
+        if (Array.isArray(value)) {
+          const normalized = value.map((item) => coerceText(item)).filter(Boolean).join(" ");
+          return normalized || fallback;
+        }
+        if (value && typeof value === "object") {
+          for (const key of ["summary", "message", "detail", "error", "text", "title"]) {
+            const normalized = coerceText(value[key], "");
+            if (normalized)
+              return normalized;
+          }
+          try {
+            const serialized = JSON.stringify(value);
+            return serialized === "{}" ? fallback : serialized;
+          } catch (error) {
+            return fallback;
+          }
+        }
+        return fallback;
+      };
+      const getErrorMessage = (error, fallback = "生成失败，请稍后重试") => {
+        const message = coerceText((error == null ? void 0 : error.message) || (error == null ? void 0 : error.detail) || (error == null ? void 0 : error.error), "");
+        return message || fallback;
+      };
+      const toggleSidebar = () => {
+        sidebarVisible.value = !sidebarVisible.value;
+      };
+      const closeSidebar = () => {
+        sidebarVisible.value = false;
+      };
+      const handleNavigate = (path) => {
+        navigateByPath(path);
+      };
+      const clearConversation = () => {
+        currentConversationId.value = "";
+        lastPrompt.value = "";
+        generatedResult.value = null;
+        userInput.value = "";
+      };
+      const syncWorkshopHistory = () => {
+        workshopHistory.value = getWorkshopHistory();
+      };
+      const loadConversation = (chatId) => {
+        const conversation = getWorkshopConversation(chatId);
+        if (!conversation) {
+          clearConversation();
+          return;
+        }
+        currentConversationId.value = conversation.id;
+        lastPrompt.value = conversation.prompt || "";
+        generatedResult.value = conversation.result || null;
+      };
+      const mergeWorkshopHistory = (local = [], remote = []) => {
+        const byId = /* @__PURE__ */ new Map();
+        [...remote, ...local].forEach((item) => {
+          if (!item || !item.id)
+            return;
+          const existing = byId.get(item.id);
+          if (!existing) {
+            byId.set(item.id, item);
+            return;
+          }
+          const currentTime = Number(existing.createdAt || 0);
+          const nextTime = Number(item.createdAt || 0);
+          if (nextTime > currentTime) {
+            byId.set(item.id, item);
+          }
+        });
+        return Array.from(byId.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      };
+      const historySignature = (list = []) => {
+        try {
+          return JSON.stringify(
+            (Array.isArray(list) ? list : []).map((item) => ({ id: (item == null ? void 0 : item.id) || "", createdAt: Number((item == null ? void 0 : item.createdAt) || 0) })).filter((item) => item.id).slice(0, 60)
+          );
+        } catch (error) {
+          return "";
+        }
+      };
+      const getWorkshopHistoryRemote = async () => ({ list: [] });
+      const saveWorkshopHistoryRemote = async () => ({ success: true });
+      const syncWorkshopHistoryRemote = async ({ silent = true } = {}) => {
+        const now2 = Date.now();
+        if (workshopSyncInFlight.value)
+          return;
+        if (now2 - workshopSyncLastAt.value < 12e3)
+          return;
+        const local = getWorkshopHistory();
+        workshopHistory.value = local;
+        try {
+          workshopSyncInFlight.value = true;
+          const response = await getWorkshopHistoryRemote();
+          const remote = Array.isArray(response.list) ? response.list : [];
+          const merged = mergeWorkshopHistory(local, remote);
+          appendDebugLog("workshop", "history_sync", {
+            localCount: local.length,
+            remoteCount: remote.length,
+            mergedCount: merged.length
+          });
+          workshopHistory.value = merged;
+          setWorkshopHistory(merged);
+          const mergedSignature = historySignature(merged);
+          const remoteSignature = historySignature(remote);
+          if (mergedSignature && mergedSignature !== remoteSignature && mergedSignature !== workshopSyncLastSignature.value) {
+            try {
+              await saveWorkshopHistoryRemote(merged);
+              workshopSyncLastSignature.value = mergedSignature;
+            } catch (error) {
+            }
+          }
+          workshopSyncLastAt.value = now2;
+        } catch (error) {
+          appendDebugLog("workshop", "history_sync_failed", {
+            error: getErrorMessage(error, "云端历史同步失败")
+          });
+          if (!silent) {
+            uni.showToast({
+              title: getErrorMessage(error, "云端历史同步失败"),
+              icon: "none"
+            });
+          }
+        } finally {
+          workshopSyncInFlight.value = false;
+        }
+      };
+      const startLoadingAnimation = () => {
+        if (loadingTimer) {
+          clearInterval(loadingTimer);
+        }
+        loadingPhase.value = 0;
+        loadingTimer = setInterval(() => {
+          loadingPhase.value = (loadingPhase.value + 1) % loadingPhases.length;
+        }, 1200);
+      };
+      const stopLoadingAnimation = () => {
+        if (!loadingTimer)
+          return;
+        clearInterval(loadingTimer);
+        loadingTimer = null;
+      };
+      const openPreview = () => {
+        var _a, _b, _c, _d;
+        const previewUrl = ((_a = generatedResult.value) == null ? void 0 : _a.previewUrl) || ((_b = generatedResult.value) == null ? void 0 : _b.url);
+        if (!previewUrl) {
+          appendDebugLog("workshop", "open_preview_skipped", {
+            reason: "missing preview url",
+            result: generatedResult.value || ""
+          });
+          return;
+        }
+        appendDebugLog("workshop", "open_preview", {
+          title: ((_c = generatedResult.value) == null ? void 0 : _c.title) || "",
+          previewUrl
+        });
+        uni.navigateTo({
+          url: `/pages/workshop/preview?url=${encodeURIComponent(previewUrl)}&title=${encodeURIComponent(
+            ((_d = generatedResult.value) == null ? void 0 : _d.title) || "工坊预览"
+          )}`
+        });
+      };
+      const runAssistantAction = (action) => {
+        if (!(action == null ? void 0 : action.path))
+          return;
+        navigateByPath(action.path);
+      };
+      const buildAssistantReply = ({ intent }) => {
+        const examples = ["做一个贪吃蛇小游戏", "生成一个登录页", "做一个记账小程序页面"];
+        if (intent === "news") {
+          return {
+            kind: "assistant",
+            text: `我可以带你去看 AI 资讯榜单。
+
+你也可以继续在工坊里输入“${examples[0]}”这类指令来生成小游戏或页面原型。`,
+            quickActions: [
+              { label: "去 AI 观察哨", path: "/pages/crawl/index" },
+              { label: "去 AI 学堂", path: "/pages/school/input" }
+            ]
+          };
+        }
+        if (intent === "school") {
+          return {
+            kind: "assistant",
+            text: `我可以带你去 AI 学堂。
+
+如果你想在工坊生成小游戏或页面，请直接这样说：
+- ${examples[0]}
+- ${examples[1]}`,
+            quickActions: [
+              { label: "去 AI 学堂", path: "/pages/school/input" },
+              { label: "去 AI 观察哨", path: "/pages/crawl/index" }
+            ]
+          };
+        }
+        return {
+          kind: "assistant",
+          text: `我能做两件事：
+1. 在工坊帮你生成小游戏或页面原型
+2. 带你跳转到 AI 观察哨 / AI 学堂
+
+如果你要生成，请这样说：
+- ${examples[0]}
+- ${examples[1]}
+- ${examples[2]}`,
+          quickActions: [
+            { label: "去 AI 观察哨", path: "/pages/crawl/index" },
+            { label: "去 AI 学堂", path: "/pages/school/input" }
+          ]
+        };
+      };
+      const normalizeWorkshopResult = (response, prompt) => {
+        const raw = (response == null ? void 0 : response.result) && typeof response.result === "object" ? response.result : response || {};
+        const previewUrl = raw.previewUrl || raw.url || (response == null ? void 0 : response.url) || (response == null ? void 0 : response.previewUrl) || "";
+        const code = coerceText(raw.code || raw.html || (response == null ? void 0 : response.html), "");
+        const summary = coerceText(raw.summary || raw.message || (response == null ? void 0 : response.summary) || (response == null ? void 0 : response.message), "") || `已根据“${prompt}”生成结果，可以直接打开预览。`;
+        const title = coerceText(raw.title || (response == null ? void 0 : response.title) || prompt, "工坊预览");
+        const normalizedResult = {
+          ...raw,
+          title,
+          summary,
+          code,
+          url: previewUrl,
+          previewUrl,
+          language: raw.language || "html"
+        };
+        appendDebugLog("workshop", "normalize_result", {
+          prompt,
+          previewUrl,
+          title,
+          hasCode: !!code,
+          summary,
+          raw: response
+        });
+        return normalizedResult;
+      };
+      const handleGenerate = async () => {
+        const prompt = userInput.value.trim();
+        if (!prompt || loading.value) {
+          if (!prompt) {
+            uni.showToast({ title: "请输入你的需求", icon: "none" });
+          }
+          return;
+        }
+        appendDebugLog("workshop", "generate_submit", {
+          prompt,
+          logFile: DEBUG_LOG_FILE_HINT
+        });
+        lastPrompt.value = prompt;
+        userInput.value = "";
+        const localIntent = classifyWorkshopInput(prompt);
+        if (localIntent.intent !== WorkshopIntent.GenerateWorkshop) {
+          generatedResult.value = buildAssistantReply({ intent: localIntent.intent || "help" });
+          appendDebugLog("workshop", "route_classified_as_help", localIntent);
+          return;
+        }
+        loading.value = true;
+        generatedResult.value = null;
+        startLoadingAnimation();
+        try {
+          const response = await generateCode(prompt);
+          appendDebugLog("workshop", "generate_response", response || {});
+          const nextResult = normalizeWorkshopResult(response, prompt);
+          generatedResult.value = nextResult;
+          const savedConversation = saveWorkshopConversation({
+            id: currentConversationId.value || `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
+            prompt,
+            result: nextResult,
+            createdAt: Date.now()
+          });
+          currentConversationId.value = savedConversation.id;
+          syncWorkshopHistory();
+          workshopSyncLastAt.value = 0;
+        } catch (error) {
+          appendDebugLog("workshop", "generate_failed", {
+            prompt,
+            error: getErrorMessage(error)
+          });
+          uni.showToast({ title: getErrorMessage(error), icon: "none" });
+          userInput.value = prompt;
+        } finally {
+          loading.value = false;
+          stopLoadingAnimation();
+        }
+      };
+      const registerKeyboardListener = () => {
+        if (typeof uni.onKeyboardHeightChange !== "function")
+          return;
+        keyboardHeightHandler = (event = {}) => {
+          keyboardHeight.value = Math.max(Number(event.height || 0), 0);
+        };
+        uni.onKeyboardHeightChange(keyboardHeightHandler);
+      };
+      const unregisterKeyboardListener = () => {
+        if (!keyboardHeightHandler)
+          return;
+        if (typeof uni.offKeyboardHeightChange === "function") {
+          uni.offKeyboardHeightChange(keyboardHeightHandler);
+        }
+        keyboardHeightHandler = null;
+      };
+      vue.onMounted(() => {
+        registerKeyboardListener();
+      });
+      vue.onUnmounted(() => {
+        stopLoadingAnimation();
+        unregisterKeyboardListener();
+      });
+      onLoad((query) => {
+        syncWorkshopHistory();
+        syncWorkshopHistoryRemote({ silent: true });
+        sidebarVisible.value = query.openSidebar === "1";
+        if (query.reset === "1") {
+          clearConversation();
+          return;
+        }
+        if (query.chatId) {
+          loadConversation(decodeURIComponent(query.chatId));
+        }
+      });
+      onShow(() => {
+        syncWorkshopHistory();
+        syncWorkshopHistoryRemote({ silent: true });
+      });
+      let lastBackPressAt = 0;
+      onBackPress(() => {
+        if (sidebarVisible.value) {
+          closeSidebar();
+          return true;
+        }
+        const now2 = Date.now();
+        if (now2 - lastBackPressAt < 1500) {
+          plus.runtime.quit();
+          return true;
+        }
+        lastBackPressAt = now2;
+        uni.showToast({ title: "再按一次退出应用", icon: "none" });
+        return true;
+      });
+      const __returned__ = { systemInfo, isAndroidApp, statusBarHeight, safeAreaInsetsBottom, headerBarHeight, headerShellHeight, inputHeight, inputVerticalPadding, inputBaseHeight, sidebarVisible, userInput, loading, generatedResult, lastPrompt, loadingPhase, workshopHistory, currentConversationId, keyboardHeight, workshopSyncInFlight, workshopSyncLastAt, workshopSyncLastSignature, get loadingTimer() {
+        return loadingTimer;
+      }, set loadingTimer(v) {
+        loadingTimer = v;
+      }, get keyboardHeightHandler() {
+        return keyboardHeightHandler;
+      }, set keyboardHeightHandler(v) {
+        keyboardHeightHandler = v;
+      }, loadingPhases, loadingText, keyboardLiftOffset, inputSafeBottom, inputDockHeight, chatBottomOffset, hasPreview, activeLoadingPhase, isAssistantReply, assistantActions, aiTitle, introText, aiBodyText, highlights, showHighlights, coerceText, getErrorMessage, toggleSidebar, closeSidebar, handleNavigate, clearConversation, syncWorkshopHistory, loadConversation, mergeWorkshopHistory, historySignature, getWorkshopHistoryRemote, saveWorkshopHistoryRemote, syncWorkshopHistoryRemote, startLoadingAnimation, stopLoadingAnimation, openPreview, runAssistantAction, buildAssistantReply, normalizeWorkshopResult, handleGenerate, registerKeyboardListener, unregisterKeyboardListener, get lastBackPressAt() {
+        return lastBackPressAt;
+      }, set lastBackPressAt(v) {
+        lastBackPressAt = v;
+      }, computed: vue.computed, onMounted: vue.onMounted, onUnmounted: vue.onUnmounted, ref: vue.ref, get onBackPress() {
+        return onBackPress;
+      }, get onLoad() {
+        return onLoad;
+      }, get onShow() {
+        return onShow;
+      }, Sidebar, get generateCode() {
+        return generateCode;
+      }, get navigateByPath() {
+        return navigateByPath;
+      }, get getLayoutMetrics() {
+        return getLayoutMetrics;
+      }, get classifyWorkshopInput() {
+        return classifyWorkshopInput;
+      }, get WorkshopIntent() {
+        return WorkshopIntent;
+      }, get appendDebugLog() {
+        return appendDebugLog;
+      }, get DEBUG_LOG_FILE_HINT() {
+        return DEBUG_LOG_FILE_HINT;
+      }, get getWorkshopConversation() {
+        return getWorkshopConversation;
+      }, get getWorkshopHistory() {
+        return getWorkshopHistory;
+      }, get saveWorkshopConversation() {
+        return saveWorkshopConversation;
+      }, get setWorkshopHistory() {
+        return setWorkshopHistory;
+      } };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render$b(_ctx, _cache, $props, $setup, $data, $options) {
+    return vue.openBlock(), vue.createElementBlock("view", { class: "workshop-page" }, [
+      vue.createElementVNode(
+        "view",
+        {
+          class: "header-shell",
+          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
+        },
+        [
+          vue.createElementVNode("view", { class: "page-header" }, [
+            vue.createElementVNode("text", {
+              class: "header-action",
+              onClick: $setup.toggleSidebar
+            }, "≡"),
+            vue.createElementVNode("text", { class: "header-title" }, "AI工坊"),
+            vue.createElementVNode("view", { class: "header-placeholder" })
+          ])
+        ],
+        4
+        /* STYLE */
+      ),
+      vue.createElementVNode(
+        "scroll-view",
+        {
+          class: "chat-scroll",
+          "scroll-y": "",
+          "show-scrollbar": false,
+          style: vue.normalizeStyle({
+            top: `${$setup.headerShellHeight}px`,
+            bottom: `${$setup.chatBottomOffset}px`
+          })
+        },
+        [
+          vue.createElementVNode("view", { class: "chat-content" }, [
+            $setup.lastPrompt ? (vue.openBlock(), vue.createElementBlock("view", {
+              key: 0,
+              class: "user-row"
+            }, [
+              vue.createElementVNode("view", { class: "user-bubble" }, [
+                vue.createElementVNode(
+                  "text",
+                  { class: "user-text" },
+                  vue.toDisplayString($setup.lastPrompt),
+                  1
+                  /* TEXT */
+                )
+              ]),
+              vue.createElementVNode("text", { class: "message-time" }, "刚刚")
+            ])) : vue.createCommentVNode("v-if", true),
+            $setup.generatedResult || $setup.loading ? (vue.openBlock(), vue.createElementBlock("view", {
+              key: 1,
+              class: "ai-row"
+            }, [
+              vue.createElementVNode("view", { class: "ai-avatar" }, [
+                vue.createElementVNode("text", { class: "ai-avatar-text" }, "AI")
+              ]),
+              vue.createElementVNode("view", { class: "ai-column" }, [
+                vue.createElementVNode("view", { class: "ai-bubble" }, [
+                  vue.createElementVNode(
+                    "text",
+                    { class: "ai-title" },
+                    vue.toDisplayString($setup.aiTitle),
+                    1
+                    /* TEXT */
+                  ),
+                  vue.createElementVNode(
+                    "text",
+                    { class: "ai-text" },
+                    vue.toDisplayString($setup.aiBodyText),
+                    1
+                    /* TEXT */
+                  ),
+                  $setup.loading ? (vue.openBlock(), vue.createElementBlock("view", {
+                    key: 0,
+                    class: "loading-panel"
+                  }, [
+                    vue.createElementVNode("view", { class: "loading-orbit" }, [
+                      vue.createElementVNode("view", { class: "orbit-ring ring-one" }),
+                      vue.createElementVNode("view", { class: "orbit-ring ring-two" }),
+                      vue.createElementVNode("view", { class: "orbit-core" }, [
+                        vue.createElementVNode("text", { class: "orbit-core-text" }, "AI")
+                      ]),
+                      vue.createElementVNode("view", { class: "orbit-dot dot-one" }),
+                      vue.createElementVNode("view", { class: "orbit-dot dot-two" }),
+                      vue.createElementVNode("view", { class: "orbit-dot dot-three" })
+                    ]),
+                    vue.createElementVNode("view", { class: "loading-meta" }, [
+                      vue.createElementVNode(
+                        "text",
+                        { class: "loading-phase" },
+                        vue.toDisplayString($setup.activeLoadingPhase),
+                        1
+                        /* TEXT */
+                      ),
+                      vue.createElementVNode("text", { class: "loading-subtitle" }, "正在调用模型并整理可预览的移动端结果"),
+                      vue.createElementVNode("view", { class: "loading-steps" }, [
+                        (vue.openBlock(), vue.createElementBlock(
+                          vue.Fragment,
+                          null,
+                          vue.renderList($setup.loadingPhases, (step, index) => {
+                            return vue.createElementVNode(
+                              "view",
+                              {
+                                key: step,
+                                class: vue.normalizeClass(["loading-step", { active: index === $setup.loadingPhase }])
+                              },
+                              [
+                                vue.createElementVNode("view", { class: "loading-step-dot" }),
+                                vue.createElementVNode(
+                                  "text",
+                                  { class: "loading-step-text" },
+                                  vue.toDisplayString(step),
+                                  1
+                                  /* TEXT */
+                                )
+                              ],
+                              2
+                              /* CLASS */
+                            );
+                          }),
+                          64
+                          /* STABLE_FRAGMENT */
+                        ))
+                      ])
+                    ]),
+                    vue.createElementVNode("view", { class: "loading-progress-track" }, [
+                      vue.createElementVNode("view", { class: "loading-progress-bar" })
+                    ])
+                  ])) : vue.createCommentVNode("v-if", true),
+                  $setup.showHighlights ? (vue.openBlock(), vue.createElementBlock("view", {
+                    key: 1,
+                    class: "idea-card"
+                  }, [
+                    vue.createElementVNode("text", { class: "idea-title" }, "这次生成重点"),
+                    (vue.openBlock(true), vue.createElementBlock(
+                      vue.Fragment,
+                      null,
+                      vue.renderList($setup.highlights, (point, index) => {
+                        return vue.openBlock(), vue.createElementBlock("view", {
+                          key: index,
+                          class: "idea-item"
+                        }, [
+                          vue.createElementVNode("text", { class: "idea-dot" }, "•"),
+                          vue.createElementVNode(
+                            "text",
+                            { class: "idea-text" },
+                            vue.toDisplayString(point),
+                            1
+                            /* TEXT */
+                          )
+                        ]);
+                      }),
+                      128
+                      /* KEYED_FRAGMENT */
+                    ))
+                  ])) : vue.createCommentVNode("v-if", true),
+                  $setup.generatedResult && !$setup.isAssistantReply ? (vue.openBlock(), vue.createElementBlock("view", {
+                    key: 2,
+                    class: "result-card"
+                  }, [
+                    $setup.hasPreview ? (vue.openBlock(), vue.createElementBlock("view", {
+                      key: 0,
+                      class: "preview-shell preview-clickable",
+                      onClick: $setup.openPreview
+                    }, [
+                      vue.createElementVNode("view", { class: "preview-header" }, [
+                        vue.createElementVNode(
+                          "text",
+                          { class: "preview-title" },
+                          vue.toDisplayString($setup.generatedResult.title || "在线预览"),
+                          1
+                          /* TEXT */
+                        ),
+                        vue.createElementVNode("view", { class: "preview-badge" }, [
+                          vue.createElementVNode("text", { class: "preview-badge-text" }, "WEB")
+                        ])
+                      ]),
+                      vue.createElementVNode("view", { class: "preview-hero" }, [
+                        vue.createElementVNode("text", { class: "preview-hero-title" }, "点击进入 WebView 试玩"),
+                        vue.createElementVNode(
+                          "text",
+                          { class: "preview-hero-copy" },
+                          vue.toDisplayString($setup.generatedResult.summary || "已生成可在线运行的页面，点击即可打开。"),
+                          1
+                          /* TEXT */
+                        ),
+                        vue.createElementVNode("view", { class: "preview-cta" }, [
+                          vue.createElementVNode("text", { class: "preview-cta-text" }, "立即打开")
+                        ])
+                      ])
+                    ])) : (vue.openBlock(), vue.createElementBlock("view", {
+                      key: 1,
+                      class: "preview-shell"
+                    }, [
+                      vue.createElementVNode("view", { class: "preview-header" }, [
+                        vue.createElementVNode(
+                          "text",
+                          { class: "preview-title" },
+                          vue.toDisplayString($setup.generatedResult.title || "生成结果"),
+                          1
+                          /* TEXT */
+                        ),
+                        vue.createElementVNode("view", { class: "preview-badge" }, [
+                          vue.createElementVNode(
+                            "text",
+                            { class: "preview-badge-text" },
+                            vue.toDisplayString($setup.generatedResult.language || "html"),
+                            1
+                            /* TEXT */
+                          )
+                        ])
+                      ]),
+                      vue.createElementVNode("scroll-view", {
+                        class: "preview-code-scroll",
+                        "scroll-y": ""
+                      }, [
+                        vue.createElementVNode(
+                          "text",
+                          { class: "preview-code" },
+                          vue.toDisplayString($setup.generatedResult.code),
+                          1
+                          /* TEXT */
+                        )
+                      ])
+                    ]))
+                  ])) : vue.createCommentVNode("v-if", true),
+                  $setup.isAssistantReply && $setup.assistantActions.length ? (vue.openBlock(), vue.createElementBlock("view", {
+                    key: 3,
+                    class: "assist-actions"
+                  }, [
+                    (vue.openBlock(true), vue.createElementBlock(
+                      vue.Fragment,
+                      null,
+                      vue.renderList($setup.assistantActions, (action) => {
+                        return vue.openBlock(), vue.createElementBlock("view", {
+                          key: action.path,
+                          class: "assist-action",
+                          onClick: ($event) => $setup.runAssistantAction(action)
+                        }, [
+                          vue.createElementVNode(
+                            "text",
+                            { class: "assist-action-text" },
+                            vue.toDisplayString(action.label),
+                            1
+                            /* TEXT */
+                          )
+                        ], 8, ["onClick"]);
+                      }),
+                      128
+                      /* KEYED_FRAGMENT */
+                    ))
+                  ])) : vue.createCommentVNode("v-if", true)
+                ]),
+                vue.createElementVNode("text", { class: "message-time" }, "刚刚")
+              ])
+            ])) : (vue.openBlock(), vue.createElementBlock("view", {
+              key: 2,
+              class: "empty-state"
+            }, [
+              vue.createElementVNode("text", { class: "empty-title" }, "描述你想做的应用"),
+              vue.createElementVNode("text", { class: "empty-copy" }, " 比如“做一个贪吃蛇小游戏”或“生成一个登录页”，我会先整理需求，再给出适合移动端的结果。 ")
+            ]))
+          ])
+        ],
+        4
+        /* STYLE */
+      ),
+      vue.createElementVNode(
+        "view",
+        {
+          class: "input-dock",
+          style: vue.normalizeStyle({
+            bottom: `${$setup.keyboardLiftOffset}px`,
+            paddingBottom: `${$setup.inputSafeBottom}px`
+          })
+        },
+        [
+          vue.createElementVNode("view", { class: "input-area" }, [
+            vue.createElementVNode("view", { class: "input-shell" }, [
+              vue.withDirectives(vue.createElementVNode(
+                "input",
+                {
+                  "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => $setup.userInput = $event),
+                  class: "prompt-input",
+                  placeholder: "输入你的需求...",
+                  "placeholder-class": "prompt-placeholder",
+                  "confirm-type": "send",
+                  maxlength: "500",
+                  "adjust-position": false,
+                  "cursor-spacing": 24,
+                  onConfirm: $setup.handleGenerate
+                },
+                null,
+                544
+                /* NEED_HYDRATION, NEED_PATCH */
+              ), [
+                [vue.vModelText, $setup.userInput]
+              ])
+            ]),
+            vue.createElementVNode(
+              "view",
+              {
+                class: vue.normalizeClass(["send-button", { disabled: $setup.loading }]),
+                onClick: $setup.handleGenerate
+              },
+              [
+                vue.createElementVNode("text", { class: "send-button-text" }, "发送")
+              ],
+              2
+              /* CLASS */
+            )
+          ])
+        ],
+        4
+        /* STYLE */
+      ),
+      vue.createVNode($setup["Sidebar"], {
+        visible: $setup.sidebarVisible,
+        "active-section": "workshop",
+        "workshop-history": $setup.workshopHistory,
+        onClose: $setup.closeSidebar,
+        onNavigate: $setup.handleNavigate
+      }, null, 8, ["visible", "workshop-history"])
+    ]);
+  }
+  const PagesHomeIndex = /* @__PURE__ */ _export_sfc(_sfc_main$c, [["render", _sfc_render$b], ["__scopeId", "data-v-4978fed5"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/home/index.vue"]]);
+  const _sfc_main$b = {
+    __name: "index",
+    setup(__props, { expose: __expose }) {
+      __expose();
+      const { statusBarHeight } = getLayoutMetrics();
+      const topBarOffset = `${statusBarHeight + uni.upx2px(222)}px`;
+      const newsScrollStyle = {
+        marginTop: topBarOffset,
+        height: `calc(100vh - ${topBarOffset})`
+      };
+      const activeTab = vue.ref("business");
+      const newsList = vue.ref([]);
+      const loading = vue.ref(false);
+      const refreshing = vue.ref(false);
+      const goBackToWorkshop = () => {
+        uni.reLaunch({ url: "/pages/home/index?openSidebar=1" });
+      };
+      const switchTab = (tab) => {
+        if (activeTab.value === tab)
+          return;
+        activeTab.value = tab;
+        loadNews();
+      };
+      const loadNews = async () => {
+        loading.value = true;
+        refreshing.value = true;
+        try {
+          const response = await getNewsList(activeTab.value);
+          newsList.value = response.list || [];
+        } catch (error) {
+          newsList.value = [];
+          uni.showToast({ title: error.message, icon: "none" });
+        } finally {
+          loading.value = false;
+          refreshing.value = false;
+        }
+      };
+      const viewDetail = (item) => {
+        if (!item.url)
+          return;
+        uni.navigateTo({
+          url: `/pages/workshop/preview?url=${encodeURIComponent(item.url)}&title=${encodeURIComponent(item.title || "新闻详情")}`
+        });
+      };
+      vue.onMounted(() => {
+        loadNews();
+      });
+      onBackPress((options = {}) => {
+        if (options.from === "navigateBack") {
+          return false;
+        }
+        goBackToWorkshop();
+        return true;
+      });
+      const __returned__ = { statusBarHeight, topBarOffset, newsScrollStyle, activeTab, newsList, loading, refreshing, goBackToWorkshop, switchTab, loadNews, viewDetail, onMounted: vue.onMounted, ref: vue.ref, get onBackPress() {
+        return onBackPress;
+      }, get getNewsList() {
+        return getNewsList;
+      }, get getLayoutMetrics() {
+        return getLayoutMetrics;
+      } };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render$a(_ctx, _cache, $props, $setup, $data, $options) {
+    return vue.openBlock(), vue.createElementBlock("view", { class: "news-page" }, [
+      vue.createElementVNode(
+        "view",
+        {
+          class: "top-bar",
+          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
+        },
+        [
+          vue.createElementVNode("view", { class: "page-header" }, [
+            vue.createElementVNode("view", {
+              class: "header-side header-back",
+              onClick: $setup.goBackToWorkshop
+            }, [
+              vue.createElementVNode("text", { class: "header-back-icon" }, "←")
+            ]),
+            vue.createElementVNode("text", { class: "header-title" }, "AI 观察哨"),
+            vue.createElementVNode("view", { class: "header-side header-placeholder" })
+          ]),
+          vue.createElementVNode("view", { class: "segment-wrap" }, [
+            vue.createElementVNode("view", { class: "segment-control" }, [
+              vue.createElementVNode(
+                "view",
+                {
+                  class: vue.normalizeClass(["segment-item", { active: $setup.activeTab === "business" }]),
+                  onClick: _cache[0] || (_cache[0] = ($event) => $setup.switchTab("business"))
+                },
+                [
+                  vue.createElementVNode("text", { class: "segment-text" }, "商业榜")
+                ],
+                2
+                /* CLASS */
+              ),
+              vue.createElementVNode(
+                "view",
+                {
+                  class: vue.normalizeClass(["segment-item", { active: $setup.activeTab === "personal" }]),
+                  onClick: _cache[1] || (_cache[1] = ($event) => $setup.switchTab("personal"))
+                },
+                [
+                  vue.createElementVNode("text", { class: "segment-text" }, "个人榜")
+                ],
+                2
+                /* CLASS */
+              )
+            ])
+          ])
+        ],
+        4
+        /* STYLE */
+      ),
+      vue.createElementVNode("scroll-view", {
+        class: "news-scroll",
+        style: $setup.newsScrollStyle,
+        "scroll-y": "",
+        "refresher-enabled": "",
+        "refresher-triggered": $setup.refreshing,
+        onRefresherrefresh: $setup.loadNews
+      }, [
+        $setup.newsList.length > 0 ? (vue.openBlock(), vue.createElementBlock("view", {
+          key: 0,
+          class: "news-list"
+        }, [
+          (vue.openBlock(true), vue.createElementBlock(
+            vue.Fragment,
+            null,
+            vue.renderList($setup.newsList, (item, index) => {
+              return vue.openBlock(), vue.createElementBlock("view", {
+                key: item.id,
+                class: "news-card",
+                onClick: ($event) => $setup.viewDetail(item)
+              }, [
+                vue.createElementVNode("view", { class: "card-top" }, [
+                  vue.createElementVNode("view", { class: "rank-chip" }, [
+                    vue.createElementVNode(
+                      "text",
+                      { class: "rank-chip-text" },
+                      "#" + vue.toDisplayString(index + 1),
+                      1
+                      /* TEXT */
+                    )
+                  ]),
+                  vue.createElementVNode(
+                    "text",
+                    { class: "card-score" },
+                    "热度 " + vue.toDisplayString(item.score),
+                    1
+                    /* TEXT */
+                  )
+                ]),
+                vue.createElementVNode(
+                  "text",
+                  { class: "card-title" },
+                  vue.toDisplayString(item.title),
+                  1
+                  /* TEXT */
+                ),
+                vue.createElementVNode(
+                  "text",
+                  { class: "card-summary" },
+                  vue.toDisplayString(item.summary),
+                  1
+                  /* TEXT */
+                ),
+                vue.createElementVNode("view", { class: "card-tags" }, [
+                  vue.createElementVNode("view", { class: "tag primary" }, [
+                    vue.createElementVNode(
+                      "text",
+                      { class: "tag-text" },
+                      vue.toDisplayString(item.source || "AI资讯速览"),
+                      1
+                      /* TEXT */
+                    )
+                  ]),
+                  vue.createElementVNode("view", { class: "tag" }, [
+                    vue.createElementVNode(
+                      "text",
+                      { class: "tag-text" },
+                      vue.toDisplayString($setup.activeTab === "business" ? "商业" : "个人"),
+                      1
+                      /* TEXT */
+                    )
+                  ])
+                ])
+              ], 8, ["onClick"]);
+            }),
+            128
+            /* KEYED_FRAGMENT */
+          ))
+        ])) : $setup.loading ? (vue.openBlock(), vue.createElementBlock("view", {
+          key: 1,
+          class: "loading-state"
+        }, [
+          vue.createElementVNode("text", { class: "loading-title" }, "正在拉取资讯"),
+          vue.createElementVNode("text", { class: "loading-copy" }, "首次启动后端时可能需要一点初始化时间，稍后下拉刷新即可。")
+        ])) : (vue.openBlock(), vue.createElementBlock("view", {
+          key: 2,
+          class: "empty-state"
+        }, [
+          vue.createElementVNode("text", { class: "empty-title" }, "还没有资讯内容"),
+          vue.createElementVNode("text", { class: "empty-copy" }, "后端抓取完成后，这里会显示最新榜单。你也可以切换榜单类型再试一次。")
+        ]))
+      ], 40, ["refresher-triggered"])
+    ]);
+  }
+  const PagesCrawlIndex = /* @__PURE__ */ _export_sfc(_sfc_main$b, [["render", _sfc_render$a], ["__scopeId", "data-v-be3def88"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/crawl/index.vue"]]);
+  const _sfc_main$a = {
+    __name: "input",
+    setup(__props, { expose: __expose }) {
+      __expose();
+      const openmaicUrl = vue.ref("");
+      const resolveOpenmaicUrl = () => {
+        try {
+          const url = new URL(getOpenmaicBaseUrl());
+          url.pathname = "/";
+          url.search = "";
+          url.hash = "";
+          return url.toString().replace(/\/$/, "");
+        } catch (error) {
+          return "http://8.135.4.46:3000";
+        }
+      };
+      const goBack = () => {
+        uni.reLaunch({ url: "/pages/home/index?openSidebar=1" });
+      };
+      onLoad(() => {
+        openmaicUrl.value = resolveOpenmaicUrl();
+      });
+      onNavigationBarButtonTap(() => {
+        goBack();
+      });
+      onBackPress((options = {}) => {
+        if (options.from === "navigateBack") {
+          return false;
+        }
+        goBack();
+        return true;
+      });
+      const __returned__ = { openmaicUrl, resolveOpenmaicUrl, goBack, ref: vue.ref, get onBackPress() {
+        return onBackPress;
+      }, get onLoad() {
+        return onLoad;
+      }, get onNavigationBarButtonTap() {
+        return onNavigationBarButtonTap;
+      }, get getOpenmaicBaseUrl() {
+        return getOpenmaicBaseUrl;
+      } };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render$9(_ctx, _cache, $props, $setup, $data, $options) {
+    return vue.openBlock(), vue.createElementBlock("view", { class: "school-page" }, [
+      $setup.openmaicUrl ? (vue.openBlock(), vue.createElementBlock("web-view", {
+        key: 0,
+        class: "school-webview",
+        src: $setup.openmaicUrl
+      }, null, 8, ["src"])) : (vue.openBlock(), vue.createElementBlock("view", {
+        key: 1,
+        class: "empty-state"
+      }, [
+        vue.createElementVNode("text", { class: "empty-title" }, "AI 学堂暂时不可用"),
+        vue.createElementVNode("text", { class: "empty-copy" }, " 当前没有可用的 OpenMAIC 地址，请先检查服务器和前端访问地址配置。 ")
+      ]))
+    ]);
+  }
+  const PagesSchoolInput = /* @__PURE__ */ _export_sfc(_sfc_main$a, [["render", _sfc_render$9], ["__scopeId", "data-v-6684b8ff"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/school/input.vue"]]);
+  const _sfc_main$9 = {
+    __name: "index",
+    setup(__props, { expose: __expose }) {
+      __expose();
+      const { statusBarHeight, safeAreaInsetsBottom } = getLayoutMetrics();
+      const topBarOffset = `${statusBarHeight + uni.upx2px(124)}px`;
+      const profileScrollStyle = {
+        marginTop: topBarOffset,
+        height: `calc(100vh - ${topBarOffset})`
+      };
+      const userStore = useUserStore();
+      const localProfile = vue.ref(getLocalProfile());
+      const genderSheetVisible = vue.ref(false);
+      const genderOptions = ["未设置", "女", "男"];
+      const toastState = vue.ref({
+        visible: false,
+        message: "",
+        type: "success"
+      });
+      let toastTimer = null;
+      const isAuthenticated = vue.computed(() => userStore.isAuthenticated);
+      const userInfo = vue.computed(() => {
+        if (userStore.userInfo)
+          return userStore.userInfo;
+        return {
+          id: "guest",
+          username: "",
+          nickname: "灵境用户"
+        };
+      });
+      const displayUsername = vue.computed(() => userInfo.value.username || userInfo.value.id || "后端未提供");
+      const mergedProfile = vue.computed(() => ({
+        ...localProfile.value,
+        nickname: userInfo.value.nickname || localProfile.value.nickname
+      }));
+      const avatarInitial = vue.computed(() => {
+        const source = mergedProfile.value.nickname || displayUsername.value || "灵";
+        return String(source).trim().slice(0, 1) || "灵";
+      });
+      const introDisplay = vue.computed(() => {
+        const bio = String(mergedProfile.value.bio || "").trim();
+        return bio ? `${bio}  ›` : "介绍一下自己  ›";
+      });
+      const showInlineToast = (message, type = "success", duration = 1800) => {
+        if (!message)
+          return;
+        if (toastTimer) {
+          clearTimeout(toastTimer);
+          toastTimer = null;
+        }
+        toastState.value = {
+          visible: true,
+          message,
+          type
+        };
+        toastTimer = setTimeout(() => {
+          toastState.value.visible = false;
+          toastTimer = null;
+        }, duration);
+      };
+      const syncProfile = () => {
+        localProfile.value = saveLocalProfile({
+          nickname: userInfo.value.nickname || getLocalProfile().nickname
+        });
+      };
+      const loadPageData = async () => {
+        syncProfile();
+      };
+      const goBack = () => {
+        safeNavigateBack("/pages/home/index?openSidebar=1");
+      };
+      const openAuth = (mode = "login") => {
+        uni.navigateTo({
+          url: `/pages/profile/auth?mode=${mode}&redirect=${encodeURIComponent("/pages/profile/index")}`
+        });
+      };
+      const goToNickname = () => {
+        uni.navigateTo({ url: "/pages/profile/nickname" });
+      };
+      const goToBio = () => {
+        uni.navigateTo({ url: "/pages/profile/bio" });
+      };
+      const handleAvatarTap = () => {
+        uni.showToast({ title: "头像能力待接入", icon: "none" });
+      };
+      const openGenderSheet = () => {
+        if (!isAuthenticated.value)
+          return;
+        genderSheetVisible.value = true;
+      };
+      const closeGenderSheet = () => {
+        genderSheetVisible.value = false;
+      };
+      const selectGender = (gender) => {
+        saveLocalProfile({ gender });
+        setProfilePendingToast("性别选项已保存");
+        closeGenderSheet();
+        syncProfile();
+        showInlineToast("性别选项已保存");
+      };
+      const handleLogout = () => {
+        uni.showModal({
+          title: "提示",
+          content: "确定退出当前账号吗？",
+          success: async (res) => {
+            if (!res.confirm)
+              return;
+            try {
+              await userStore.logoutRemote();
+              showInlineToast("已退出登录");
+              setTimeout(() => {
+                uni.reLaunch({ url: "/pages/profile/auth" });
+              }, 300);
+            } catch (error) {
+              uni.showToast({ title: error.message || "退出失败", icon: "none" });
+            }
+          }
+        });
+      };
+      onShow(async () => {
+        await loadPageData();
+        const toastMessage2 = consumeProfilePendingToast();
+        if (toastMessage2) {
+          showInlineToast(toastMessage2);
+        }
+      });
+      vue.onBeforeUnmount(() => {
+        if (toastTimer) {
+          clearTimeout(toastTimer);
+          toastTimer = null;
+        }
+      });
+      onBackPress((options = {}) => {
+        if (options.from === "navigateBack") {
+          return false;
+        }
+        if (genderSheetVisible.value) {
+          closeGenderSheet();
+          return true;
+        }
+        goBack();
+        return true;
+      });
+      const __returned__ = { statusBarHeight, safeAreaInsetsBottom, topBarOffset, profileScrollStyle, userStore, localProfile, genderSheetVisible, genderOptions, toastState, get toastTimer() {
+        return toastTimer;
+      }, set toastTimer(v) {
+        toastTimer = v;
+      }, isAuthenticated, userInfo, displayUsername, mergedProfile, avatarInitial, introDisplay, showInlineToast, syncProfile, loadPageData, goBack, openAuth, goToNickname, goToBio, handleAvatarTap, openGenderSheet, closeGenderSheet, selectGender, handleLogout, computed: vue.computed, onBeforeUnmount: vue.onBeforeUnmount, ref: vue.ref, get onBackPress() {
+        return onBackPress;
+      }, get onShow() {
+        return onShow;
+      }, get useUserStore() {
+        return useUserStore;
+      }, get getLayoutMetrics() {
+        return getLayoutMetrics;
+      }, get safeNavigateBack() {
+        return safeNavigateBack;
+      }, get consumeProfilePendingToast() {
+        return consumeProfilePendingToast;
+      }, get getLocalProfile() {
+        return getLocalProfile;
+      }, get saveLocalProfile() {
+        return saveLocalProfile;
+      }, get setProfilePendingToast() {
+        return setProfilePendingToast;
+      } };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render$8(_ctx, _cache, $props, $setup, $data, $options) {
+    return vue.openBlock(), vue.createElementBlock("view", { class: "profile-page" }, [
+      vue.createElementVNode(
+        "view",
+        {
+          class: "top-bar",
+          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
+        },
+        [
+          vue.createElementVNode("view", { class: "page-header" }, [
+            vue.createElementVNode("view", {
+              class: "header-back",
+              onClick: $setup.goBack
+            }, [
+              vue.createElementVNode("text", { class: "header-back-icon" }, "←")
+            ]),
+            vue.createElementVNode("text", { class: "header-title" }, "个人信息"),
+            vue.createElementVNode("view", { class: "header-placeholder" })
+          ])
+        ],
+        4
+        /* STYLE */
+      ),
+      vue.createElementVNode("scroll-view", {
+        class: "profile-scroll",
+        style: $setup.profileScrollStyle,
+        "scroll-y": ""
+      }, [
+        vue.createElementVNode(
+          "view",
+          {
+            class: "profile-body",
+            style: vue.normalizeStyle({ paddingBottom: `${$setup.safeAreaInsetsBottom + 28}px` })
+          },
+          [
+            vue.createElementVNode("view", { class: "avatar-section" }, [
+              vue.createElementVNode("view", { class: "avatar-orb" }, [
+                vue.createElementVNode("view", { class: "avatar-highlight" }),
+                vue.createElementVNode(
+                  "text",
+                  { class: "avatar-initial" },
+                  vue.toDisplayString($setup.avatarInitial),
+                  1
+                  /* TEXT */
+                )
+              ]),
+              vue.createElementVNode("view", {
+                class: "camera-badge",
+                onClick: $setup.handleAvatarTap
+              }, [
+                vue.createElementVNode("text", { class: "camera-badge-text" }, "机")
+              ])
+            ]),
+            $setup.isAuthenticated ? (vue.openBlock(), vue.createElementBlock(
+              vue.Fragment,
+              { key: 0 },
+              [
+                vue.createElementVNode("view", { class: "info-card" }, [
+                  vue.createElementVNode("view", {
+                    class: "info-row clickable",
+                    onClick: $setup.goToNickname
+                  }, [
+                    vue.createElementVNode("text", { class: "row-label" }, "昵称"),
+                    vue.createElementVNode("view", { class: "row-right" }, [
+                      vue.createElementVNode(
+                        "text",
+                        { class: "row-value" },
+                        vue.toDisplayString($setup.mergedProfile.nickname),
+                        1
+                        /* TEXT */
+                      ),
+                      vue.createElementVNode("text", { class: "row-arrow" }, "›")
+                    ])
+                  ]),
+                  vue.createElementVNode("view", { class: "divider" }),
+                  vue.createElementVNode("view", {
+                    class: "info-row clickable",
+                    onClick: $setup.openGenderSheet
+                  }, [
+                    vue.createElementVNode("text", { class: "row-label" }, "性别"),
+                    vue.createElementVNode("view", { class: "row-right" }, [
+                      vue.createElementVNode(
+                        "text",
+                        { class: "row-value" },
+                        vue.toDisplayString($setup.mergedProfile.gender),
+                        1
+                        /* TEXT */
+                      ),
+                      vue.createElementVNode("text", { class: "row-arrow" }, "›")
+                    ])
+                  ])
+                ]),
+                vue.createElementVNode("view", {
+                  class: "intro-card",
+                  onClick: $setup.goToBio
+                }, [
+                  vue.createElementVNode("text", { class: "intro-title" }, "自我介绍"),
+                  vue.createElementVNode(
+                    "text",
+                    { class: "intro-value" },
+                    vue.toDisplayString($setup.introDisplay),
+                    1
+                    /* TEXT */
+                  )
+                ]),
+                vue.createElementVNode("view", { class: "meta-card" }, [
+                  vue.createElementVNode("view", { class: "info-row" }, [
+                    vue.createElementVNode("text", { class: "row-label" }, "账号状态"),
+                    vue.createElementVNode("text", { class: "row-value" }, "已登录")
+                  ]),
+                  vue.createElementVNode("view", { class: "divider" }),
+                  vue.createElementVNode("view", { class: "info-row" }, [
+                    vue.createElementVNode("text", { class: "row-label" }, "用户名"),
+                    vue.createElementVNode(
+                      "text",
+                      { class: "row-value" },
+                      vue.toDisplayString($setup.displayUsername),
+                      1
+                      /* TEXT */
+                    )
+                  ])
+                ]),
+                vue.createElementVNode("view", {
+                  class: "logout-button",
+                  onClick: $setup.handleLogout
+                }, [
+                  vue.createElementVNode("text", { class: "logout-text" }, "退出登录")
+                ])
+              ],
+              64
+              /* STABLE_FRAGMENT */
+            )) : (vue.openBlock(), vue.createElementBlock(
+              vue.Fragment,
+              { key: 1 },
+              [
+                vue.createElementVNode("view", { class: "guest-card" }, [
+                  vue.createElementVNode("text", { class: "guest-title" }, "尚未登录账号"),
+                  vue.createElementVNode("text", { class: "guest-copy" }, "登录后可同步个人身份，并使用公司后端提供的账号能力。"),
+                  vue.createElementVNode("view", {
+                    class: "guest-action primary",
+                    onClick: _cache[0] || (_cache[0] = ($event) => $setup.openAuth("login"))
+                  }, [
+                    vue.createElementVNode("text", { class: "guest-action-text dark" }, "登录账号")
+                  ]),
+                  vue.createElementVNode("view", {
+                    class: "guest-action secondary",
+                    onClick: _cache[1] || (_cache[1] = ($event) => $setup.openAuth("register"))
+                  }, [
+                    vue.createElementVNode("text", { class: "guest-action-text light" }, "新用户注册")
+                  ])
+                ]),
+                vue.createElementVNode("view", { class: "meta-card" }, [
+                  vue.createElementVNode("view", { class: "info-row" }, [
+                    vue.createElementVNode("text", { class: "row-label" }, "账号状态"),
+                    vue.createElementVNode("text", { class: "row-value" }, "访客模式")
+                  ]),
+                  vue.createElementVNode("view", { class: "divider" }),
+                  vue.createElementVNode("view", { class: "info-row" }, [
+                    vue.createElementVNode("text", { class: "row-label" }, "用户名"),
+                    vue.createElementVNode("text", { class: "row-value" }, "未登录")
+                  ])
+                ])
+              ],
+              64
+              /* STABLE_FRAGMENT */
+            ))
+          ],
+          4
+          /* STYLE */
+        )
+      ]),
+      $setup.genderSheetVisible && $setup.isAuthenticated ? (vue.openBlock(), vue.createElementBlock("view", {
+        key: 0,
+        class: "sheet-mask",
+        onClick: $setup.closeGenderSheet
+      }, [
+        vue.createElementVNode("view", {
+          class: "gender-sheet",
+          onClick: _cache[2] || (_cache[2] = vue.withModifiers(() => {
+          }, ["stop"]))
+        }, [
+          vue.createElementVNode("text", { class: "sheet-title" }, "性别设置"),
+          (vue.openBlock(), vue.createElementBlock(
+            vue.Fragment,
+            null,
+            vue.renderList($setup.genderOptions, (item) => {
+              return vue.createElementVNode("view", {
+                key: item,
+                class: "sheet-option",
+                onClick: ($event) => $setup.selectGender(item)
+              }, [
+                vue.createElementVNode(
+                  "text",
+                  { class: "sheet-option-text" },
+                  vue.toDisplayString(item),
+                  1
+                  /* TEXT */
+                )
+              ], 8, ["onClick"]);
+            }),
+            64
+            /* STABLE_FRAGMENT */
+          ))
+        ])
+      ])) : vue.createCommentVNode("v-if", true),
+      $setup.toastState.visible ? (vue.openBlock(), vue.createElementBlock("view", {
+        key: 1,
+        class: "floating-toast"
+      }, [
+        vue.createElementVNode("view", { class: "floating-toast-panel" }, [
+          $setup.toastState.type === "success" ? (vue.openBlock(), vue.createElementBlock("text", {
+            key: 0,
+            class: "floating-toast-icon"
+          }, "✓")) : vue.createCommentVNode("v-if", true),
+          vue.createElementVNode(
+            "text",
+            { class: "floating-toast-text" },
+            vue.toDisplayString($setup.toastState.message),
+            1
+            /* TEXT */
+          )
+        ])
+      ])) : vue.createCommentVNode("v-if", true)
+    ]);
+  }
+  const PagesProfileIndex = /* @__PURE__ */ _export_sfc(_sfc_main$9, [["render", _sfc_render$8], ["__scopeId", "data-v-201c0da5"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/profile/index.vue"]]);
+  const _sfc_main$8 = {
+    __name: "nickname",
+    setup(__props, { expose: __expose }) {
+      __expose();
+      const { statusBarHeight } = getLayoutMetrics();
+      const topBarOffset = `${statusBarHeight + uni.upx2px(124)}px`;
+      const formAreaStyle = {
+        paddingTop: `calc(${topBarOffset} + 24rpx)`
+      };
+      const userStore = useUserStore();
+      const nickname = vue.ref("");
+      const goBack = () => {
+        safeNavigateBack("/pages/profile/index");
+      };
+      const handleSave = async () => {
+        const value = nickname.value.trim();
+        if (!value) {
+          uni.showToast({ title: "请输入昵称", icon: "none" });
+          return;
+        }
+        userStore.setUserInfo({
+          ...userStore.userInfo || {},
+          nickname: value
+        });
+        saveLocalProfile({ nickname: value });
+        setProfilePendingToast("昵称修改成功");
+        safeNavigateBack("/pages/profile/index");
+      };
+      onLoad(() => {
+        var _a;
+        nickname.value = ((_a = userStore.userInfo) == null ? void 0 : _a.nickname) || getLocalProfile().nickname;
+      });
+      onBackPress((options = {}) => {
+        if (options.from === "navigateBack") {
+          return false;
+        }
+        goBack();
+        return true;
+      });
+      const __returned__ = { statusBarHeight, topBarOffset, formAreaStyle, userStore, nickname, goBack, handleSave, get onBackPress() {
+        return onBackPress;
+      }, get onLoad() {
+        return onLoad;
+      }, ref: vue.ref, get useUserStore() {
+        return useUserStore;
+      }, get getLayoutMetrics() {
+        return getLayoutMetrics;
+      }, get getLocalProfile() {
+        return getLocalProfile;
+      }, get saveLocalProfile() {
+        return saveLocalProfile;
+      }, get setProfilePendingToast() {
+        return setProfilePendingToast;
+      }, get safeNavigateBack() {
+        return safeNavigateBack;
+      } };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render$7(_ctx, _cache, $props, $setup, $data, $options) {
+    return vue.openBlock(), vue.createElementBlock("view", { class: "edit-page" }, [
+      vue.createElementVNode(
+        "view",
+        {
+          class: "top-bar",
+          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
+        },
+        [
+          vue.createElementVNode("view", { class: "page-header" }, [
+            vue.createElementVNode("view", {
+              class: "header-side header-back",
+              onClick: $setup.goBack
+            }, [
+              vue.createElementVNode("text", { class: "header-back-icon" }, "←")
+            ]),
+            vue.createElementVNode("text", { class: "header-title" }, "设置昵称"),
+            vue.createElementVNode("view", {
+              class: "header-side header-action-done",
+              onClick: $setup.handleSave
+            }, [
+              vue.createElementVNode("text", { class: "header-action-text" }, "完成")
+            ])
+          ])
+        ],
+        4
+        /* STYLE */
+      ),
+      vue.createElementVNode("view", {
+        class: "form-area",
+        style: $setup.formAreaStyle
+      }, [
+        vue.withDirectives(vue.createElementVNode(
+          "input",
+          {
+            class: "text-input",
+            "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => $setup.nickname = $event),
+            maxlength: "20",
+            placeholder: "请输入昵称",
+            "placeholder-class": "text-placeholder"
+          },
+          null,
+          512
+          /* NEED_PATCH */
+        ), [
+          [vue.vModelText, $setup.nickname]
+        ])
+      ])
+    ]);
+  }
+  const PagesProfileNickname = /* @__PURE__ */ _export_sfc(_sfc_main$8, [["render", _sfc_render$7], ["__scopeId", "data-v-fe5128e0"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/profile/nickname.vue"]]);
+  const _sfc_main$7 = {
+    __name: "bio",
+    setup(__props, { expose: __expose }) {
+      __expose();
+      const { statusBarHeight } = getLayoutMetrics();
+      const topBarOffset = `${statusBarHeight + uni.upx2px(124)}px`;
+      const formAreaStyle = {
+        paddingTop: `calc(${topBarOffset} + 24rpx)`
+      };
+      const bio = vue.ref("");
+      const goBack = () => {
+        safeNavigateBack("/pages/profile/index");
+      };
+      const handleSave = () => {
+        saveLocalProfile({ bio: bio.value.trim() });
+        setProfilePendingToast("自我介绍修改成功");
+        safeNavigateBack("/pages/profile/index");
+      };
+      onLoad(() => {
+        bio.value = getLocalProfile().bio;
+      });
+      onBackPress((options = {}) => {
+        if (options.from === "navigateBack") {
+          return false;
+        }
+        goBack();
+        return true;
+      });
+      const __returned__ = { statusBarHeight, topBarOffset, formAreaStyle, bio, goBack, handleSave, get onBackPress() {
+        return onBackPress;
+      }, get onLoad() {
+        return onLoad;
+      }, ref: vue.ref, get getLayoutMetrics() {
+        return getLayoutMetrics;
+      }, get getLocalProfile() {
+        return getLocalProfile;
+      }, get saveLocalProfile() {
+        return saveLocalProfile;
+      }, get setProfilePendingToast() {
+        return setProfilePendingToast;
+      }, get safeNavigateBack() {
+        return safeNavigateBack;
+      } };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render$6(_ctx, _cache, $props, $setup, $data, $options) {
+    return vue.openBlock(), vue.createElementBlock("view", { class: "edit-page" }, [
+      vue.createElementVNode(
+        "view",
+        {
+          class: "top-bar",
+          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
+        },
+        [
+          vue.createElementVNode("view", { class: "page-header" }, [
+            vue.createElementVNode("view", {
+              class: "header-side header-back",
+              onClick: $setup.goBack
+            }, [
+              vue.createElementVNode("text", { class: "header-back-icon" }, "←")
+            ]),
+            vue.createElementVNode("text", { class: "header-title" }, "自我介绍"),
+            vue.createElementVNode("view", {
+              class: "header-side header-action-done",
+              onClick: $setup.handleSave
+            }, [
+              vue.createElementVNode("text", { class: "header-action-text" }, "保存")
+            ])
+          ])
+        ],
+        4
+        /* STYLE */
+      ),
+      vue.createElementVNode("view", {
+        class: "form-area",
+        style: $setup.formAreaStyle
+      }, [
+        vue.withDirectives(vue.createElementVNode(
+          "textarea",
+          {
+            class: "text-area",
+            "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => $setup.bio = $event),
+            maxlength: "50",
+            placeholder: "请输入不多于 50 字的自我介绍",
+            "placeholder-class": "text-placeholder"
+          },
+          null,
+          512
+          /* NEED_PATCH */
+        ), [
+          [vue.vModelText, $setup.bio]
+        ]),
+        vue.createElementVNode(
+          "text",
+          { class: "count-text" },
+          vue.toDisplayString($setup.bio.length) + "/50",
+          1
+          /* TEXT */
+        )
+      ])
+    ]);
+  }
+  const PagesProfileBio = /* @__PURE__ */ _export_sfc(_sfc_main$7, [["render", _sfc_render$6], ["__scopeId", "data-v-7b992428"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/profile/bio.vue"]]);
+  const _sfc_main$6 = {
+    __name: "preview",
+    setup(__props, { expose: __expose }) {
+      __expose();
+      const { statusBarHeight, safeAreaInsetsBottom } = getLayoutMetrics();
+      const previewUrl = vue.ref("");
+      const pageTitle = vue.ref("工坊预览");
+      const goBack = () => {
+        safeNavigateBack("/pages/home/index?openSidebar=1");
+      };
+      const isHttpUrl = (url) => /^https?:\/\/.+/i.test(url || "");
+      const copyLink = () => {
+        if (!previewUrl.value)
+          return;
+        if (!isHttpUrl(previewUrl.value)) {
+          uni.showToast({ title: "预览地址不合法", icon: "none" });
+          return;
+        }
+        uni.setClipboardData({ data: previewUrl.value });
+      };
+      const openExternal = () => {
+        if (!previewUrl.value)
+          return;
+        if (!isHttpUrl(previewUrl.value)) {
+          uni.showToast({ title: "预览地址不合法", icon: "none" });
+          return;
+        }
+        uni.showModal({
+          title: "提示",
+          content: "将使用系统浏览器打开预览链接，是否继续？",
+          success: (res) => {
+            if (!res.confirm)
+              return;
+            plus.runtime.openURL(previewUrl.value);
+          }
+        });
+      };
+      onLoad((query) => {
+        let url = "";
+        let title = "工坊预览";
+        try {
+          url = decodeURIComponent(query.url || "");
+          title = decodeURIComponent(query.title || "工坊预览");
+        } catch (e) {
+          url = "";
+          title = "工坊预览";
+        }
+        pageTitle.value = title;
+        if (url && !isHttpUrl(url)) {
+          uni.showToast({ title: "预览地址不合法", icon: "none" });
+          previewUrl.value = "";
+          return;
+        }
+        previewUrl.value = url;
+      });
+      onBackPress((options = {}) => {
+        if (options.from === "navigateBack") {
+          return false;
+        }
+        goBack();
+        return true;
+      });
+      const __returned__ = { statusBarHeight, safeAreaInsetsBottom, previewUrl, pageTitle, goBack, isHttpUrl, copyLink, openExternal, get onBackPress() {
+        return onBackPress;
+      }, get onLoad() {
+        return onLoad;
+      }, ref: vue.ref, get getLayoutMetrics() {
+        return getLayoutMetrics;
+      }, get safeNavigateBack() {
+        return safeNavigateBack;
+      } };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render$5(_ctx, _cache, $props, $setup, $data, $options) {
+    return vue.openBlock(), vue.createElementBlock("view", { class: "preview-page" }, [
+      vue.createElementVNode(
+        "view",
+        {
+          class: "top-safe",
+          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight}px` })
+        },
+        null,
+        4
+        /* STYLE */
+      ),
+      vue.createElementVNode("view", { class: "page-header" }, [
+        vue.createElementVNode("text", {
+          class: "header-action",
+          onClick: $setup.goBack
+        }, "‹"),
+        vue.createElementVNode(
+          "text",
+          { class: "header-title" },
+          vue.toDisplayString($setup.pageTitle),
+          1
+          /* TEXT */
+        ),
+        vue.createElementVNode("text", {
+          class: "header-action",
+          onClick: $setup.copyLink
+        }, "⧉")
+      ]),
+      $setup.previewUrl ? (vue.openBlock(), vue.createElementBlock("view", {
+        key: 0,
+        class: "webview-wrap"
+      }, [
+        vue.createElementVNode("web-view", { src: $setup.previewUrl }, null, 8, ["src"])
+      ])) : (vue.openBlock(), vue.createElementBlock("view", {
+        key: 1,
+        class: "empty-state"
+      }, [
+        vue.createElementVNode("text", { class: "empty-title" }, "暂无可预览页面"),
+        vue.createElementVNode("text", { class: "empty-copy" }, " 当前结果没有返回可访问的预览地址，请先检查 Workshop 服务和 OSS 配置。 ")
+      ])),
+      $setup.previewUrl ? (vue.openBlock(), vue.createElementBlock(
+        "view",
+        {
+          key: 2,
+          class: "fallback-bar",
+          style: vue.normalizeStyle({ paddingBottom: `${$setup.safeAreaInsetsBottom + 18}px` })
+        },
+        [
+          vue.createElementVNode("text", { class: "fallback-copy" }, "内嵌预览优先；如打不开可用浏览器兜底"),
+          vue.createElementVNode("view", {
+            class: "fallback-button",
+            onClick: $setup.openExternal
+          }, [
+            vue.createElementVNode("text", { class: "fallback-button-text" }, "浏览器打开")
+          ])
+        ],
+        4
+        /* STYLE */
+      )) : vue.createCommentVNode("v-if", true)
+    ]);
+  }
+  const PagesWorkshopPreview = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["render", _sfc_render$5], ["__scopeId", "data-v-2ca49518"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/workshop/preview.vue"]]);
+  const _sfc_main$5 = {
+    __name: "index",
+    setup(__props, { expose: __expose }) {
+      __expose();
+      const { statusBarHeight } = getLayoutMetrics();
+      const latestIssue = vue.computed(() => getLatestNewsBriefIssue());
+      const issues = vue.computed(() => getRecentNewsBriefIssues(7));
+      const goBackHome = () => {
+        safeNavigateBack("/pages/home/index?openSidebar=1");
+      };
+      const openIssue = (issueId) => {
+        uni.navigateTo({
+          url: `/pages/news-brief/issue?id=${encodeURIComponent(issueId)}`
+        });
+      };
+      const formatIssueDate = (issue) => {
+        const value = String((issue == null ? void 0 : issue.id) || (issue == null ? void 0 : issue.date) || "").trim();
+        const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (match) {
+          return `${match[1]}年 ${match[2]}月 ${match[3]}日`;
+        }
+        return value;
+      };
+      const getIssueMeta = (issue) => {
+        if (issue == null ? void 0 : issue.selectionCount) {
+          return `从 ${issue.selectionCount} 条资讯中筛出`;
+        }
+        return `当天 ${Array.isArray(issue == null ? void 0 : issue.items) ? issue.items.length : 0} 条重点`;
+      };
+      onBackPress((options = {}) => {
+        if (options.from === "navigateBack")
+          return false;
+        goBackHome();
+        return true;
+      });
+      const __returned__ = { statusBarHeight, latestIssue, issues, goBackHome, openIssue, formatIssueDate, getIssueMeta, computed: vue.computed, get onBackPress() {
+        return onBackPress;
+      }, get getLatestNewsBriefIssue() {
+        return getLatestNewsBriefIssue;
+      }, get getRecentNewsBriefIssues() {
+        return getRecentNewsBriefIssues;
+      }, get getLayoutMetrics() {
+        return getLayoutMetrics;
+      }, get safeNavigateBack() {
+        return safeNavigateBack;
+      } };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render$4(_ctx, _cache, $props, $setup, $data, $options) {
+    return vue.openBlock(), vue.createElementBlock("view", { class: "brief-page" }, [
+      vue.createElementVNode(
+        "view",
+        {
+          class: "safe-top",
+          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight + 12}px` })
+        },
+        [
+          vue.createElementVNode("view", { class: "hero-block" }, [
+            vue.createElementVNode("view", {
+              class: "back-chip",
+              onClick: $setup.goBackHome
+            }, [
+              vue.createElementVNode("text", { class: "back-chip-icon" }, "<"),
+              vue.createElementVNode("text", { class: "back-chip-text" }, "返回")
+            ]),
+            vue.createElementVNode("view", { class: "hero-copy" }, [
+              vue.createElementVNode("text", { class: "hero-kicker" }, "HOT / WEIRD / REAL"),
+              vue.createElementVNode("text", { class: "hero-title" }, "AI趣闻萃取"),
+              vue.createElementVNode("text", { class: "hero-subtitle" }, "把今天最离谱、最有梗、最值得点开的 AI 热闹，一次筛给你")
+            ])
+          ])
+        ],
+        4
+        /* STYLE */
+      ),
+      vue.createElementVNode("scroll-view", {
+        class: "brief-scroll",
+        "scroll-y": "",
+        "show-scrollbar": false
+      }, [
+        vue.createElementVNode("view", { class: "content-shell" }, [
+          (vue.openBlock(true), vue.createElementBlock(
+            vue.Fragment,
+            null,
+            vue.renderList($setup.issues, (issueItem) => {
+              return vue.openBlock(), vue.createElementBlock("view", {
+                key: issueItem.id,
+                class: "issue-card",
+                onClick: ($event) => $setup.openIssue(issueItem.id)
+              }, [
+                vue.createElementVNode("view", { class: "issue-card-head" }, [
+                  vue.createElementVNode(
+                    "text",
+                    { class: "issue-date" },
+                    vue.toDisplayString($setup.formatIssueDate(issueItem)),
+                    1
+                    /* TEXT */
+                  ),
+                  vue.createElementVNode(
+                    "text",
+                    { class: "issue-count" },
+                    vue.toDisplayString($setup.getIssueMeta(issueItem)),
+                    1
+                    /* TEXT */
+                  )
+                ]),
+                vue.createElementVNode("view", { class: "issue-lines" }, [
+                  (vue.openBlock(true), vue.createElementBlock(
+                    vue.Fragment,
+                    null,
+                    vue.renderList(issueItem.items.slice(0, 3), (newsItem, index) => {
+                      return vue.openBlock(), vue.createElementBlock("view", {
+                        key: newsItem.id,
+                        class: "issue-line"
+                      }, [
+                        vue.createElementVNode(
+                          "text",
+                          {
+                            class: vue.normalizeClass(["issue-line-index", { active: index === 0 }])
+                          },
+                          vue.toDisplayString(String(index + 1).padStart(2, "0")),
+                          3
+                          /* TEXT, CLASS */
+                        ),
+                        vue.createElementVNode("view", { class: "issue-line-copy" }, [
+                          vue.createElementVNode(
+                            "text",
+                            {
+                              class: vue.normalizeClass(["issue-line-title", { active: index === 0 }])
+                            },
+                            vue.toDisplayString(newsItem.headline),
+                            3
+                            /* TEXT, CLASS */
+                          ),
+                          newsItem.warning ? (vue.openBlock(), vue.createElementBlock(
+                            "text",
+                            {
+                              key: 0,
+                              class: "issue-line-summary"
+                            },
+                            vue.toDisplayString(newsItem.warning),
+                            1
+                            /* TEXT */
+                          )) : vue.createCommentVNode("v-if", true)
+                        ])
+                      ]);
+                    }),
+                    128
+                    /* KEYED_FRAGMENT */
+                  ))
+                ]),
+                vue.createElementVNode("view", { class: "issue-card-foot" }, [
+                  vue.createElementVNode(
+                    "text",
+                    { class: "issue-foot-copy" },
+                    vue.toDisplayString(issueItem.subtitle),
+                    1
+                    /* TEXT */
+                  ),
+                  vue.createElementVNode("text", { class: "issue-foot-link" }, "点进当天三条")
+                ])
+              ], 8, ["onClick"]);
+            }),
+            128
+            /* KEYED_FRAGMENT */
+          )),
+          vue.createElementVNode("view", { class: "footer-copy" }, [
+            vue.createElementVNode(
+              "text",
+              { class: "footer-copy-text" },
+              vue.toDisplayString($setup.latestIssue.footer),
+              1
+              /* TEXT */
+            )
+          ])
+        ])
+      ])
+    ]);
+  }
+  const PagesNewsBriefIndex = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["render", _sfc_render$4], ["__scopeId", "data-v-1d561bff"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/news-brief/index.vue"]]);
+  const _sfc_main$4 = {
+    __name: "NewsBriefSummaryCard",
+    props: {
+      item: {
+        type: Object,
+        required: true
+      },
+      cardNumber: {
+        type: Number,
+        default: 1
+      },
+      toneIndex: {
+        type: Number,
+        default: 1
+      }
+    },
+    emits: ["open-brief", "open-link"],
+    setup(__props, { expose: __expose }) {
+      __expose();
+      const formatIndex = (value) => String(value || 1).padStart(2, "0");
+      const props = __props;
+      const DEFAULT_COVERS = {
+        1: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+        2: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80",
+        3: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80"
+      };
+      const coverImage = vue.computed(() => {
+        var _a;
+        return ((_a = props.item) == null ? void 0 : _a.coverImage) || DEFAULT_COVERS[props.toneIndex] || DEFAULT_COVERS[1];
+      });
+      const __returned__ = { formatIndex, props, DEFAULT_COVERS, coverImage, computed: vue.computed };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render$3(_ctx, _cache, $props, $setup, $data, $options) {
+    return vue.openBlock(), vue.createElementBlock(
+      "view",
+      {
+        class: vue.normalizeClass(["summary-card", [`tone-${$props.toneIndex}`]]),
+        onClick: _cache[2] || (_cache[2] = ($event) => _ctx.$emit("open-brief"))
+      },
+      [
+        vue.createElementVNode("image", {
+          class: "summary-cover",
+          src: $setup.coverImage,
+          mode: "aspectFill"
+        }, null, 8, ["src"]),
+        vue.createElementVNode("view", { class: "summary-topline" }, [
+          vue.createElementVNode(
+            "text",
+            { class: "summary-index" },
+            vue.toDisplayString($setup.formatIndex($props.cardNumber)),
+            1
+            /* TEXT */
+          ),
+          vue.createElementVNode(
+            "text",
+            { class: "summary-tag" },
+            vue.toDisplayString($props.item.source || "AI 热讯"),
+            1
+            /* TEXT */
+          )
+        ]),
+        vue.createElementVNode("view", { class: "summary-copy" }, [
+          vue.createElementVNode(
+            "text",
+            { class: "summary-headline" },
+            vue.toDisplayString($props.item.headline),
+            1
+            /* TEXT */
+          ),
+          $props.item.warning ? (vue.openBlock(), vue.createElementBlock(
+            "text",
+            {
+              key: 0,
+              class: "summary-warning"
+            },
+            vue.toDisplayString($props.item.warning),
+            1
+            /* TEXT */
+          )) : vue.createCommentVNode("v-if", true)
+        ]),
+        vue.createElementVNode("view", { class: "summary-footer" }, [
+          vue.createElementVNode("view", {
+            class: "brief-pill",
+            onClick: _cache[0] || (_cache[0] = vue.withModifiers(($event) => _ctx.$emit("open-brief"), ["stop"]))
+          }, [
+            vue.createElementVNode("text", { class: "brief-pill-text" }, "AI简报")
+          ]),
+          $props.item.articleUrl ? (vue.openBlock(), vue.createElementBlock("view", {
+            key: 0,
+            class: "origin-link",
+            onClick: _cache[1] || (_cache[1] = vue.withModifiers(($event) => _ctx.$emit("open-link"), ["stop"]))
+          }, [
+            vue.createElementVNode("text", { class: "origin-link-text" }, "原文")
+          ])) : vue.createCommentVNode("v-if", true)
+        ])
+      ],
+      2
+      /* CLASS */
+    );
+  }
+  const NewsBriefSummaryCard = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["render", _sfc_render$3], ["__scopeId", "data-v-18104601"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/components/NewsBriefSummaryCard.vue"]]);
+  const LATEST_ISSUE_STORAGE_KEY = "newsBriefLatestIssueRuntime";
+  const ISSUE_SUBTITLE = "这里有为你精心挑选的 AI 智慧与生活点滴，每天7点准时更新，希望能伴你度过轻松且有收获的每一天。";
+  const normalizeParagraphs = (text = "") => {
+    const value = String(text || "").trim();
+    if (!value)
+      return [];
+    const parts = value.split(new RegExp("(?<=[。！？!?])")).map((item) => item.trim()).filter(Boolean);
+    return parts.length > 0 ? parts : [value];
+  };
+  const createLatestIssueShell = () => {
+    const latestIssue = getLatestNewsBriefIssue();
+    return {
+      ...latestIssue,
+      subtitle: ISSUE_SUBTITLE,
+      items: []
+    };
+  };
+  const normalizeRuntimeItem = (item = {}, index = 0) => {
+    var _a, _b, _c, _d, _e, _f;
+    const summary = String(((_b = (_a = item.raw) == null ? void 0 : _a.brief) == null ? void 0 : _b.lead) || item.summary || "").trim();
+    const briefParagraphs = Array.isArray((_d = (_c = item.raw) == null ? void 0 : _c.brief) == null ? void 0 : _d.paragraphs) ? item.raw.brief.paragraphs.map((paragraph) => String(paragraph || "").trim()).filter(Boolean) : [];
+    return {
+      id: String(item.id || `personal-top-${index + 1}`),
+      newsId: Number(item.id || 0),
+      source: String(item.source || "AI 热讯"),
+      headline: String(((_f = (_e = item.raw) == null ? void 0 : _e.brief) == null ? void 0 : _f.headline) || item.title || "今日 AI 热点"),
+      warning: summary,
+      articleUrl: String(item.url || ""),
+      coverImage: String(item.coverUrl || ""),
+      expandedBody: briefParagraphs.length > 0 ? briefParagraphs : normalizeParagraphs(summary)
+    };
+  };
+  const normalizeRuntimeIssue = (newsList = []) => {
+    const latestIssue = createLatestIssueShell();
+    return {
+      ...latestIssue,
+      items: newsList.slice(0, 3).map((item, index) => normalizeRuntimeItem(item, index))
+    };
+  };
+  const getLatestNewsBriefIssueId = () => getLatestNewsBriefIssue().id;
+  const getCachedLatestNewsBriefIssue = () => {
+    const cachedIssue = uni.getStorageSync(LATEST_ISSUE_STORAGE_KEY);
+    if (!cachedIssue || typeof cachedIssue !== "object" || Array.isArray(cachedIssue)) {
+      return null;
+    }
+    return {
+      ...createLatestIssueShell(),
+      ...cachedIssue,
+      items: Array.isArray(cachedIssue.items) ? cachedIssue.items : []
+    };
+  };
+  const fetchLatestNewsBriefIssue = async () => {
+    const response = await getNewsList("personal");
+    const issue = normalizeRuntimeIssue(Array.isArray(response == null ? void 0 : response.list) ? response.list : []);
+    uni.setStorageSync(LATEST_ISSUE_STORAGE_KEY, issue);
+    return issue;
+  };
+  const getRenderableNewsBriefIssueById = (issueId = "") => {
+    if (String(issueId || "") === getLatestNewsBriefIssueId()) {
+      return getCachedLatestNewsBriefIssue() || createLatestIssueShell();
+    }
+    return getNewsBriefIssueById(issueId);
+  };
+  const getRenderableNewsBriefItemByIds = (issueId = "", itemId = "") => {
+    const issue = getRenderableNewsBriefIssueById(issueId);
+    const items = Array.isArray(issue == null ? void 0 : issue.items) ? issue.items : [];
+    return items.find((item) => item.id === itemId) || items[0] || null;
+  };
+  const _sfc_main$3 = {
+    __name: "issue",
+    setup(__props, { expose: __expose }) {
+      __expose();
+      const { statusBarHeight } = getLayoutMetrics();
+      const latestIssueId = getLatestNewsBriefIssueId();
+      const issue = vue.ref(getRenderableNewsBriefIssueById(latestIssueId) || getLatestNewsBriefIssue());
+      const loading = vue.ref(false);
+      const openBrief = (item) => {
+        if (!(item == null ? void 0 : item.id))
+          return;
+        uni.navigateTo({
+          url: `/pages/news-brief/brief?issueId=${encodeURIComponent(issue.value.id)}&itemId=${encodeURIComponent(item.id)}`
+        });
+      };
+      const openArticle = (item) => {
+        if (!(item == null ? void 0 : item.articleUrl))
+          return;
+        uni.navigateTo({
+          url: `/pages/workshop/preview?url=${encodeURIComponent(item.articleUrl)}&title=${encodeURIComponent(item.headline || "新闻详情")}`
+        });
+      };
+      const openArchive = () => {
+        uni.navigateTo({
+          url: "/pages/news-brief/index"
+        });
+      };
+      const goBackHome = () => {
+        safeNavigateBack("/pages/home/index?openSidebar=1");
+      };
+      const loadIssue = async (rawIssueId = "") => {
+        const targetIssueId = rawIssueId || latestIssueId;
+        issue.value = getRenderableNewsBriefIssueById(targetIssueId);
+        if (targetIssueId !== latestIssueId)
+          return;
+        loading.value = true;
+        try {
+          const latestIssue = await fetchLatestNewsBriefIssue();
+          if (Array.isArray(latestIssue == null ? void 0 : latestIssue.items) && latestIssue.items.length > 0) {
+            issue.value = latestIssue;
+          }
+        } catch (error) {
+          uni.showToast({
+            title: (error == null ? void 0 : error.message) || "获取今日趣闻失败",
+            icon: "none"
+          });
+        } finally {
+          loading.value = false;
+        }
+      };
+      onLoad((query = {}) => {
+        loadIssue(query.id);
+      });
+      onBackPress((options = {}) => {
+        if (options.from === "navigateBack")
+          return false;
+        goBackHome();
+        return true;
+      });
+      const __returned__ = { statusBarHeight, latestIssueId, issue, loading, openBrief, openArticle, openArchive, goBackHome, loadIssue, ref: vue.ref, get onBackPress() {
+        return onBackPress;
+      }, get onLoad() {
+        return onLoad;
+      }, NewsBriefSummaryCard, get getLatestNewsBriefIssue() {
+        return getLatestNewsBriefIssue;
+      }, get fetchLatestNewsBriefIssue() {
+        return fetchLatestNewsBriefIssue;
+      }, get getLatestNewsBriefIssueId() {
+        return getLatestNewsBriefIssueId;
+      }, get getRenderableNewsBriefIssueById() {
+        return getRenderableNewsBriefIssueById;
+      }, get getLayoutMetrics() {
+        return getLayoutMetrics;
+      }, get safeNavigateBack() {
+        return safeNavigateBack;
+      } };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render$2(_ctx, _cache, $props, $setup, $data, $options) {
+    return vue.openBlock(), vue.createElementBlock("view", { class: "brief-page" }, [
+      vue.createElementVNode(
+        "view",
+        {
+          class: "safe-top",
+          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight + 12}px` })
+        },
+        [
+          vue.createElementVNode("view", { class: "hero-block" }, [
+            vue.createElementVNode("view", { class: "hero-actions" }, [
+              vue.createElementVNode("view", {
+                class: "back-chip",
+                onClick: $setup.goBackHome
+              }, [
+                vue.createElementVNode("text", { class: "back-chip-icon" }, "<"),
+                vue.createElementVNode("text", { class: "back-chip-text" }, "返回")
+              ]),
+              vue.createElementVNode("view", {
+                class: "archive-chip",
+                onClick: $setup.openArchive
+              }, [
+                vue.createElementVNode("text", { class: "archive-chip-text" }, "往期回顾")
+              ])
+            ]),
+            vue.createElementVNode("view", { class: "hero-copy" }, [
+              vue.createElementVNode("text", { class: "hero-kicker" }, "3 STORIES / 1 DAY"),
+              vue.createElementVNode(
+                "text",
+                { class: "hero-title" },
+                vue.toDisplayString($setup.issue.title),
+                1
+                /* TEXT */
+              ),
+              vue.createElementVNode(
+                "text",
+                { class: "hero-subtitle" },
+                vue.toDisplayString($setup.issue.subtitle),
+                1
+                /* TEXT */
+              )
+            ])
+          ])
+        ],
+        4
+        /* STYLE */
+      ),
+      vue.createElementVNode("scroll-view", {
+        class: "brief-scroll",
+        "scroll-y": "",
+        "show-scrollbar": false
+      }, [
+        vue.createElementVNode("view", { class: "content-shell" }, [
+          (vue.openBlock(true), vue.createElementBlock(
+            vue.Fragment,
+            null,
+            vue.renderList($setup.issue.items, (item, index) => {
+              return vue.openBlock(), vue.createBlock($setup["NewsBriefSummaryCard"], {
+                key: item.id,
+                item,
+                "card-number": index + 1,
+                "tone-index": index % 3 + 1,
+                onOpenBrief: ($event) => $setup.openBrief(item),
+                onOpenLink: ($event) => $setup.openArticle(item)
+              }, null, 8, ["item", "card-number", "tone-index", "onOpenBrief", "onOpenLink"]);
+            }),
+            128
+            /* KEYED_FRAGMENT */
+          )),
+          $setup.loading && !$setup.issue.items.length ? (vue.openBlock(), vue.createElementBlock("view", {
+            key: 0,
+            class: "loading-copy"
+          }, [
+            vue.createElementVNode("text", { class: "loading-copy-text" }, "正在同步今天的 AI 热榜前三条...")
+          ])) : vue.createCommentVNode("v-if", true),
+          vue.createElementVNode("view", { class: "footer-copy" }, [
+            vue.createElementVNode(
+              "text",
+              { class: "footer-copy-text" },
+              vue.toDisplayString($setup.issue.footer),
+              1
+              /* TEXT */
+            )
+          ])
+        ])
+      ])
+    ]);
+  }
+  const PagesNewsBriefIssue = /* @__PURE__ */ _export_sfc(_sfc_main$3, [["render", _sfc_render$2], ["__scopeId", "data-v-24be200d"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/news-brief/issue.vue"]]);
+  const _sfc_main$2 = {
+    __name: "NewsBriefCard",
+    props: {
+      item: {
+        type: Object,
+        required: true
+      },
+      cardNumber: {
+        type: Number,
+        default: 1
+      }
+    },
+    emits: ["open-link"],
+    setup(__props, { expose: __expose }) {
+      __expose();
+      const formatIndex = (value) => String(value || 1).padStart(2, "0");
+      const __returned__ = { formatIndex };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render$1(_ctx, _cache, $props, $setup, $data, $options) {
+    return vue.openBlock(), vue.createElementBlock("view", { class: "brief-card" }, [
+      vue.createElementVNode("view", { class: "card-head-row" }, [
+        vue.createElementVNode(
+          "text",
+          { class: "card-index" },
+          vue.toDisplayString($setup.formatIndex($props.cardNumber)),
+          1
+          /* TEXT */
+        ),
+        vue.createElementVNode(
+          "text",
+          { class: "card-headline" },
+          vue.toDisplayString($props.item.headline),
+          1
+          /* TEXT */
+        )
+      ]),
+      vue.createElementVNode(
+        "text",
+        { class: "card-warning" },
+        vue.toDisplayString($props.item.warning),
+        1
+        /* TEXT */
+      ),
+      vue.createElementVNode("view", { class: "card-content" }, [
+        vue.createElementVNode("view", { class: "content-divider" }),
+        (vue.openBlock(true), vue.createElementBlock(
+          vue.Fragment,
+          null,
+          vue.renderList($props.item.expandedBody, (paragraph, index) => {
+            return vue.openBlock(), vue.createElementBlock(
+              "text",
+              {
+                key: `${$props.item.id}-${index}`,
+                class: "content-paragraph"
+              },
+              vue.toDisplayString(paragraph),
+              1
+              /* TEXT */
+            );
+          }),
+          128
+          /* KEYED_FRAGMENT */
+        ))
+      ]),
+      vue.createElementVNode("view", { class: "card-footer" }, [
+        $props.item.articleUrl ? (vue.openBlock(), vue.createElementBlock("view", {
+          key: 0,
+          class: "origin-link",
+          onClick: _cache[0] || (_cache[0] = vue.withModifiers(($event) => _ctx.$emit("open-link"), ["stop"]))
+        }, [
+          vue.createElementVNode("text", { class: "origin-link-text" }, "原文")
+        ])) : vue.createCommentVNode("v-if", true)
+      ])
+    ]);
+  }
+  const NewsBriefCard = /* @__PURE__ */ _export_sfc(_sfc_main$2, [["render", _sfc_render$1], ["__scopeId", "data-v-d73bc55a"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/components/NewsBriefCard.vue"]]);
+  const _sfc_main$1 = {
+    __name: "brief",
+    setup(__props, { expose: __expose }) {
+      __expose();
+      const { statusBarHeight } = getLayoutMetrics();
+      const latestIssueId = getLatestNewsBriefIssueId();
+      const issueId = vue.ref(latestIssueId);
+      const itemId = vue.ref("");
+      const issue = vue.ref(getRenderableNewsBriefIssueById(latestIssueId) || getLatestNewsBriefIssue());
+      const item = vue.ref(issue.value.items[0] || {});
+      const cardNumber = vue.computed(() => {
+        var _a;
+        const currentItems = Array.isArray((_a = issue.value) == null ? void 0 : _a.items) ? issue.value.items : [];
+        const index = currentItems.findIndex((entry) => {
+          var _a2;
+          return entry.id === ((_a2 = item.value) == null ? void 0 : _a2.id);
+        });
+        return index >= 0 ? index + 1 : 1;
+      });
+      const openArticle = (newsItem) => {
+        if (!(newsItem == null ? void 0 : newsItem.articleUrl))
+          return;
+        uni.navigateTo({
+          url: `/pages/workshop/preview?url=${encodeURIComponent(newsItem.articleUrl)}&title=${encodeURIComponent(newsItem.headline || "新闻详情")}`
+        });
+      };
+      const goBackToIssue = () => {
+        safeNavigateBack(`/pages/news-brief/issue?id=${encodeURIComponent(issueId.value || issue.value.id)}`);
+      };
+      const applyRemoteBrief = async () => {
+        var _a, _b;
+        const newsId = Number(((_a = item.value) == null ? void 0 : _a.newsId) || ((_b = item.value) == null ? void 0 : _b.id) || 0);
+        if (!newsId)
+          return;
+        try {
+          const response = await getNewsBrief(newsId);
+          const brief = response == null ? void 0 : response.data;
+          if (!brief || typeof brief !== "object")
+            return;
+          const paragraphs = Array.isArray(brief.paragraphs) ? brief.paragraphs.map((paragraph) => String(paragraph || "").trim()).filter(Boolean) : [];
+          item.value = {
+            ...item.value,
+            headline: String(brief.headline || item.value.headline || "").trim(),
+            warning: String(brief.lead || item.value.warning || "").trim(),
+            expandedBody: paragraphs.length > 0 ? paragraphs : item.value.expandedBody
+          };
+        } catch (error) {
+        }
+      };
+      const syncDetail = async () => {
+        var _a;
+        issue.value = getRenderableNewsBriefIssueById(issueId.value);
+        item.value = getRenderableNewsBriefItemByIds(issueId.value, itemId.value) || issue.value.items[0] || {};
+        if (issueId.value !== latestIssueId)
+          return;
+        try {
+          const latestIssue = await fetchLatestNewsBriefIssue();
+          issue.value = latestIssue;
+          item.value = getRenderableNewsBriefItemByIds(issueId.value, itemId.value) || latestIssue.items[0] || {};
+        } catch (error) {
+          if (!((_a = item.value) == null ? void 0 : _a.id)) {
+            uni.showToast({
+              title: (error == null ? void 0 : error.message) || "获取新闻详情失败",
+              icon: "none"
+            });
+          }
+        }
+        await applyRemoteBrief();
+      };
+      onLoad((query = {}) => {
+        issueId.value = query.issueId || query.id || latestIssueId;
+        itemId.value = query.itemId || "";
+        syncDetail();
+      });
+      onBackPress((options = {}) => {
+        if (options.from === "navigateBack")
+          return false;
+        goBackToIssue();
+        return true;
+      });
+      const __returned__ = { statusBarHeight, latestIssueId, issueId, itemId, issue, item, cardNumber, openArticle, goBackToIssue, applyRemoteBrief, syncDetail, computed: vue.computed, ref: vue.ref, get onBackPress() {
+        return onBackPress;
+      }, get onLoad() {
+        return onLoad;
+      }, NewsBriefCard, get getLatestNewsBriefIssue() {
+        return getLatestNewsBriefIssue;
+      }, get getNewsBrief() {
+        return getNewsBrief;
+      }, get fetchLatestNewsBriefIssue() {
+        return fetchLatestNewsBriefIssue;
+      }, get getLatestNewsBriefIssueId() {
+        return getLatestNewsBriefIssueId;
+      }, get getRenderableNewsBriefIssueById() {
+        return getRenderableNewsBriefIssueById;
+      }, get getRenderableNewsBriefItemByIds() {
+        return getRenderableNewsBriefItemByIds;
+      }, get getLayoutMetrics() {
+        return getLayoutMetrics;
+      }, get safeNavigateBack() {
+        return safeNavigateBack;
+      } };
+      Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+      return __returned__;
+    }
+  };
+  function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
+    return vue.openBlock(), vue.createElementBlock("view", { class: "brief-page" }, [
+      vue.createElementVNode(
+        "view",
+        {
+          class: "safe-top",
+          style: vue.normalizeStyle({ paddingTop: `${$setup.statusBarHeight + 12}px` })
+        },
+        [
+          vue.createElementVNode("view", { class: "hero-block" }, [
+            vue.createElementVNode("view", {
+              class: "back-chip",
+              onClick: $setup.goBackToIssue
+            }, [
+              vue.createElementVNode("text", { class: "back-chip-icon" }, "<"),
+              vue.createElementVNode("text", { class: "back-chip-text" }, "返回")
+            ]),
+            vue.createElementVNode("view", { class: "hero-copy" }, [
+              vue.createElementVNode(
+                "text",
+                { class: "hero-kicker" },
+                vue.toDisplayString($setup.item.source || "AI 简报"),
+                1
+                /* TEXT */
+              ),
+              vue.createElementVNode(
+                "text",
+                { class: "hero-title" },
+                vue.toDisplayString($setup.item.headline),
+                1
+                /* TEXT */
+              ),
+              vue.createElementVNode(
+                "text",
+                { class: "hero-subtitle" },
+                vue.toDisplayString($setup.issue.title),
+                1
+                /* TEXT */
+              )
+            ])
+          ])
+        ],
+        4
+        /* STYLE */
+      ),
+      vue.createElementVNode("scroll-view", {
+        class: "brief-scroll",
+        "scroll-y": "",
+        "show-scrollbar": false
+      }, [
+        vue.createElementVNode("view", { class: "content-shell" }, [
+          vue.createVNode($setup["NewsBriefCard"], {
+            item: $setup.item,
+            "card-number": $setup.cardNumber,
+            onOpenLink: _cache[0] || (_cache[0] = ($event) => $setup.openArticle($setup.item))
+          }, null, 8, ["item", "card-number"]),
+          vue.createElementVNode("view", { class: "footer-copy" }, [
+            vue.createElementVNode(
+              "text",
+              { class: "footer-copy-text" },
+              vue.toDisplayString($setup.issue.footer),
+              1
+              /* TEXT */
+            )
+          ])
+        ])
+      ])
+    ]);
+  }
+  const PagesNewsBriefBrief = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["render", _sfc_render], ["__scopeId", "data-v-18a6e664"], ["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/pages/news-brief/brief.vue"]]);
+  __definePage("pages/profile/auth", PagesProfileAuth);
+  __definePage("pages/home/index", PagesHomeIndex);
+  __definePage("pages/crawl/index", PagesCrawlIndex);
+  __definePage("pages/school/input", PagesSchoolInput);
+  __definePage("pages/profile/index", PagesProfileIndex);
+  __definePage("pages/profile/nickname", PagesProfileNickname);
+  __definePage("pages/profile/bio", PagesProfileBio);
+  __definePage("pages/workshop/preview", PagesWorkshopPreview);
+  __definePage("pages/news-brief/index", PagesNewsBriefIndex);
+  __definePage("pages/news-brief/issue", PagesNewsBriefIssue);
+  __definePage("pages/news-brief/brief", PagesNewsBriefBrief);
+  const resolveCurrentRoute = () => {
+    const pages = (getCurrentPages == null ? void 0 : getCurrentPages()) || [];
+    return pages.length ? `/${pages[pages.length - 1].route}` : "";
+  };
+  const ensureAuthState = () => {
+    const userStore = useUserStore();
+    if (userStore.restoreSession())
+      return true;
+    return hasStoredSessionToken();
+  };
+  const _sfc_main = {
+    onLaunch() {
+      setUnauthorizedHandler(() => {
+        useUserStore().logout();
+        const currentRoute = resolveCurrentRoute();
+        if (normalizeRoute(currentRoute) !== AUTH_ROUTE) {
+          redirectToAuth(currentRoute);
+        }
+      });
+      if (!ensureAuthState()) {
+        setTimeout(() => {
+          const currentRoute = resolveCurrentRoute();
+          if (normalizeRoute(currentRoute) !== AUTH_ROUTE) {
+            redirectToAuth(currentRoute || "/pages/home/index");
+          }
+        }, 0);
+      }
+    },
+    onShow() {
+      const currentRoute = resolveCurrentRoute();
+      const hasAuth = ensureAuthState();
+      if (!currentRoute) {
+        if (!hasAuth) {
+          redirectToAuth("/pages/home/index");
+        }
+        return;
+      }
+      if (!routeRequiresAuth(currentRoute))
+        return;
+      if (hasAuth)
+        return;
+      redirectToAuth(currentRoute);
+    }
+  };
+  const App = /* @__PURE__ */ _export_sfc(_sfc_main, [["__file", "D:/Cording_V1.0/AI EDU/Frontend/ai-nexus-app/src/App.vue"]]);
+  function createApp() {
+    const app = vue.createVueApp(App);
+    const pinia = createPinia();
+    app.use(pinia);
+    return { app, pinia };
+  }
+  const { app: __app__, Vuex: __Vuex__, Pinia: __Pinia__ } = createApp();
+  uni.Vuex = __Vuex__;
+  uni.Pinia = __Pinia__;
+  __app__.provide("__globalStyles", __uniConfig.styles);
+  __app__._component.mpType = "app";
+  __app__._component.render = () => {
+  };
+  __app__.mount("#app");
+})(Vue);
