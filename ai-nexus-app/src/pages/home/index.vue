@@ -178,7 +178,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { onBackPress, onLoad, onShow } from '@dcloudio/uni-app'
 import Sidebar from '@/components/Sidebar.vue'
-import { generateCode } from '@/services/api'
+import { generateCode, getWorkshopHistoryRemote, saveWorkshopHistoryRemote } from '@/services/api'
 import { navigateByPath } from '@/utils/navigation'
 import { getLayoutMetrics } from '@/utils/layout'
 import { classifyWorkshopInput, WorkshopIntent } from '@/utils/workshop_intent'
@@ -212,6 +212,8 @@ const keyboardHeight = ref(0)
 const workshopSyncInFlight = ref(false)
 const workshopSyncLastAt = ref(0)
 const workshopSyncLastSignature = ref('')
+const streamStatusText = ref('')
+const streamDraftText = ref('')
 
 let loadingTimer = null
 let keyboardHeightHandler = null
@@ -256,7 +258,9 @@ const introText = computed(() => {
 })
 
 const aiBodyText = computed(() => {
-  if (loading.value) return loadingText
+  if (loading.value) {
+    return streamDraftText.value || streamStatusText.value || loadingText
+  }
   if (isAssistantReply.value) return generatedResult.value?.text || ''
   return introText.value
 })
@@ -331,6 +335,8 @@ const clearConversation = () => {
   lastPrompt.value = ''
   generatedResult.value = null
   userInput.value = ''
+  streamStatusText.value = ''
+  streamDraftText.value = ''
 }
 
 const syncWorkshopHistory = () => {
@@ -347,6 +353,8 @@ const loadConversation = (chatId) => {
   currentConversationId.value = conversation.id
   lastPrompt.value = conversation.prompt || ''
   generatedResult.value = conversation.result || null
+  streamStatusText.value = ''
+  streamDraftText.value = ''
 }
 
 const mergeWorkshopHistory = (local = [], remote = []) => {
@@ -361,21 +369,23 @@ const mergeWorkshopHistory = (local = [], remote = []) => {
       return
     }
 
-    const currentTime = Number(existing.createdAt || 0)
-    const nextTime = Number(item.createdAt || 0)
+    const currentTime = Number(existing.updatedAt || existing.createdAt || 0)
+    const nextTime = Number(item.updatedAt || item.createdAt || 0)
     if (nextTime > currentTime) {
       byId.set(item.id, item)
     }
   })
 
-  return Array.from(byId.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+  return Array.from(byId.values()).sort(
+    (a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0),
+  )
 }
 
 const historySignature = (list = []) => {
   try {
     return JSON.stringify(
       (Array.isArray(list) ? list : [])
-        .map((item) => ({ id: item?.id || '', createdAt: Number(item?.createdAt || 0) }))
+        .map((item) => ({ id: item?.id || '', createdAt: Number(item?.updatedAt || item?.createdAt || 0) }))
         .filter((item) => item.id)
         .slice(0, 60),
     )
@@ -383,9 +393,6 @@ const historySignature = (list = []) => {
     return ''
   }
 }
-
-const getWorkshopHistoryRemote = async () => ({ list: [] })
-const saveWorkshopHistoryRemote = async () => ({ success: true })
 
 const syncWorkshopHistoryRemote = async ({ silent = true } = {}) => {
   const now = Date.now()
@@ -527,8 +534,18 @@ const normalizeWorkshopResult = (response, prompt) => {
   const previewUrl = raw.previewUrl || raw.url || response?.url || response?.previewUrl || ''
   const code = coerceText(raw.code || raw.html || response?.html, '')
   const summary =
-    coerceText(raw.summary || raw.message || response?.summary || response?.message, '') ||
-    `已根据“${prompt}”生成结果，可以直接打开预览。`
+    coerceText(
+      raw.summary ||
+        raw.message ||
+        response?.summary ||
+        response?.message ||
+        response?.streamText ||
+        streamDraftText.value ||
+        response?.streamStatus ||
+        streamStatusText.value,
+      '',
+    ) ||
+    `已根据“${prompt}”生成了结果，可以直接打开预览。`
   const title = coerceText(raw.title || response?.title || prompt, '工坊预览')
 
   const normalizedResult = {
@@ -577,22 +594,56 @@ const handleGenerate = async () => {
     return
   }
 
+  const conversationId = currentConversationId.value || `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`
+
   loading.value = true
   generatedResult.value = null
+  streamStatusText.value = ''
+  streamDraftText.value = ''
   startLoadingAnimation()
 
   try {
-    const response = await generateCode(prompt)
+    const response = await generateCode(prompt, {
+      conversationId,
+      title: prompt,
+      onStatus: (status, payload) => {
+        streamStatusText.value = coerceText(payload?.content || status, streamStatusText.value)
+      },
+      onDelta: (_delta, fullText) => {
+        streamDraftText.value = coerceText(fullText, streamDraftText.value)
+      },
+      onResult: (result) => {
+        const previewUrl = result?.previewUrl || result?.url || ''
+        if (previewUrl) {
+          streamStatusText.value = 'preview_ready'
+        }
+      },
+    })
     appendDebugLog('workshop', 'generate_response', response || {})
 
     const nextResult = normalizeWorkshopResult(response, prompt)
     generatedResult.value = nextResult
 
     const savedConversation = saveWorkshopConversation({
-      id: currentConversationId.value || `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
+      id: response?.conversationId || conversationId,
+      title: prompt,
       prompt,
       result: nextResult,
       createdAt: Date.now(),
+      updatedAt: Date.now(),
+      preview: {
+        mode: nextResult?.previewUrl || nextResult?.url ? 'url' : nextResult?.code ? 'code' : 'empty',
+        html: '',
+        url: nextResult?.previewUrl || nextResult?.url || '',
+        code: {
+          lang: nextResult?.language || 'html',
+          content: nextResult?.code || '',
+        },
+      },
+      messages: [
+        { role: 'user', content: prompt },
+        { role: 'assistant', content: nextResult?.summary || nextResult?.message || '' },
+      ],
     })
 
     currentConversationId.value = savedConversation.id

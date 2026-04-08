@@ -1,2 +1,3 @@
-"ai-nexus-app/node_modules/" 
+ai-nexus-app/node_modules/
 **/node_modules/
+ai-nexus-app/src/unpackage/
