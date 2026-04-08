@@ -310,19 +310,21 @@ onBackPress((options = {}) => {
   min-height: 100vh;
   position: relative;
   overflow: hidden;
-  background: #08080b;
+  background:
+    radial-gradient(circle at top right, rgba(255, 229, 192, 0.34), transparent 34%),
+    linear-gradient(180deg, $paper-bg 0%, $paper-bg-soft 52%, $paper-bg-deep 100%);
 }
 
 .auth-bg {
   position: absolute;
   inset: 0;
-  background: #08080b;
+  background: transparent;
 }
 
 .glow {
   position: absolute;
   border-radius: 50%;
-  filter: blur(36rpx);
+  filter: blur(42rpx);
 }
 
 .glow-primary {
@@ -330,7 +332,7 @@ onBackPress((options = {}) => {
   height: 560rpx;
   left: 90rpx;
   top: 150rpx;
-  background: radial-gradient(circle, rgba(193, 59, 255, 0.28) 0%, rgba(108, 43, 255, 0.18) 48%, rgba(8, 8, 11, 0) 74%);
+  background: radial-gradient(circle, rgba(242, 205, 164, 0.52) 0%, rgba(242, 205, 164, 0.12) 52%, rgba(255, 249, 241, 0) 76%);
 }
 
 .glow-secondary {
@@ -338,95 +340,112 @@ onBackPress((options = {}) => {
   height: 420rpx;
   right: -40rpx;
   top: 180rpx;
-  background: radial-gradient(circle, rgba(74, 30, 255, 0.2) 0%, rgba(14, 19, 48, 0) 72%);
+  background: radial-gradient(circle, rgba(194, 98, 41, 0.18) 0%, rgba(194, 98, 41, 0) 74%);
 }
 
 .auth-shell {
   position: relative;
   z-index: 1;
   min-height: 100vh;
-  padding-left: 48rpx;
-  padding-right: 48rpx;
+  padding-left: 36rpx;
+  padding-right: 36rpx;
   display: flex;
   flex-direction: column;
 }
 
 .top-action {
-  width: 56rpx;
-  height: 56rpx;
+  width: 74rpx;
+  height: 74rpx;
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.82);
+  border: 2rpx solid rgba(107, 62, 31, 0.08);
+  box-shadow: $shadow-soft;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 48rpx;
+  margin-bottom: 42rpx;
 }
 
 .top-action-icon {
-  color: #f5f5f7;
-  font-size: 52rpx;
+  color: $accent-brand-deep;
+  font-size: 38rpx;
+  font-weight: 800;
   line-height: 1;
 }
 
 .brand-block {
-  padding-top: 80rpx;
-  align-items: center;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  gap: 10rpx;
+  padding: 62rpx 8rpx 0;
 }
 
 .brand-title {
-  font-size: 84rpx;
-  font-weight: 700;
+  color: $ink-strong;
+  font-size: 86rpx;
+  font-weight: 900;
   line-height: 1;
-  letter-spacing: 4rpx;
-  background: linear-gradient(180deg, #49d6ff 0%, #bb7cff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  letter-spacing: 3rpx;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .brand-subtitle {
-  margin-top: 18rpx;
-  color: rgba(245, 245, 247, 0.76);
+  color: $accent-brand;
   font-size: 26rpx;
   letter-spacing: 4rpx;
+  font-weight: 800;
+  font-family: 'SFMono-Regular', 'JetBrains Mono', 'Consolas', monospace;
 }
 
 .brand-caption {
-  margin-top: 12rpx;
-  color: rgba(207, 207, 224, 0.68);
-  font-size: 24rpx;
+  color: $ink-body;
+  font-size: 26rpx;
+  line-height: 1.65;
+  max-width: 620rpx;
 }
 
 .form-block {
-  margin-top: 138rpx;
+  margin-top: 56rpx;
+  padding: 30rpx 26rpx 28rpx;
+  border-radius: 34rpx;
+  background:
+    radial-gradient(circle at top right, rgba(255, 237, 209, 0.84), transparent 36%),
+    linear-gradient(160deg, rgba(255, 252, 247, 0.98), rgba(244, 233, 217, 0.98));
+  border: 2rpx solid rgba(107, 62, 31, 0.08);
+  box-shadow: $shadow-elevated;
 }
 
 .mode-pill {
   margin: 0 auto 26rpx;
   width: fit-content;
-  padding: 0 24rpx;
-  min-height: 48rpx;
+  padding: 0 26rpx;
+  min-height: 52rpx;
   border-radius: 999rpx;
-  background: rgba(38, 38, 43, 0.88);
+  background: rgba(255, 255, 255, 0.74);
+  border: 2rpx solid rgba(107, 62, 31, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .mode-pill-text {
-  color: rgba(207, 207, 224, 0.82);
+  color: $accent-brand-deep;
   font-size: 22rpx;
-  font-weight: 600;
+  font-weight: 800;
+  letter-spacing: 2rpx;
 }
 
 .auth-input {
   width: 100%;
-  height: 82rpx;
+  height: 86rpx;
   border-radius: 24rpx;
-  background: rgba(38, 38, 43, 0.94);
-  color: #f5f5f7;
+  background: rgba(255, 255, 255, 0.8);
+  color: $ink-strong;
   font-size: 28rpx;
   padding: 0 28rpx;
   box-sizing: border-box;
+  border: 2rpx solid rgba(107, 62, 31, 0.08);
 }
 
 .auth-input + .auth-input {
@@ -434,20 +453,20 @@ onBackPress((options = {}) => {
 }
 
 .auth-placeholder {
-  color: #76767e;
+  color: $ink-faint;
   font-size: 26rpx;
 }
 
 .submit-button {
   margin-top: 34rpx;
   width: 100%;
-  height: 72rpx;
+  height: 82rpx;
   border-radius: 24rpx;
-  background: linear-gradient(180deg, #0b72c9 0%, #0958a3 100%);
+  background: linear-gradient(145deg, #c26229, #8e4b22);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 22rpx 44rpx rgba(11, 114, 201, 0.18);
+  box-shadow: 0 18rpx 36rpx rgba(117, 63, 29, 0.18);
 }
 
 .submit-button.disabled {
@@ -455,9 +474,9 @@ onBackPress((options = {}) => {
 }
 
 .submit-button-text {
-  color: #d3dfec;
-  font-size: 32rpx;
-  font-weight: 700;
+  color: #fff7ef;
+  font-size: 30rpx;
+  font-weight: 800;
   letter-spacing: 2rpx;
 }
 
@@ -470,14 +489,14 @@ onBackPress((options = {}) => {
 }
 
 .mode-switch-copy {
-  color: rgba(207, 207, 224, 0.72);
+  color: $ink-soft;
   font-size: 24rpx;
 }
 
 .mode-switch-action {
-  color: #49d6ff;
+  color: $accent-brand;
   font-size: 24rpx;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .agreement-row {
@@ -493,35 +512,37 @@ onBackPress((options = {}) => {
   min-width: 20rpx;
   margin-top: 6rpx;
   border-radius: 50%;
-  border: 2rpx solid #4a4a55;
+  border: 2rpx solid rgba(107, 62, 31, 0.28);
+  background: rgba(255, 255, 255, 0.78);
 }
 
 .agreement-checkbox.checked {
-  background: #0b72c9;
-  border-color: #0b72c9;
+  background: $accent-brand;
+  border-color: $accent-brand;
 }
 
 .agreement-text {
-  color: #cfcfe0;
+  color: $ink-body;
   font-size: 22rpx;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .helper-text {
   display: block;
   margin-top: 20rpx;
-  color: rgba(207, 207, 224, 0.6);
+  color: $ink-soft;
   font-size: 22rpx;
   text-align: center;
+  line-height: 1.6;
 }
 
 .bottom-actions {
   margin-top: auto;
-  padding-top: 52rpx;
+  padding-top: 34rpx;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 76rpx;
+  gap: 40rpx;
 }
 
 .action-item {
@@ -535,23 +556,24 @@ onBackPress((options = {}) => {
   width: 72rpx;
   height: 72rpx;
   border-radius: 50%;
-  border: 2rpx solid #2a2a33;
+  border: 2rpx solid rgba(107, 62, 31, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(10, 10, 13, 0.48);
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: $shadow-soft;
 }
 
 .action-circle-text {
-  color: #f2f2f5;
+  color: $accent-brand-deep;
   font-size: 28rpx;
-  font-weight: 600;
+  font-weight: 800;
   line-height: 1;
 }
 
 .action-label {
-  color: #f2f2f5;
+  color: $ink-soft;
   font-size: 20rpx;
-  font-weight: 500;
+  font-weight: 700;
 }
 </style>

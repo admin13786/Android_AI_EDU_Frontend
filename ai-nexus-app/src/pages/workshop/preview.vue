@@ -108,7 +108,9 @@ onBackPress((options = {}) => {
 
 .preview-page {
   min-height: 100vh;
-  background: #0a0a0a;
+  background:
+    radial-gradient(circle at top right, rgba(255, 229, 192, 0.32), transparent 34%),
+    linear-gradient(180deg, $paper-bg 0%, $paper-bg-soft 52%, $paper-bg-deep 100%);
   display: flex;
   flex-direction: column;
 }
@@ -123,22 +125,33 @@ onBackPress((options = {}) => {
 
 .header-title,
 .header-action {
-  color: $text-white;
+  color: $ink-strong;
 }
 
 .page-header {
   height: 72rpx;
+  background: rgba(255, 249, 241, 0.92);
+  border-bottom: 2rpx solid rgba(107, 62, 31, 0.08);
+  box-shadow: 0 16rpx 34rpx rgba(62, 35, 8, 0.08);
+  backdrop-filter: blur(12rpx);
 }
 
 .header-title {
-  font-size: 30rpx;
-  font-weight: 700;
+  font-size: 32rpx;
+  font-weight: 900;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .header-action {
-  width: 44rpx;
+  width: 74rpx;
+  height: 52rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.78);
+  border: 2rpx solid rgba(107, 62, 31, 0.1);
   text-align: center;
   font-size: 30rpx;
+  line-height: 52rpx;
+  box-shadow: $shadow-soft;
 }
 
 .webview-wrap {
@@ -147,36 +160,45 @@ onBackPress((options = {}) => {
 
 .empty-state {
   flex: 1;
-  padding: 48rpx;
+  margin: 28rpx 22rpx 0;
+  padding: 48rpx 34rpx;
+  border-radius: 32rpx;
+  background:
+    radial-gradient(circle at top right, rgba(255, 235, 203, 0.76), transparent 36%),
+    linear-gradient(160deg, rgba(255, 252, 247, 0.96), rgba(243, 234, 221, 0.96));
+  border: 2rpx dashed rgba(107, 62, 31, 0.16);
+  box-shadow: $shadow-card;
 }
 
 .empty-title {
   display: block;
-  color: $text-white;
-  font-size: 32rpx;
-  font-weight: 700;
+  color: $ink-strong;
+  font-size: 34rpx;
+  font-weight: 900;
   margin-bottom: 12rpx;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .empty-copy {
-  color: $text-muted;
+  color: $ink-body;
   font-size: 26rpx;
   line-height: 1.7;
 }
 
 .fallback-bar {
   padding: 18rpx 24rpx;
-  background: rgba(10, 10, 10, 0.92);
-  border-top: 1rpx solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 249, 241, 0.94);
+  border-top: 2rpx solid rgba(107, 62, 31, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16rpx;
+  box-shadow: 0 -12rpx 28rpx rgba(62, 35, 8, 0.06);
 }
 
 .fallback-copy {
   flex: 1;
-  color: $text-muted;
+  color: $ink-soft;
   font-size: 22rpx;
   line-height: 1.5;
 }
@@ -186,15 +208,16 @@ onBackPress((options = {}) => {
   height: 68rpx;
   padding: 0 20rpx;
   border-radius: 999rpx;
-  background: linear-gradient(135deg, #38bdf8, #2563eb);
+  background: linear-gradient(145deg, #c26229, #8e4b22);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 14rpx 28rpx rgba(117, 63, 29, 0.16);
 }
 
 .fallback-button-text {
-  color: #fff;
+  color: #fff8ef;
   font-size: 24rpx;
-  font-weight: 600;
+  font-weight: 700;
 }
 </style>

@@ -293,7 +293,9 @@ onBackPress((options = {}) => {
 
 .profile-page {
   min-height: 100vh;
-  background: #0b0b0d;
+  background:
+    radial-gradient(circle at top right, rgba(255, 229, 192, 0.34), transparent 34%),
+    linear-gradient(180deg, $paper-bg 0%, $paper-bg-soft 52%, $paper-bg-deep 100%);
 }
 
 .top-bar {
@@ -305,7 +307,10 @@ onBackPress((options = {}) => {
   padding-left: 24rpx;
   padding-right: 24rpx;
   padding-bottom: 18rpx;
-  background: rgba(11, 11, 13, 0.96);
+  background: rgba(255, 249, 241, 0.94);
+  border-bottom: 2rpx solid rgba(107, 62, 31, 0.08);
+  box-shadow: 0 18rpx 40rpx rgba(62, 35, 8, 0.08);
+  backdrop-filter: blur(12rpx);
 }
 
 .page-header {
@@ -319,34 +324,36 @@ onBackPress((options = {}) => {
 .header-placeholder {
   width: 86rpx;
   min-width: 86rpx;
-  height: 46rpx;
+  height: 52rpx;
 }
 
 .header-back {
   border-radius: 999rpx;
-  background: #17171c;
-  border: 2rpx solid #272730;
+  background: rgba(255, 255, 255, 0.82);
+  border: 2rpx solid rgba(107, 62, 31, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: $shadow-soft;
 }
 
 .header-back-icon,
 .header-title {
-  color: #f5f5f7;
+  color: $ink-strong;
 }
 
 .header-back-icon {
-  font-size: 30rpx;
+  font-size: 32rpx;
   line-height: 1;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .header-title {
   flex: 1;
   text-align: center;
-  font-size: 38rpx;
-  font-weight: 700;
+  font-size: 40rpx;
+  font-weight: 900;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .profile-scroll {
@@ -354,63 +361,64 @@ onBackPress((options = {}) => {
 }
 
 .profile-body {
-  padding: 0 16rpx;
+  padding: 0 18rpx;
   box-sizing: border-box;
   overflow: hidden;
 }
 
 .avatar-section {
   position: relative;
-  width: 112rpx;
-  height: 112rpx;
-  margin: 0 auto 40rpx;
+  width: 132rpx;
+  height: 132rpx;
+  margin: 0 auto 44rpx;
 }
 
 .avatar-orb {
-  width: 112rpx;
-  height: 112rpx;
+  width: 132rpx;
+  height: 132rpx;
   border-radius: 50%;
-  background: radial-gradient(circle at 28% 30%, #d8f2ff 0%, #4db1ff 42%, #2e89ea 72%, #1f5eb4 100%);
+  background: radial-gradient(circle at 28% 30%, #f5dfc6 0%, #d48a52 42%, #9b5c2f 72%, #6b3e1f 100%);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  box-shadow: 0 20rpx 42rpx rgba(107, 62, 31, 0.18);
 }
 
 .avatar-highlight {
   position: absolute;
   inset: 6rpx;
   border-radius: 50%;
-  background: radial-gradient(circle at 68% 32%, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0) 50%);
+  background: radial-gradient(circle at 68% 32%, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 50%);
 }
 
 .avatar-initial {
   position: relative;
   z-index: 1;
-  color: rgba(245, 245, 247, 0.94);
-  font-size: 40rpx;
-  font-weight: 700;
+  color: #fff8f0;
+  font-size: 46rpx;
+  font-weight: 800;
 }
 
 .camera-badge {
   position: absolute;
-  right: -10rpx;
+  right: -8rpx;
   bottom: 0;
-  width: 40rpx;
-  height: 40rpx;
+  width: 44rpx;
+  height: 44rpx;
   border-radius: 50%;
-  background: #1d1d23;
-  border: 2rpx solid #272730;
+  background: rgba(255, 255, 255, 0.92);
+  border: 2rpx solid rgba(107, 62, 31, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .camera-badge-text {
-  color: #f5f5f7;
+  color: $accent-brand-deep;
   font-size: 20rpx;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .info-card,
@@ -418,20 +426,23 @@ onBackPress((options = {}) => {
 .meta-card,
 .guest-card {
   width: 100%;
-  border-radius: 20rpx;
-  background: #17171c;
-  border: 2rpx solid #272730;
+  border-radius: 28rpx;
+  background:
+    radial-gradient(circle at top right, rgba(255, 237, 209, 0.76), transparent 36%),
+    linear-gradient(160deg, rgba(255, 252, 247, 0.98), rgba(244, 233, 217, 0.98));
+  border: 2rpx solid rgba(107, 62, 31, 0.08);
   box-sizing: border-box;
+  box-shadow: $shadow-card;
 }
 
 .info-card,
 .meta-card,
 .guest-card {
-  padding: 20rpx 22rpx;
+  padding: 24rpx 24rpx;
 }
 
 .intro-card {
-  padding: 20rpx 22rpx;
+  padding: 24rpx 24rpx;
   margin-top: 20rpx;
 }
 
@@ -453,9 +464,9 @@ onBackPress((options = {}) => {
 }
 
 .row-label {
-  color: #f5f5f7;
+  color: $ink-strong;
   font-size: 30rpx;
-  font-weight: 600;
+  font-weight: 800;
 }
 
 .row-right {
@@ -467,7 +478,7 @@ onBackPress((options = {}) => {
 }
 
 .row-value {
-  color: #a7a7b3;
+  color: $ink-soft;
   font-size: 28rpx;
   text-align: right;
   min-width: 0;
@@ -478,43 +489,45 @@ onBackPress((options = {}) => {
 }
 
 .row-arrow {
-  color: #a7a7b3;
+  color: $accent-brand-deep;
   font-size: 30rpx;
   line-height: 1;
 }
 
 .divider {
   height: 2rpx;
-  background: #272730;
+  background: rgba(107, 62, 31, 0.08);
   margin: 18rpx 0;
 }
 
 .intro-title {
   display: block;
-  color: #f5f5f7;
+  color: $ink-strong;
   font-size: 32rpx;
-  font-weight: 600;
+  font-weight: 900;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .intro-value {
   display: block;
   margin-top: 18rpx;
-  color: #a7a7b3;
+  color: $ink-body;
   font-size: 28rpx;
   line-height: 1.6;
 }
 
 .guest-title {
   display: block;
-  color: #f5f5f7;
+  color: $ink-strong;
   font-size: 34rpx;
-  font-weight: 700;
+  font-weight: 900;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .guest-copy {
   display: block;
   margin-top: 14rpx;
-  color: #a7a7b3;
+  color: $ink-body;
   font-size: 26rpx;
   line-height: 1.7;
 }
@@ -526,53 +539,56 @@ onBackPress((options = {}) => {
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
 }
 
 .guest-action.primary {
-  background: #f5f5f7;
+  background: linear-gradient(145deg, #c26229, #8e4b22);
+  box-shadow: 0 18rpx 36rpx rgba(117, 63, 29, 0.18);
 }
 
 .guest-action.secondary {
-  background: #0b0b0d;
-  border: 2rpx solid #3a3a45;
+  background: rgba(255, 255, 255, 0.78);
+  border: 2rpx solid rgba(107, 62, 31, 0.12);
 }
 
 .guest-action-text {
   font-size: 28rpx;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .guest-action-text.dark {
-  color: #0b0b0d;
+  color: #fff7ef;
 }
 
 .guest-action-text.light {
-  color: #f5f5f7;
+  color: $accent-brand-deep;
 }
 
 .logout-button {
   width: 100%;
-  min-height: 56rpx;
+  min-height: 84rpx;
   border-radius: 999rpx;
-  background: #0b0b0d;
-  border: 3rpx solid #3a3a45;
+  background: rgba(255, 255, 255, 0.76);
+  border: 3rpx solid rgba(107, 62, 31, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  box-shadow: $shadow-soft;
 }
 
 .logout-text {
-  color: #f5f5f7;
+  color: $accent-brand-deep;
   font-size: 30rpx;
-  font-weight: 600;
+  font-weight: 800;
 }
 
 .sheet-mask {
   position: fixed;
   inset: 0;
   z-index: 40;
-  background: rgba(17, 17, 24, 0.72);
+  background: rgba(62, 35, 8, 0.28);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -582,33 +598,39 @@ onBackPress((options = {}) => {
 .gender-sheet {
   width: 100%;
   border-radius: 28rpx 28rpx 0 0;
-  background: #17171c;
+  background:
+    radial-gradient(circle at top right, rgba(255, 237, 209, 0.76), transparent 36%),
+    linear-gradient(160deg, rgba(255, 252, 247, 0.98), rgba(244, 233, 217, 0.98));
   padding: 28rpx 24rpx 36rpx;
+  border: 2rpx solid rgba(107, 62, 31, 0.08);
+  box-shadow: $shadow-elevated;
 }
 
 .sheet-title {
   display: block;
-  color: #f5f5f7;
+  color: $ink-strong;
   font-size: 30rpx;
-  font-weight: 700;
+  font-weight: 900;
   text-align: center;
   margin-bottom: 24rpx;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .sheet-option {
   min-height: 84rpx;
   border-radius: 20rpx;
-  background: #0b0b0d;
+  background: rgba(255, 255, 255, 0.74);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 12rpx;
-  border: 2rpx solid #272730;
+  border: 2rpx solid rgba(107, 62, 31, 0.08);
 }
 
 .sheet-option-text {
-  color: #f5f5f7;
+  color: $ink-strong;
   font-size: 28rpx;
+  font-weight: 700;
 }
 
 .floating-toast {
@@ -627,8 +649,8 @@ onBackPress((options = {}) => {
   min-width: 280rpx;
   padding: 28rpx 32rpx;
   border-radius: 28rpx;
-  background: rgba(8, 8, 8, 0.92);
-  box-shadow: 0 18rpx 40rpx rgba(0, 0, 0, 0.3);
+  background: rgba(22, 17, 13, 0.92);
+  box-shadow: 0 18rpx 40rpx rgba(62, 35, 8, 0.22);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -637,14 +659,14 @@ onBackPress((options = {}) => {
 }
 
 .floating-toast-icon {
-  color: #ffffff;
+  color: #fff8ef;
   font-size: 72rpx;
   font-weight: 700;
   line-height: 1;
 }
 
 .floating-toast-text {
-  color: #ffffff;
+  color: #fff8ef;
   font-size: 30rpx;
   font-weight: 600;
   line-height: 1.5;

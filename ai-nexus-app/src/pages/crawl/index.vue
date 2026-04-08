@@ -135,7 +135,9 @@ onBackPress((options = {}) => {
 
 .news-page {
   min-height: 100vh;
-  background: #0a0a0a;
+  background:
+    radial-gradient(circle at top right, rgba(255, 229, 192, 0.34), transparent 34%),
+    linear-gradient(180deg, $paper-bg 0%, $paper-bg-soft 52%, $paper-bg-deep 100%);
   display: flex;
   flex-direction: column;
 }
@@ -149,9 +151,10 @@ onBackPress((options = {}) => {
   padding-left: 24rpx;
   padding-right: 24rpx;
   padding-bottom: 18rpx;
-  background: rgba(10, 10, 10, 0.98);
-  border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 16rpx 32rpx rgba(0, 0, 0, 0.24);
+  background: rgba(255, 249, 241, 0.94);
+  border-bottom: 2rpx solid rgba(107, 62, 31, 0.08);
+  box-shadow: 0 18rpx 40rpx rgba(62, 35, 8, 0.08);
+  backdrop-filter: blur(12rpx);
   z-index: 30;
 }
 
@@ -169,32 +172,20 @@ onBackPress((options = {}) => {
   min-width: 144rpx;
 }
 
-// .header-back {
-//   height: 72rpx;
-//   padding: 0 18rpx;
-//   border-radius: 999rpx;
-//   background: #17171a;
-//   border: 2rpx solid rgba(255, 255, 255, 0.08);
-//   display: flex;
-//   align-items: center;
-//   justify-content: flex-start;
-//   gap: 10rpx;
-// }
-
 .header-back {
   width: 72rpx;
   min-width: 72rpx;
   height: 72rpx;
   padding: 0;
   border-radius: 24rpx;
-  background: #17171a;
-  border: 2rpx solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+  border: 2rpx solid rgba(107, 62, 31, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0;
+  box-shadow: $shadow-soft;
 }
-
 
 .header-placeholder {
   height: 72rpx;
@@ -203,61 +194,66 @@ onBackPress((options = {}) => {
 .header-back-icon,
 .header-back-text,
 .header-title {
-  color: $text-white;
+  color: $ink-strong;
 }
 
 .header-back-icon {
-  font-size: 36rpx;
-  font-weight: 700;
+  font-size: 34rpx;
+  font-weight: 800;
   line-height: 1;
 }
 
 .header-back-text {
   font-size: 26rpx;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .header-title {
   flex: 1;
   text-align: center;
-  font-size: 42rpx;
-  font-weight: 700;
+  font-size: 44rpx;
+  font-weight: 900;
   letter-spacing: 1rpx;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .segment-wrap {
-  padding-top: 10rpx;
+  padding-top: 12rpx;
 }
 
 .segment-control {
-  background: #18181b;
-  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.66);
+  border-radius: 30rpx;
   padding: 8rpx;
   display: flex;
   gap: 8rpx;
+  border: 2rpx solid rgba(107, 62, 31, 0.08);
+  box-shadow: $shadow-soft;
 }
 
 .segment-item {
   flex: 1;
   height: 72rpx;
-  border-radius: 20rpx;
+  border-radius: 22rpx;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .segment-item.active {
-  background: #7c3aed;
+  background:
+    radial-gradient(circle at top right, rgba(255, 236, 208, 0.96), transparent 36%),
+    linear-gradient(145deg, rgba(255, 251, 245, 0.98), rgba(244, 232, 214, 0.98));
 }
 
 .segment-text {
-  color: #a1a1aa;
+  color: $ink-soft;
   font-size: 26rpx;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .segment-item.active .segment-text {
-  color: $text-white;
+  color: $accent-brand-deep;
 }
 
 .news-scroll {
@@ -267,15 +263,18 @@ onBackPress((options = {}) => {
 .news-list,
 .empty-state,
 .loading-state {
-  padding: 20rpx 24rpx 24rpx;
+  padding: 20rpx 24rpx 30rpx;
 }
 
 .news-card {
-  border-radius: 28rpx;
-  background: #18181b;
-  border: 2rpx solid #27272a;
-  padding: 24rpx;
-  margin-bottom: 16rpx;
+  border-radius: 30rpx;
+  background:
+    radial-gradient(circle at top right, rgba(255, 237, 209, 0.8), transparent 35%),
+    linear-gradient(160deg, rgba(255, 252, 247, 0.98), rgba(244, 233, 217, 0.98));
+  border: 2rpx solid rgba(107, 62, 31, 0.08);
+  padding: 26rpx 24rpx 24rpx;
+  margin-bottom: 18rpx;
+  box-shadow: $shadow-card;
 }
 
 .card-top,
@@ -293,15 +292,16 @@ onBackPress((options = {}) => {
 .tag {
   border-radius: 999rpx;
   padding: 10rpx 18rpx;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.68);
+  border: 2rpx solid rgba(107, 62, 31, 0.08);
 }
 
 .rank-chip {
-  background: rgba(124, 58, 237, 0.2);
+  background: rgba(194, 98, 41, 0.12);
 }
 
 .tag.primary {
-  background: rgba(34, 211, 238, 0.15);
+  background: rgba(111, 123, 77, 0.12);
 }
 
 .rank-chip-text,
@@ -311,26 +311,28 @@ onBackPress((options = {}) => {
 }
 
 .rank-chip-text {
-  color: #c4b5fd;
+  color: $accent-brand-deep;
+  font-weight: 800;
 }
 
 .card-score,
 .tag-text {
-  color: #a1a1aa;
+  color: $ink-soft;
 }
 
 .card-title {
   display: block;
-  color: $text-white;
-  font-size: 30rpx;
-  font-weight: 700;
+  color: $ink-strong;
+  font-size: 32rpx;
+  font-weight: 900;
   line-height: 1.45;
   margin-bottom: 14rpx;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .card-summary {
   display: block;
-  color: $text-muted;
+  color: $ink-body;
   font-size: 24rpx;
   line-height: 1.65;
   margin-bottom: 18rpx;
@@ -344,16 +346,28 @@ onBackPress((options = {}) => {
 .empty-title,
 .loading-title {
   display: block;
-  color: $text-white;
-  font-size: 32rpx;
-  font-weight: 700;
+  color: $ink-strong;
+  font-size: 34rpx;
+  font-weight: 900;
   margin-bottom: 12rpx;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .empty-copy,
 .loading-copy {
-  color: $text-muted;
+  color: $ink-body;
   font-size: 26rpx;
   line-height: 1.7;
+}
+
+.empty-state,
+.loading-state {
+  margin: 0 4rpx;
+  border-radius: 30rpx;
+  background:
+    radial-gradient(circle at top right, rgba(255, 235, 203, 0.78), transparent 36%),
+    linear-gradient(160deg, rgba(255, 252, 247, 0.96), rgba(243, 234, 221, 0.96));
+  border: 2rpx dashed rgba(107, 62, 31, 0.16);
+  box-shadow: $shadow-card;
 }
 </style>

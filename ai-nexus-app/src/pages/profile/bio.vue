@@ -69,7 +69,9 @@ onBackPress((options = {}) => {
 
 .edit-page {
   min-height: 100vh;
-  background: #0f0f0f;
+  background:
+    radial-gradient(circle at top right, rgba(255, 229, 192, 0.34), transparent 34%),
+    linear-gradient(180deg, $paper-bg 0%, $paper-bg-soft 52%, $paper-bg-deep 100%);
 }
 
 .top-bar {
@@ -80,9 +82,10 @@ onBackPress((options = {}) => {
   padding-left: 24rpx;
   padding-right: 24rpx;
   padding-bottom: 18rpx;
-  background: rgba(15, 15, 15, 0.98);
-  border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 16rpx 32rpx rgba(0, 0, 0, 0.24);
+  background: rgba(255, 249, 241, 0.94);
+  border-bottom: 2rpx solid rgba(107, 62, 31, 0.08);
+  box-shadow: 0 18rpx 40rpx rgba(62, 35, 8, 0.08);
+  backdrop-filter: blur(12rpx);
   z-index: 30;
 }
 
@@ -113,42 +116,46 @@ onBackPress((options = {}) => {
 .header-back {
   width: 72rpx;
   min-width: 72rpx;
-  background: #17171a;
-  border: 2rpx solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+  border: 2rpx solid rgba(107, 62, 31, 0.1);
   justify-content: center;
+  box-shadow: $shadow-soft;
 }
 
 .header-action-done {
-  background: rgba(34, 211, 238, 0.12);
-  border: 2rpx solid rgba(34, 211, 238, 0.26);
+  background: rgba(255, 255, 255, 0.82);
+  border: 2rpx solid rgba(107, 62, 31, 0.1);
   justify-content: center;
+  box-shadow: $shadow-soft;
 }
 
 .header-back-icon,
 .header-back-text,
 .header-title,
 .header-action-text {
-  color: $text-white;
+  color: $ink-strong;
 }
 
 .header-back-icon {
-  font-size: 36rpx;
-  font-weight: 700;
+  font-size: 34rpx;
+  font-weight: 800;
   line-height: 1;
 }
 
 .header-action-text {
-  color: #22d3ee;
-  font-size: 28rpx;
-  font-weight: 700;
+  color: $accent-brand-deep;
+  font-size: 26rpx;
+  font-weight: 800;
 }
 
 .header-title {
   flex: 1;
   text-align: center;
-  font-size: 42rpx;
-  font-weight: 700;
+  font-size: 40rpx;
+  font-weight: 900;
   letter-spacing: 1rpx;
+  color: $ink-strong;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .form-area {
@@ -159,23 +166,27 @@ onBackPress((options = {}) => {
 .text-area {
   width: 100%;
   min-height: 280rpx;
-  border-radius: 24rpx;
-  background: #1a1a1a;
-  color: $text-white;
+  border-radius: 28rpx;
+  background:
+    radial-gradient(circle at top right, rgba(255, 237, 209, 0.72), transparent 36%),
+    linear-gradient(160deg, rgba(255, 252, 247, 0.98), rgba(244, 233, 217, 0.98));
+  color: $ink-strong;
   font-size: 30rpx;
   line-height: 1.6;
   padding: 28rpx;
   box-sizing: border-box;
+  border: 2rpx solid rgba(107, 62, 31, 0.08);
+  box-shadow: $shadow-card;
 }
 
 .text-placeholder {
-  color: #6b7280;
+  color: $ink-faint;
   font-size: 26rpx;
 }
 
 .count-text {
   display: block;
-  color: #8e8e93;
+  color: $ink-soft;
   font-size: 24rpx;
   text-align: right;
   margin-top: 14rpx;

@@ -53,9 +53,13 @@ onBackPress((options = {}) => {
 </script>
 
 <style lang="scss" scoped>
+@import '../../theme.scss';
+
 .school-page {
   min-height: 100vh;
-  background: #ffffff;
+  background:
+    radial-gradient(circle at top right, rgba(255, 229, 192, 0.3), transparent 34%),
+    linear-gradient(180deg, $paper-bg 0%, $paper-bg-soft 52%, $paper-bg-deep 100%);
 }
 
 .school-webview {
@@ -69,18 +73,21 @@ onBackPress((options = {}) => {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: #ffffff;
+  background:
+    radial-gradient(circle at top right, rgba(255, 235, 203, 0.72), transparent 36%),
+    linear-gradient(160deg, rgba(255, 252, 247, 0.96), rgba(243, 234, 221, 0.96));
 }
 
 .empty-title {
-  color: #0f172a;
-  font-size: 32rpx;
-  font-weight: 700;
+  color: $ink-strong;
+  font-size: 36rpx;
+  font-weight: 900;
   margin-bottom: 14rpx;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .empty-copy {
-  color: #64748b;
+  color: $ink-body;
   font-size: 24rpx;
   line-height: 1.7;
 }

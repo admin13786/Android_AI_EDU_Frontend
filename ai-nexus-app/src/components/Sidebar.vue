@@ -10,14 +10,19 @@
       @touchend="onTouchEnd"
       @touchcancel="onTouchEnd"
     >
-      <view class="sidebar-header" :style="{ paddingTop: `${statusBarHeight + 6}px` }">
-        <view class="brand-row">
+      <view class="sidebar-header" :style="{ paddingTop: `${statusBarHeight + 10}px` }">
+        <view class="brand-badge">
+          <text class="brand-badge-text">LJ</text>
+        </view>
+        <view class="brand-copy">
           <text class="brand-title">灵境</text>
+          <text class="brand-subtitle">AI 教育工作台</text>
         </view>
       </view>
 
       <scroll-view class="sidebar-scroll" scroll-y show-scrollbar>
         <view class="quick-action" @click="startNewConversation">
+          <text class="quick-action-kicker">START FRESH</text>
           <text class="quick-action-text">开启新对话</text>
         </view>
 
@@ -29,14 +34,19 @@
             :class="{ active: item.id === activeSection }"
             @click="handleMenuClick(item)"
           >
-            <text class="menu-label">{{ item.name }}</text>
+            <view class="menu-copy">
+              <text class="menu-label">{{ item.name }}</text>
+              <text class="menu-meta">{{ item.meta }}</text>
+            </view>
             <text class="menu-arrow">›</text>
           </view>
         </view>
 
         <view class="history-block">
-          <view class="history-divider"></view>
-          <text class="history-window">30天内</text>
+          <view class="history-heading">
+            <text class="history-title">工坊记录</text>
+            <text class="history-window">30 天内</text>
+          </view>
 
           <template v-if="recentHistory.length">
             <view
@@ -49,7 +59,7 @@
             </view>
           </template>
 
-          <text v-else class="history-empty">没有更多内容哦</text>
+          <text v-else class="history-empty">还没有更多对话记录</text>
         </view>
       </scroll-view>
 
@@ -122,11 +132,13 @@ const getLatestNewsBriefPath = () =>
   `/pages/news-brief/issue?id=${encodeURIComponent(getLatestNewsBriefIssue().id)}`
 
 const menuItems = [
-  { id: 'school', name: 'AI学堂', path: '/pages/school/input' },
-  { id: 'crawl', name: 'AI观察哨', path: '/pages/crawl/index' },
-  { id: 'workshop', name: 'AI工坊', path: '/pages/home/index' },
-  { id: 'newsBrief', name: 'AI趣闻萃取', path: getLatestNewsBriefPath() },
+  { id: 'school', name: 'AI学堂', meta: '外部课堂 WebView', path: '/pages/school/input' },
+  { id: 'crawl', name: 'AI观察哨', meta: '实时新闻榜单', path: '/pages/crawl/index' },
+  { id: 'workshop', name: 'AI工坊', meta: '新建创作任务', path: '/pages/home/index' },
+  { id: 'newsBrief', name: 'AI趣闻萃取', meta: '每日三条速览', path: getLatestNewsBriefPath() },
 ]
+
+menuItems[0].meta = '\u5916\u90e8\u8bfe\u5802'
 
 const recentHistory = computed(() => {
   const source = Array.isArray(props.workshopHistory) ? props.workshopHistory : []
@@ -235,6 +247,8 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
+@import '../theme.scss';
+
 .sidebar-wrapper {
   position: fixed;
   inset: 0;
@@ -244,7 +258,7 @@ onUnmounted(() => {
 .sidebar-mask {
   position: absolute;
   inset: 0;
-  background: rgba(17, 17, 24, 0.72);
+  background: rgba(42, 27, 13, 0.34);
   transition: opacity 0.22s ease;
 }
 
@@ -255,16 +269,19 @@ onUnmounted(() => {
 .sidebar-panel {
   position: absolute;
   inset: 0 auto 0 0;
-  width: 440rpx;
-  max-width: 90vw;
+  width: 496rpx;
+  max-width: 92vw;
   height: 100%;
-  background: #0b0b0d;
+  background:
+    radial-gradient(circle at top right, rgba(255, 229, 192, 0.5), transparent 34%),
+    linear-gradient(180deg, #fff8ef 0%, #f4ece0 50%, #ede2d4 100%);
   display: flex;
   flex-direction: column;
   animation: slide-in 0.22s ease;
   transition: transform 0.22s ease;
   will-change: transform;
   overflow: hidden;
+  box-shadow: 18rpx 0 48rpx rgba(62, 35, 8, 0.12);
 }
 
 .sidebar-panel.closing {
@@ -272,147 +289,207 @@ onUnmounted(() => {
 }
 
 .sidebar-header {
-  padding-left: 16rpx;
-  padding-right: 16rpx;
-}
-
-.brand-row {
-  height: 42rpx;
+  padding-left: 24rpx;
+  padding-right: 24rpx;
+  padding-bottom: 16rpx;
   display: flex;
   align-items: center;
+  gap: 16rpx;
+}
+
+.brand-badge {
+  width: 62rpx;
+  height: 62rpx;
+  border-radius: 22rpx;
+  background: #17110c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12rpx 28rpx rgba(23, 17, 12, 0.14);
+}
+
+.brand-badge-text {
+  color: $ink-inverse;
+  font-size: 22rpx;
+  font-weight: 800;
+  letter-spacing: 1rpx;
+}
+
+.brand-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
 }
 
 .brand-title {
-  color: #f5f5f7;
-  font-size: 38rpx;
-  font-weight: 700;
+  color: $ink-strong;
+  font-size: 40rpx;
+  font-weight: 900;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
+}
+
+.brand-subtitle {
+  color: $ink-soft;
+  font-size: 20rpx;
+  letter-spacing: 2rpx;
 }
 
 .sidebar-scroll {
   flex: 1;
   min-height: 0;
-  padding: 22rpx 16rpx 20rpx;
+  padding: 8rpx 22rpx 20rpx;
   box-sizing: border-box;
 }
 
-.sidebar-scroll ::-webkit-scrollbar {
-  width: 6rpx;
-}
-
-.sidebar-scroll ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.28);
-  border-radius: 999rpx;
-}
-
 .quick-action {
-  width: 100%;
-  height: 56rpx;
-  border-radius: 20rpx;
-  background: #17171c;
+  border-radius: 28rpx;
+  padding: 20rpx 22rpx;
+  background: rgba(255, 255, 255, 0.72);
+  border: 2rpx solid rgba(107, 62, 31, 0.08);
+  box-shadow: $shadow-card;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.quick-action-kicker {
+  color: $accent-brand;
+  font-size: 18rpx;
+  font-weight: 800;
+  letter-spacing: 3rpx;
+  font-family: 'SFMono-Regular', 'JetBrains Mono', monospace;
 }
 
 .quick-action-text {
-  color: #f5f5f7;
-  font-size: 26rpx;
-  font-weight: 600;
+  color: $ink-strong;
+  font-size: 30rpx;
+  font-weight: 800;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
 .menu-group {
   margin-top: 18rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
 }
 
 .menu-item {
-  min-height: 54rpx;
+  min-height: 104rpx;
+  padding: 18rpx 20rpx;
+  border-radius: 26rpx;
+  border: 2rpx solid rgba(107, 62, 31, 0.08);
+  background: rgba(255, 255, 255, 0.68);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16rpx;
 }
 
-.menu-item + .menu-item {
-  margin-top: 8rpx;
+.menu-item.active {
+  background:
+    radial-gradient(circle at top right, rgba(255, 237, 209, 0.92), transparent 36%),
+    linear-gradient(160deg, rgba(255, 252, 247, 0.98), rgba(244, 233, 217, 0.98));
+  box-shadow: $shadow-card;
+}
+
+.menu-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
 }
 
 .menu-label {
-  color: #f5f5f7;
+  color: $ink-strong;
   font-size: 30rpx;
-  font-weight: 600;
+  font-weight: 800;
+  font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
 }
 
-.menu-item.active .menu-label,
-.menu-item.active .menu-arrow {
-  color: #ffffff;
+.menu-meta {
+  color: $ink-soft;
+  font-size: 20rpx;
 }
 
 .menu-arrow {
-  color: #a7a7b3;
-  font-size: 30rpx;
+  color: $accent-brand-deep;
+  font-size: 34rpx;
+  font-weight: 700;
 }
 
 .history-block {
-  margin-top: 18rpx;
+  margin-top: 20rpx;
+  padding-top: 18rpx;
+  border-top: 2rpx solid rgba(121, 104, 88, 0.12);
 }
 
-.history-divider {
-  width: 100%;
-  height: 2rpx;
-  background: #272730;
+.history-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.history-title {
+  color: $ink-strong;
+  font-size: 24rpx;
+  font-weight: 800;
 }
 
 .history-window {
-  display: block;
-  margin-top: 18rpx;
-  color: #a7a7b3;
-  font-size: 22rpx;
-  font-weight: 500;
+  color: $ink-faint;
+  font-size: 18rpx;
+  letter-spacing: 2rpx;
+  font-family: 'SFMono-Regular', 'JetBrains Mono', monospace;
 }
 
 .history-item {
-  margin-top: 14rpx;
+  margin-top: 12rpx;
+  padding: 16rpx 18rpx;
+  border-radius: 22rpx;
+  background: rgba(255, 255, 255, 0.52);
 }
 
 .history-item-text {
-  color: #f5f5f7;
-  font-size: 28rpx;
-  line-height: 1.55;
+  color: $ink-body;
+  font-size: 24rpx;
+  line-height: 1.6;
 }
 
 .history-empty {
   display: block;
-  margin-top: 22rpx;
-  color: #a7a7b3;
-  font-size: 24rpx;
+  margin-top: 20rpx;
+  color: $ink-faint;
+  font-size: 22rpx;
   text-align: center;
 }
 
 .profile-anchor {
   flex-shrink: 0;
-  padding-left: 16rpx;
-  padding-right: 16rpx;
+  padding-left: 22rpx;
+  padding-right: 22rpx;
   padding-top: 16rpx;
-  background: #111115;
-  border-top: 2rpx solid #272730;
+  background: rgba(255, 255, 255, 0.55);
+  border-top: 2rpx solid rgba(121, 104, 88, 0.12);
   display: flex;
   align-items: center;
   gap: 14rpx;
 }
 
 .profile-avatar {
-  width: 46rpx;
-  height: 46rpx;
+  width: 56rpx;
+  height: 56rpx;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #6a39ff 0%, #11b7ff 100%);
+  background: linear-gradient(160deg, #23160d, #6b3e1f);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .profile-avatar-text {
-  color: #f5f5f7;
-  font-size: 20rpx;
-  font-weight: 700;
+  color: $ink-inverse;
+  font-size: 22rpx;
+  font-weight: 800;
 }
 
 .profile-meta {
@@ -422,14 +499,14 @@ onUnmounted(() => {
 }
 
 .profile-name {
-  color: #f5f5f7;
+  color: $ink-strong;
   font-size: 26rpx;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .profile-subtitle {
-  color: #8d8d98;
-  font-size: 22rpx;
+  color: $ink-soft;
+  font-size: 20rpx;
 }
 
 @keyframes slide-in {

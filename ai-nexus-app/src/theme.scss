@@ -1,20 +1,47 @@
-// AI Nexus 主题色彩系统
-$bg-deep: #070B1A;
-$bg-card: #0F1629;
-$bg-hover: #1A2235;
+$paper-bg: #fff9f1;
+$paper-bg-soft: #f6eee2;
+$paper-bg-deep: #efe4d5;
+$paper-surface: rgba(255, 252, 247, 0.96);
+$paper-surface-strong: rgba(250, 242, 231, 0.98);
+$paper-surface-muted: rgba(255, 255, 255, 0.72);
 
-$accent-purple: #A78BFA;
-$accent-cyan: #06B6D4;
-$accent-lime: #84CC16;
-$accent-orange: #F59E0B;
-$accent-pink: #EC4899;
+$ink-strong: #16110d;
+$ink-body: #46372a;
+$ink-soft: #77614d;
+$ink-faint: #9d8873;
+$ink-inverse: #fff8f0;
 
-$text-white: #FFFFFF;
-$text-muted: #94A3B8;
-$text-dim: #64748B;
-$text-faint: #475569;
+$accent-brand: #c26229;
+$accent-brand-deep: #6b3e1f;
+$accent-brand-soft: #f2d4bd;
+$accent-olive: #6f7b4d;
+$accent-border: rgba(120, 91, 62, 0.14);
+$accent-shadow: rgba(74, 45, 19, 0.1);
 
-$border-card: #1E293B;
+$bg-deep: $paper-bg;
+$bg-card: $paper-surface;
+$bg-hover: $paper-surface-strong;
 
-$gradient-purple-blue-start: #8B5CF6;
-$gradient-purple-blue-end: #3B82F6;
+$accent-purple: #a0613b;
+$accent-cyan: #bf6927;
+$accent-lime: #6f7b4d;
+$accent-orange: #c26229;
+$accent-pink: #9a6a43;
+
+$text-white: $ink-strong;
+$text-muted: $ink-soft;
+$text-dim: $ink-faint;
+$text-faint: rgba(119, 97, 77, 0.72);
+
+$border-card: $accent-border;
+
+$gradient-purple-blue-start: #f7ecdf;
+$gradient-purple-blue-end: #ead4bc;
+
+$radius-card-lg: 34rpx;
+$radius-card-md: 26rpx;
+$radius-pill: 999rpx;
+
+$shadow-soft: 0 18rpx 42rpx rgba(74, 45, 19, 0.08);
+$shadow-card: 0 16rpx 38rpx rgba(62, 35, 8, 0.08);
+$shadow-elevated: 0 24rpx 60rpx rgba(62, 35, 8, 0.12);
