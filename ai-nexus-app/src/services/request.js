@@ -1,4 +1,4 @@
-import {
+﻿import {
   clearAuthSessionStorage,
   getStoredSessionToken,
   normalizeRoute,
@@ -36,11 +36,11 @@ const getConfiguredBaseUrl = (storageKeys, fallbackUrl) => {
   return fallbackUrl
 }
 
-const getBaseUrl = () => getConfiguredBaseUrl('apiBaseUrl', DEFAULT_API_BASE_URL)
+const getBaseUrl = () => DEFAULT_API_BASE_URL
 
-const getNewsBaseUrl = () => getConfiguredBaseUrl(['newsBaseUrl', 'crawlBaseUrl'], DEFAULT_NEWS_BASE_URL)
+const getNewsBaseUrl = () => DEFAULT_NEWS_BASE_URL
 
-const getOpenmaicBaseUrl = () => getConfiguredBaseUrl('openmaicBaseUrl', DEFAULT_OPENMAIC_BASE_URL)
+const getOpenmaicBaseUrl = () => DEFAULT_OPENMAIC_BASE_URL
 
 const stringifyErrorPayload = (value) => {
   if (value === null || value === undefined) return ''
@@ -51,7 +51,7 @@ const stringifyErrorPayload = (value) => {
     const message = value
       .map((item) => stringifyErrorPayload(item))
       .filter(Boolean)
-      .join('；')
+      .join(', ')
     if (message) return message
   }
 

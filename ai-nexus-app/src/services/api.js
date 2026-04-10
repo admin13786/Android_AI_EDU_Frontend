@@ -1,4 +1,5 @@
 import { getStoredUserInfo } from '@/utils/auth'
+import { appendDebugLog } from '@/utils/debug-log'
 import request, { getBaseUrl, getNewsBaseUrl } from './request'
 
 const NEWS_BOARD_BY_TYPE = {
@@ -8,16 +9,16 @@ const NEWS_BOARD_BY_TYPE = {
 
 const normalizeNewsItem = (item = {}, index = 0) => {
   const score = item.viewsNum || item.total_score || item.score || '0'
-  const source = item.source || item.tag || 'AI资讯'
+  const source = item.source || item.tag || 'AI News'
   const summary =
     item.summary ||
     item.brief ||
     item.description ||
-    `${source} 热榜内容，点击查看原文详情。`
+    `${source} hot content, tap to view details.`
 
   return {
     id: item.newsId || item.id || `news-${index}`,
-    title: item.title || '未命名资讯',
+    title: item.title || 'Untitled News',
     summary,
     url: item.url || '',
     source,
@@ -84,8 +85,9 @@ export const logoutCurrentSession = () =>
 
 // WorkShop - generation
 const WORKSHOP_SYSTEM_PROMPT =
-  '你是一个移动端 H5 游戏生成助手。请根据用户需求生成适配安卓手机 WebView 的小游戏，必须优先支持触屏操作和竖屏布局，交互清晰，按钮和触控区域足够大，界面简洁，可直接运行。若用户描述的是游戏，则默认补全为支持触屏控制、移动端适配、包含基础开始/重开与结果反馈。'
+  'You are a mobile H5 game generation assistant. Generate results suitable for Android phone WebView, prioritize touch interaction and portrait layout, keep controls clear and large enough, and make the result directly runnable. If the request is for a game, include basic start, restart, and result feedback by default.'
 
+const WORKSHOP_PREVIEW_ENDPOINT = '/agent-do/generate-preview'
 const WORKSHOP_STREAM_ENDPOINT = '/agent-do/generate-preview/stream'
 const WORKSHOP_HISTORY_ENDPOINT = '/api/workshop-history/conversations'
 
@@ -102,32 +104,51 @@ const toAbsoluteWorkshopUrl = (url) => {
   return `${baseUrl}${String(url).startsWith('/') ? url : `/${url}`}`
 }
 
-export const normalizeWorkshopPreviewUrl = (url) => {
+export const stripWorkshopApiPrefix = (url) => {
   if (!url || typeof url !== 'string') return ''
 
   const normalized = url.trim()
   if (!normalized) return ''
 
+  const rewrittenAbsolute = normalized.replace(
+    /^(https?:\/\/[^/]+)\/api\/workshop(?=\/)/i,
+    '$1',
+  )
+  const output = rewrittenAbsolute !== normalized
+    ? rewrittenAbsolute
+    : normalized.startsWith('/api/workshop/')
+      ? normalized.replace(/^\/api\/workshop/, '')
+      : normalized
+
+  appendDebugLog('workshop', 'strip_prefix_probe_v1', { input: normalized, output })
+
+  return output
+}
+
+export const normalizeWorkshopPreviewUrl = (url) => {
+  if (!url || typeof url !== 'string') return ''
+
+  const stripped = stripWorkshopApiPrefix(url)
+  if (!stripped) return ''
+
   const rewritePath = (pathname, search = '', hash = '') =>
-    toAbsoluteWorkshopUrl(`${pathname}${search}${hash}`)
+    toAbsoluteWorkshopUrl(pathname + search + hash)
 
   try {
-    const parsed = new URL(normalized, getBaseUrl() || 'http://localhost')
-    if (parsed.pathname.startsWith('/api/workshop/agent-do/preview/')) {
-      return rewritePath(parsed.pathname.replace(/^\/api\/workshop/, ''), parsed.search, parsed.hash)
-    }
+    const base = new URL(getBaseUrl() || 'http://localhost')
+    const parsed = new URL(stripped, base)
+    const sameOriginFamily = parsed.hostname === base.hostname && parsed.protocol === base.protocol
+
     if (parsed.pathname.startsWith('/agent-do/preview/')) {
-      return rewritePath(parsed.pathname, parsed.search, parsed.hash)
+      return sameOriginFamily ? rewritePath(parsed.pathname, parsed.search, parsed.hash) : parsed.toString()
     }
+
     return parsed.toString()
   } catch (error) {
-    if (normalized.startsWith('/api/workshop/agent-do/preview/')) {
-      return toAbsoluteWorkshopUrl(normalized.replace(/^\/api\/workshop/, ''))
+    if (stripped.startsWith('/agent-do/preview/')) {
+      return toAbsoluteWorkshopUrl(stripped)
     }
-    if (normalized.startsWith('/agent-do/preview/')) {
-      return toAbsoluteWorkshopUrl(normalized)
-    }
-    return normalized
+    return stripped
   }
 }
 
@@ -176,9 +197,7 @@ const normalizeWorkshopHistoryItem = (item = {}) => {
     pickWorkshopText(item?.result?.summary || item.summary, '') ||
     extractMessageText(lastMessageByRole(item.messages, 'assistant')) ||
     prompt
-  const previewUrl = normalizeWorkshopPreviewUrl(
-    item?.result?.previewUrl || item?.result?.url || item?.preview?.url || item?.previewUrl || item?.url || '',
-  )
+  const previewUrl = stripWorkshopApiPrefix(item?.result?.previewUrl || item?.result?.url || item?.preview?.url || item?.previewUrl || item?.url || '')
   const code =
     pickWorkshopText(item?.result?.code, '') || pickWorkshopText(item?.preview?.code?.content || item?.html, '')
   const title = pickWorkshopText(item.title, '') || prompt || 'Workshop Preview'
@@ -223,7 +242,7 @@ const buildRemoteWorkshopConversationPayload = (conversation = {}) => {
 
   return {
     id: normalizedConversation.id,
-    title: normalizedConversation.title || normalizedConversation.prompt || '新对话',
+    title: normalizedConversation.title || normalizedConversation.prompt || 'New Conversation',
     prompt: normalizedConversation.prompt,
     result: normalizedConversation.result,
     createdAt: normalizedConversation.createdAt,
@@ -239,7 +258,7 @@ const buildRemoteWorkshopConversationPayload = (conversation = {}) => {
             ? 'code'
             : 'empty'),
       html: conversation?.preview?.html || '',
-      url: normalizeWorkshopPreviewUrl(
+      url: stripWorkshopApiPrefix(
         conversation?.preview?.url ||
           normalizedConversation.result?.previewUrl ||
           normalizedConversation.result?.url ||
@@ -299,6 +318,51 @@ const readSseBlocks = (buffer = '') => {
   }
 }
 
+
+const requestWorkshopPreview = async (payload, options = {}) => {
+  const response = await request({
+    url: WORKSHOP_PREVIEW_ENDPOINT,
+    method: 'POST',
+    data: payload,
+    timeout: 600000,
+    header: {
+      Accept: 'application/json',
+    },
+  })
+
+  const previewUrl = stripWorkshopApiPrefix(response?.previewUrl || response?.url || '')
+  appendDebugLog('workshop', 'preview_request_success', {
+    mode: 'fallback',
+    endpoint: `${getBaseUrl()}${WORKSHOP_PREVIEW_ENDPOINT}`,
+    rawPreviewUrl: response?.previewUrl || response?.url || '',
+    strippedPreviewUrl: previewUrl,
+    response,
+  })
+
+  const normalized = {
+    ...(response && typeof response === 'object' ? response : {}),
+    previewUrl,
+    url: previewUrl,
+    conversationId: response?.conversationId || response?.conversation_id || payload.conversation_id,
+    streamStatus: previewUrl ? 'preview_ready' : '',
+    streamText: '',
+    summary: pickWorkshopText(response?.summary || response?.message || response?.acceptance?.summary || '', ''),
+    message: pickWorkshopText(response?.message || response?.summary || response?.acceptance?.summary || '', ''),
+  }
+
+  if (typeof options.onStatus === 'function' && normalized.streamStatus) {
+    options.onStatus(normalized.streamStatus, {
+      type: 'status',
+      stage: 'preview',
+      content: normalized.streamStatus,
+    })
+  }
+  if (typeof options.onResult === 'function') {
+    options.onResult(normalized, normalized)
+  }
+
+  return normalized
+}
 export const generateCode = (prompt, options = {}) => {
   const payload = buildWorkshopStreamPayload(prompt, options)
   const baseUrl = getBaseUrl()
@@ -306,7 +370,7 @@ export const generateCode = (prompt, options = {}) => {
 
   return new Promise((resolve, reject) => {
     if (typeof XMLHttpRequest === 'undefined') {
-      reject(new Error('Streaming is not supported in current environment'))
+      requestWorkshopPreview(payload, options).then(resolve).catch(reject)
       return
     }
 
@@ -328,13 +392,13 @@ export const generateCode = (prompt, options = {}) => {
     const safeResolve = () => {
       if (settled) return
       settled = true
-      const normalizedPreviewUrl = normalizeWorkshopPreviewUrl(finalResult?.previewUrl || finalResult?.url || '')
+      const rawPreviewUrl = stripWorkshopApiPrefix(finalResult?.previewUrl || finalResult?.url || '')
       resolve({
         result: finalResult || {},
         summary: finalResult?.summary || finalResult?.message || draftText || latestStatus,
         message: finalResult?.message || draftText || latestStatus,
-        previewUrl: normalizedPreviewUrl,
-        url: normalizedPreviewUrl,
+        previewUrl: rawPreviewUrl,
+        url: rawPreviewUrl,
         conversationId: finalResult?.conversationId || finalResult?.conversation_id || conversationId,
         streamStatus: latestStatus,
         streamText: draftText,
@@ -373,8 +437,8 @@ export const generateCode = (prompt, options = {}) => {
         finalResult = {
           ...(finalResult || {}),
           ...eventPayload,
-          previewUrl: normalizeWorkshopPreviewUrl(eventPayload.previewUrl || eventPayload.url || ''),
-          url: normalizeWorkshopPreviewUrl(eventPayload.url || eventPayload.previewUrl || ''),
+          previewUrl: stripWorkshopApiPrefix(eventPayload.previewUrl || eventPayload.url || ''),
+          url: stripWorkshopApiPrefix(eventPayload.url || eventPayload.previewUrl || ''),
           conversationId: eventPayload.conversationId || eventPayload.conversation_id || conversationId,
         }
         if (typeof options.onResult === 'function') {
@@ -400,6 +464,10 @@ export const generateCode = (prompt, options = {}) => {
       parsed.blocks.forEach((block) => handlePayload(extractSsePayload(block)))
     }
 
+    appendDebugLog('workshop', 'generate_stream_start', {
+      endpoint: `${baseUrl}${WORKSHOP_STREAM_ENDPOINT}`,
+      payload,
+    })
     xhr.open('POST', `${baseUrl}${WORKSHOP_STREAM_ENDPOINT}`, true)
     xhr.timeout = 600000
     xhr.setRequestHeader('Content-Type', 'application/json')
@@ -411,6 +479,14 @@ export const generateCode = (prompt, options = {}) => {
     xhr.onreadystatechange = () => {
       if (xhr.readyState >= 3) {
         processResponseText()
+      }
+
+      if (xhr.readyState >= 2) {
+        appendDebugLog('workshop', 'generate_stream_state', {
+          readyState: xhr.readyState,
+          status: xhr.status,
+          responseLength: (xhr.responseText || '').length,
+        })
       }
 
       if (xhr.readyState !== 4 || settled) return
@@ -429,11 +505,21 @@ export const generateCode = (prompt, options = {}) => {
         return
       }
 
-      safeReject(new Error(xhr.responseText || `Request failed with status ${xhr.status}`))
+      requestWorkshopPreview(payload, options).then(resolve).catch(() => {
+        safeReject(new Error(xhr.responseText || `Request failed with status ${xhr.status}`))
+      })
     }
 
-    xhr.onerror = () => safeReject(new Error('Network request failed'))
-    xhr.ontimeout = () => safeReject(new Error('Request timeout'))
+    xhr.onerror = () => {
+      requestWorkshopPreview(payload, options).then(resolve).catch(() => {
+        safeReject(new Error('Network request failed'))
+      })
+    }
+    xhr.ontimeout = () => {
+      requestWorkshopPreview(payload, options).then(resolve).catch(() => {
+        safeReject(new Error('Request timeout'))
+      })
+    }
     xhr.send(JSON.stringify(payload))
   })
 }
