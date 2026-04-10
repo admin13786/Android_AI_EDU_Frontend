@@ -1,4 +1,4 @@
-import {
+﻿import {
   clearAuthSessionStorage,
   getStoredSessionToken,
   normalizeRoute,
@@ -9,8 +9,8 @@ import { appendDebugLog } from '@/utils/debug-log'
 let unauthorizedHandler = null
 let handling401 = false
 let last401At = 0
-const DEFAULT_API_BASE_URL = 'http://121.89.87.255:10001'
-const DEFAULT_NEWS_BASE_URL = 'http://8.135.4.46'
+const DEFAULT_API_BASE_URL = 'http://8.135.4.46:5000'
+const DEFAULT_NEWS_BASE_URL = 'http://8.135.4.46:8000'
 const DEFAULT_OPENMAIC_BASE_URL = 'http://8.135.4.46:3000'
 
 export function setUnauthorizedHandler(fn) {
@@ -25,17 +25,22 @@ const normalizeStoredUrl = (value) => {
   return normalizedUrl
 }
 
-const getConfiguredBaseUrl = (storageKey, fallbackUrl) => {
-  const storedBaseUrl = normalizeStoredUrl(uni.getStorageSync(storageKey))
-  if (storedBaseUrl) return storedBaseUrl
+const getConfiguredBaseUrl = (storageKeys, fallbackUrl) => {
+  const keys = Array.isArray(storageKeys) ? storageKeys : [storageKeys]
+
+  for (const key of keys) {
+    const storedBaseUrl = normalizeStoredUrl(uni.getStorageSync(key))
+    if (storedBaseUrl) return storedBaseUrl
+  }
+
   return fallbackUrl
 }
 
-const getBaseUrl = () => getConfiguredBaseUrl('apiBaseUrl', DEFAULT_API_BASE_URL)
+const getBaseUrl = () => DEFAULT_API_BASE_URL
 
-const getNewsBaseUrl = () => getConfiguredBaseUrl('newsBaseUrl', DEFAULT_NEWS_BASE_URL)
+const getNewsBaseUrl = () => DEFAULT_NEWS_BASE_URL
 
-const getOpenmaicBaseUrl = () => getConfiguredBaseUrl('openmaicBaseUrl', DEFAULT_OPENMAIC_BASE_URL)
+const getOpenmaicBaseUrl = () => DEFAULT_OPENMAIC_BASE_URL
 
 const stringifyErrorPayload = (value) => {
   if (value === null || value === undefined) return ''
@@ -46,7 +51,7 @@ const stringifyErrorPayload = (value) => {
     const message = value
       .map((item) => stringifyErrorPayload(item))
       .filter(Boolean)
-      .join('；')
+      .join(', ')
     if (message) return message
   }
 

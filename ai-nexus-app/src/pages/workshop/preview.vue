@@ -33,6 +33,7 @@ import { onBackPress, onLoad } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 import { getLayoutMetrics } from '@/utils/layout'
 import { safeNavigateBack } from '@/utils/navigation'
+import { normalizeWorkshopPreviewUrl } from '@/services/api'
 
 const { statusBarHeight, safeAreaInsetsBottom } = getLayoutMetrics()
 const previewUrl = ref('')
@@ -78,7 +79,7 @@ onLoad((query) => {
   let url = ''
   let title = '工坊预览'
   try {
-    url = decodeURIComponent(query.url || '')
+    url = normalizeWorkshopPreviewUrl(decodeURIComponent(query.url || ''))
     title = decodeURIComponent(query.title || '工坊预览')
   } catch (e) {
     url = ''
